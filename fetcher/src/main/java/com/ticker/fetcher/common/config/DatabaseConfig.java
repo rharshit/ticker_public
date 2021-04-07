@@ -39,7 +39,7 @@ public class DatabaseConfig {
     private int maxPoolSize;
 
     @Primary
-    @Bean(name = "DataSource")
+    @Bean(name = "dataSource")
     public DataSource getDataSource() {
         HikariConfig hikariConfig = new HikariConfig();
         hikariConfig.setJdbcUrl(jdbcUrl);
