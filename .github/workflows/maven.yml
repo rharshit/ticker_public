@@ -23,7 +23,5 @@ jobs:
         distribution: 'adopt'
     - name: Build Fetcher with Maven
       run: mvn -B package --file fetcher/pom.xml -X -DskipTests
-    - name: SonarCloud Scan
-      uses: SonarSource/sonarcloud-github-action@v1.5
     - name: Coveralls GitHub Action
       uses: coverallsapp/github-action@v1.1.2
