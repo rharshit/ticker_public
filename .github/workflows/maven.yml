@@ -16,10 +16,14 @@ jobs:
 
     steps:
     - uses: actions/checkout@v2
-    - name: Set up JDK 11
+    - name: Set up JDK 8
       uses: actions/setup-java@v2
       with:
-        java-version: '9'
+        java-version: '8'
         distribution: 'adopt'
-    - name: Build with Maven
+    - name: Build Fetcher with Maven
       run: mvn -B package --file fetcher/pom.xml -X -DskipTests
+    - name: SonarCloud Scan
+      uses: SonarSource/sonarcloud-github-action@v1.5
+    - name: Coveralls GitHub Action
+      uses: coverallsapp/github-action@v1.1.2
