@@ -22,6 +22,4 @@ jobs:
         java-version: '8'
         distribution: 'adopt'
     - name: Build Fetcher with Maven
-      run: mvn -B package --file fetcher/pom.xml -X -DskipTests
-    - name: Coveralls GitHub Action
-      uses: coverallsapp/github-action@v1.1.2
+      run: mvn -B package --file fetcher/pom.xml -DskipTests
