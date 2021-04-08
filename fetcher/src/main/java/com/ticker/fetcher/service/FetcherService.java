@@ -114,4 +114,18 @@ public class FetcherService {
 
         destroyThread(tickerName);
     }
+
+    /**
+     * Return threadPool
+     *
+     * @return
+     */
+    public Map<String, String> getCurrentTickers() {
+        Map<String, FetcherThread> threadMap = getThreadPool();
+        Map<String, String> tickers = new HashMap<>();
+        for (Map.Entry<String, FetcherThread> entry : threadMap.entrySet()) {
+            tickers.put(entry.getKey(), entry.getValue().toString());
+        }
+        return tickers;
+    }
 }

@@ -7,12 +7,24 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
+import java.util.Map;
+
 @RestController
 @RequestMapping("/fetcher/")
 public class FetcherController {
 
     @Autowired
     private FetcherService service;
+
+    /**
+     * Get a map of all the tickers currently being tracked
+     *
+     * @return
+     */
+    @GetMapping
+    public ResponseEntity<Map<String, String>> getCurrentTickers() {
+        return new ResponseEntity<>(service.getCurrentTickers(), HttpStatus.OK);
+    }
 
     /**
      * Add tracking for the ticker, given exchange and symbol

@@ -31,4 +31,9 @@ public abstract class FetcherThread extends Thread {
         this.enabled = false;
         log.info("Terminating thread : " + threadName);
     }
+
+    @Override
+    public String toString() {
+        return threadName;
+    }
 }
