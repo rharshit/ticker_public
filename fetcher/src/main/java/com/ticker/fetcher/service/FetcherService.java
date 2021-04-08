@@ -21,21 +21,19 @@ public class FetcherService {
     private static Map<String, FetcherThread> threadPool;
 
     private static void destroyThread(String threadName) {
-        if (!threadPool.containsKey(threadName)) {
+        Map<String, FetcherThread> threadMap = getThreadPool();
+        if (!threadMap.containsKey(threadName)) {
             return;
         }
-        FetcherThread thread = threadPool.get(threadName);
+        FetcherThread thread = threadMap.get(threadName);
         thread.terminateThread();
-        threadPool.remove(threadName);
+        threadMap.remove(threadName);
         log.info("Removed thread: " + threadName);
     }
 
     private static void createThread(String threadName) {
-        if (threadPool == null) {
-            initializeThreadPool();
-            log.info("Initializing thread pool");
-        }
-        if (threadPool.containsKey(threadName)) {
+        Map<String, FetcherThread> threadMap = getThreadPool();
+        if (threadMap.containsKey(threadName)) {
             return;
         }
         FetcherThread thread = new FetcherThread(threadName) {
@@ -56,9 +54,17 @@ public class FetcherService {
                 }
             }
         };
-        threadPool.put(threadName, thread);
+        threadMap.put(threadName, thread);
         log.info("Added thread: " + threadName);
         thread.start();
+    }
+
+    private synchronized static Map<String, FetcherThread> getThreadPool() {
+        if (threadPool == null) {
+            initializeThreadPool();
+            log.info("Initializing thread pool");
+        }
+        return threadPool;
     }
 
     private synchronized static void initializeThreadPool() {
@@ -77,18 +83,35 @@ public class FetcherService {
      * @param symbol
      */
     public void addTicker(String exchange, String symbol) {
+        String tickerName = getTickerName(exchange, symbol);
+
+        createThread(tickerName);
+    }
+
+    private String getTickerName(String exchange, String symbol) {
         exchange = exchange.toUpperCase();
         symbol = symbol.toUpperCase();
 
         int esID = repository.getExchangeSymbolId(exchange, symbol);
-        log.info(String.valueOf(esID));
+        log.debug("ID for " + symbol + " in " + exchange + " : " + esID);
 
         DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy_MM_dd");
         String date = LocalDate.now().format(formatter);
 
         String id = String.format("%05d", esID);
-        String tickerName = date + "_" + id;
 
-        createThread(tickerName);
+        return date + "_" + id;
+    }
+
+    /**
+     * Remove tracking for the ticker, given exchange and symbol
+     *
+     * @param exchange
+     * @param symbol
+     */
+    public void deleteTicker(String exchange, String symbol) {
+        String tickerName = getTickerName(exchange, symbol);
+
+        destroyThread(tickerName);
     }
 }
