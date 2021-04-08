@@ -51,4 +51,15 @@ public class FetcherController {
         service.deleteTicker(exchange, symbol);
         return new ResponseEntity<>(new ResponseStatus(), HttpStatus.OK);
     }
+
+    /**
+     * Delete all tickers
+     *
+     * @return
+     */
+    @DeleteMapping(path = "/all/")
+    public ResponseEntity<ResponseStatus> deleteAllTickers() {
+        service.deleteAllTickers();
+        return new ResponseEntity<>(new ResponseStatus(), HttpStatus.OK);
+    }
 }

@@ -10,6 +10,7 @@ import java.time.LocalDate;
 import java.time.format.DateTimeFormatter;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.concurrent.ConcurrentHashMap;
 
 @Service
 @Slf4j
@@ -69,7 +70,7 @@ public class FetcherService {
 
     private synchronized static void initializeThreadPool() {
         if (threadPool == null) {
-            threadPool = new HashMap<>();
+            threadPool = new ConcurrentHashMap<>();
             log.info("Thread pool initialized");
         } else {
             log.info("Thread pool already initialized");
@@ -127,5 +128,12 @@ public class FetcherService {
             tickers.put(entry.getKey(), entry.getValue().toString());
         }
         return tickers;
+    }
+
+    public void deleteAllTickers() {
+        Map<String, FetcherThread> threadMap = getThreadPool();
+        for (String threadName : threadMap.keySet()) {
+            destroyThread(threadName);
+        }
     }
 }
