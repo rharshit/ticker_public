@@ -12,6 +12,9 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 
+import static com.ticker.fetcher.common.constants.WebConstants.TRADING_VIEW_BASE;
+import static com.ticker.fetcher.common.constants.WebConstants.TRADING_VIEW_CHART;
+
 @Service
 @Slf4j
 public class FetcherService {
@@ -21,7 +24,7 @@ public class FetcherService {
 
     private static Map<String, FetcherThread> threadPool;
 
-    private static void destroyThread(String threadName) {
+    private void destroyThread(String threadName) {
         Map<String, FetcherThread> threadMap = getThreadPool();
         if (!threadMap.containsKey(threadName)) {
             return;
@@ -32,16 +35,21 @@ public class FetcherService {
         log.info("Removed thread: " + threadName);
     }
 
-    private static void createThread(String threadName) {
+    private void createThread(String exchange, String symbol) {
+        String threadName = getThreadName(exchange, symbol);
         Map<String, FetcherThread> threadMap = getThreadPool();
+
         if (threadMap.containsKey(threadName)) {
             return;
         }
-        FetcherThread thread = new FetcherThread(threadName) {
-            //TODO: Implement actual method
+        FetcherThread thread = new FetcherThread(threadName, exchange, symbol) {
+
             @Override
             protected void initialize() {
-                log.info("Initializing thread : " + threadName);
+                log.info("Initializing\t" + exchange + ":" + symbol);
+                String url = TRADING_VIEW_BASE + TRADING_VIEW_CHART + exchange + ":" + symbol;
+                getWebDriver().get(url);
+                log.info("Initialized\t" + exchange + ":" + symbol);
             }
 
             //TODO: Implement actual method
@@ -84,17 +92,14 @@ public class FetcherService {
      * @param symbol
      */
     public void addTicker(String exchange, String symbol) {
-        String tickerName = getTickerName(exchange, symbol);
-
-        createThread(tickerName);
+        createThread(exchange, symbol);
     }
 
-    private String getTickerName(String exchange, String symbol) {
+    private String getThreadName(String exchange, String symbol) {
         exchange = exchange.toUpperCase();
         symbol = symbol.toUpperCase();
 
-        int esID = repository.getExchangeSymbolId(exchange, symbol);
-        log.debug("ID for " + symbol + " in " + exchange + " : " + esID);
+        int esID = getExchangeSymbolId(exchange, symbol);
 
         DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy_MM_dd");
         String date = LocalDate.now().format(formatter);
@@ -104,6 +109,10 @@ public class FetcherService {
         return date + "_" + id;
     }
 
+    private int getExchangeSymbolId(String exchange, String symbol) {
+        return repository.getExchangeSymbolId(exchange, symbol);
+    }
+
     /**
      * Remove tracking for the ticker, given exchange and symbol
      *
@@ -111,9 +120,9 @@ public class FetcherService {
      * @param symbol
      */
     public void deleteTicker(String exchange, String symbol) {
-        String tickerName = getTickerName(exchange, symbol);
+        String threadName = getThreadName(exchange, symbol);
 
-        destroyThread(tickerName);
+        destroyThread(threadName);
     }
 
     /**
