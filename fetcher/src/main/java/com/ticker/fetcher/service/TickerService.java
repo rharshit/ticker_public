@@ -83,4 +83,8 @@ public class TickerService {
         log.info("Running thread: " + fetcherThread.getThreadName());
         waitFor(WAIT_MEDIUM);
     }
+
+    public void scheduledJob(FetcherThread fetcherThread) {
+        log.info("ScheduledJob: " + fetcherThread.getThreadName());
+    }
 }

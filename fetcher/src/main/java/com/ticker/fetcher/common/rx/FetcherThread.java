@@ -9,6 +9,7 @@ import org.openqa.selenium.chrome.ChromeDriver;
 import org.openqa.selenium.chrome.ChromeOptions;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Scope;
+import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Component;
 import org.springframework.util.StopWatch;
 
@@ -89,6 +90,11 @@ public class FetcherThread extends Thread {
 
     protected void doTask() {
         service.doTask(this);
+    }
+
+    @Scheduled(fixedRate = 5000)
+    protected void scheduledJob() {
+        service.scheduledJob(this);
     }
 
     public void terminateThread() {
