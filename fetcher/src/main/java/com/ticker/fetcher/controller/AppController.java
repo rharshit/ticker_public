@@ -1,7 +1,7 @@
 package com.ticker.fetcher.controller;
 
 import com.ticker.fetcher.model.ResponseStatus;
-import com.ticker.fetcher.service.FetcherService;
+import com.ticker.fetcher.service.AppService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -11,10 +11,10 @@ import java.util.Map;
 
 @RestController
 @RequestMapping("/fetcher/")
-public class FetcherController {
+public class AppController {
 
     @Autowired
-    private FetcherService service;
+    private AppService service;
 
     /**
      * Get a map of all the tickers currently being tracked

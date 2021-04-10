@@ -12,7 +12,7 @@ import javax.sql.DataSource;
 
 
 @Configuration
-public class DatabaseConfig {
+public class FetcherDatabaseConfig {
 
     @Value("${spring.datasource.url}")
     private String jdbcUrl;
@@ -39,8 +39,8 @@ public class DatabaseConfig {
     private int maxPoolSize;
 
     @Primary
-    @Bean(name = "dataSource")
-    public DataSource getDataSource() {
+    @Bean(name = "tickerDataSource")
+    public DataSource getTickerDataSource() {
         HikariConfig hikariConfig = new HikariConfig();
         hikariConfig.setJdbcUrl(jdbcUrl);
         hikariConfig.setUsername(username);
@@ -54,8 +54,8 @@ public class DatabaseConfig {
         return new HikariDataSource(hikariConfig);
     }
 
-    @Bean(name = "jdbcTemplate")
+    @Bean(name = "tickerJdbcTemplate")
     public JdbcTemplate getJdbcTemplate() {
-        return new JdbcTemplate(getDataSource());
+        return new JdbcTemplate(getTickerDataSource());
     }
 }

@@ -1,7 +1,7 @@
 package com.ticker.fetcher.service;
 
 import com.ticker.fetcher.common.rx.FetcherThread;
-import com.ticker.fetcher.repository.FetcherRepository;
+import com.ticker.fetcher.repository.AppRepository;
 import lombok.extern.slf4j.Slf4j;
 import org.openqa.selenium.By;
 import org.openqa.selenium.Keys;
@@ -24,10 +24,10 @@ import static com.ticker.fetcher.common.util.Util.*;
 
 @Service
 @Slf4j
-public class FetcherService {
+public class AppService {
 
     @Autowired
-    FetcherRepository repository;
+    AppRepository repository;
 
     private static Map<String, FetcherThread> threadPool;
 

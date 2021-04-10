@@ -14,14 +14,14 @@ import java.util.Map;
 
 @Repository
 @Getter
-public class TickerRepository {
+public class FetcherRepository {
 
     @Autowired
-    @Qualifier("dataSource")
+    @Qualifier("tickerDataSource")
     private DataSource dataSource;
 
     @Autowired
-    @Qualifier("jdbcTemplate")
+    @Qualifier("tickerJdbcTemplate")
     private JdbcTemplate jdbcTemplate;
 
     private void setDatasource(StoredProcedure procedure) {
