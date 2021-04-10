@@ -15,6 +15,8 @@ public abstract class FetcherThread extends Thread {
     private final String symbol;
     private WebDriver webDriver;
 
+    public static final int RETRY_LIMIT = 5;
+
     protected FetcherThread(String threadName, String exchange, String symbol) {
         this.enabled = true;
         this.threadName = threadName;
@@ -29,12 +31,15 @@ public abstract class FetcherThread extends Thread {
             this.webDriver.close();
         }
         ChromeOptions options = new ChromeOptions();
+        //options.setHeadless(true);
+        options.addArguments("--window-size=1920,1080");
+        options.addArguments("incognito");
         this.webDriver = new ChromeDriver(options);
     }
 
     @Override
     public void run() {
-        initialize();
+        initialize(0);
         while (enabled) {
             doTask();
         }
@@ -44,7 +49,7 @@ public abstract class FetcherThread extends Thread {
         log.info("Terminated thread : " + threadName);
     }
 
-    protected abstract void initialize();
+    protected abstract void initialize(int i);
 
     protected abstract void doTask();
 
