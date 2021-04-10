@@ -1,23 +1,42 @@
 package com.ticker.fetcher.common.rx;
 
+import com.ticker.fetcher.repository.AppRepository;
+import com.ticker.fetcher.service.TickerService;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 import org.openqa.selenium.WebDriver;
 import org.openqa.selenium.chrome.ChromeDriver;
 import org.openqa.selenium.chrome.ChromeOptions;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.context.annotation.Scope;
+import org.springframework.scheduling.annotation.Scheduled;
+import org.springframework.stereotype.Component;
+import org.springframework.util.StopWatch;
+
+import static com.ticker.fetcher.common.constants.WebConstants.TRADING_VIEW_BASE;
+import static com.ticker.fetcher.common.constants.WebConstants.TRADING_VIEW_CHART;
 
 @Getter
 @Slf4j
-public abstract class FetcherThread extends Thread {
-    private final String threadName;
+@Component("fetcherThread")
+@Scope("prototype")
+public class FetcherThread extends Thread {
+
+    @Autowired
+    private AppRepository repository;
+
+    @Autowired
+    private TickerService service;
+
+    private String threadName;
     private boolean enabled;
-    private final String exchange;
-    private final String symbol;
+    private String exchange;
+    private String symbol;
     private WebDriver webDriver;
 
     public static final int RETRY_LIMIT = 5;
 
-    protected FetcherThread(String threadName, String exchange, String symbol) {
+    public void setProperties(String threadName, String exchange, String symbol) {
         this.enabled = true;
         this.threadName = threadName;
         this.exchange = exchange;
@@ -49,9 +68,34 @@ public abstract class FetcherThread extends Thread {
         log.info("Terminated thread : " + threadName);
     }
 
-    protected abstract void initialize(int i);
+    protected void initialize(int i) {
+        log.info(exchange + ":" + symbol + " - Initializing");
+        StopWatch stopWatch = new StopWatch();
+        stopWatch.start();
+        try {
+            String url = TRADING_VIEW_BASE + TRADING_VIEW_CHART + exchange + ":" + symbol;
+            getWebDriver().get(url);
+            service.setChartSettings(getWebDriver());
+            stopWatch.stop();
+            log.info(exchange + ":" + symbol + " - Initialized in " + stopWatch.getTotalTimeSeconds() + "s");
+        } catch (Exception e) {
+            stopWatch.stop();
+            log.error("Error while initializing", e);
+            log.error("Time spent: " + stopWatch.getTotalTimeSeconds() + "s");
+            if (i < RETRY_LIMIT && isEnabled()) {
+                initialize(i + 1);
+            }
+        }
+    }
 
-    protected abstract void doTask();
+    protected void doTask() {
+        service.doTask(this);
+    }
+
+    @Scheduled(fixedRate = 5000)
+    protected void scheduledJob() {
+        service.scheduledJob(this);
+    }
 
     public void terminateThread() {
         this.enabled = false;

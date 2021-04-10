@@ -1,6 +1,6 @@
 package com.ticker.fetcher.repository;
 
-import com.ticker.fetcher.common.repository.TickerRepository;
+import com.ticker.fetcher.common.repository.FetcherRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.jdbc.core.SqlOutParameter;
 import org.springframework.jdbc.core.SqlParameter;
@@ -14,10 +14,10 @@ import static com.ticker.fetcher.common.constants.DBConstants.*;
 import static com.ticker.fetcher.common.constants.ProcedureConstants.GET_EXCHANGE_SYMBOL_ID_PR;
 
 @Repository
-public class FetcherRepository {
+public class AppRepository {
 
     @Autowired
-    TickerRepository repository;
+    FetcherRepository repository;
 
 
     public int getExchangeSymbolId(String exchange, String symbol) {
