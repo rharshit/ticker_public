@@ -66,7 +66,7 @@ public class AppService {
                     stopWatch.stop();
                     log.error("Error while initializing", e);
                     log.error("Time spent: " + stopWatch.getTotalTimeSeconds() + "s");
-                    if (i < RETRY_LIMIT) {
+                    if (i < RETRY_LIMIT && isEnabled()) {
                         initialize(i + 1);
                     }
 
