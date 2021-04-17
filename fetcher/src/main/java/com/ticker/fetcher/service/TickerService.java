@@ -66,6 +66,8 @@ public class TickerService {
         FetcherThread thread = (FetcherThread) ctx.getBean("fetcherThread");
         thread.setProperties(threadName, exchange, symbol, esID);
 
+        thread.setTickerServiceBean(this);
+
         threadMap.put(threadName, thread);
         log.info("Added thread: " + threadName);
         thread.start();
@@ -104,6 +106,15 @@ public class TickerService {
     public void deleteTicker(String exchange, String symbol) {
         String threadName = getThreadName(exchange, symbol);
 
+        destroyThread(threadName);
+    }
+
+    /**
+     * Remove tracking for the ticker, given thread name
+     *
+     * @param threadName
+     */
+    public void deleteTicker(String threadName) {
         destroyThread(threadName);
     }
 
