@@ -18,8 +18,10 @@ import java.util.concurrent.ConcurrentHashMap;
 public class TickerService {
 
     private static Map<String, FetcherThread> threadPool;
+
     @Autowired
     AppRepository repository;
+
     @Autowired
     private ApplicationContext ctx;
 
@@ -59,8 +61,10 @@ public class TickerService {
             return;
         }
 
+        int esID = getExchangeSymbolId(exchange, symbol);
+
         FetcherThread thread = (FetcherThread) ctx.getBean("fetcherThread");
-        thread.setProperties(threadName, exchange, symbol);
+        thread.setProperties(threadName, exchange, symbol, esID);
 
         threadMap.put(threadName, thread);
         log.info("Added thread: " + threadName);
@@ -81,14 +85,10 @@ public class TickerService {
         exchange = exchange.toUpperCase();
         symbol = symbol.toUpperCase();
 
-        int esID = getExchangeSymbolId(exchange, symbol);
-
         DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy_MM_dd");
         String date = LocalDate.now().format(formatter);
 
-        String id = String.format("%05d", esID);
-
-        return date + "_" + id;
+        return symbol + ":" + exchange + "_" + date;
     }
 
     private int getExchangeSymbolId(String exchange, String symbol) {

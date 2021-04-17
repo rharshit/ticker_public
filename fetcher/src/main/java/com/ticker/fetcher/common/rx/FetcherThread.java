@@ -32,15 +32,17 @@ public class FetcherThread extends Thread {
     private boolean enabled;
     private String exchange;
     private String symbol;
+    private int esID;
     private WebDriver webDriver;
 
     public static final int RETRY_LIMIT = 5;
 
-    public void setProperties(String threadName, String exchange, String symbol) {
+    public void setProperties(String threadName, String exchange, String symbol, int esID) {
         this.enabled = true;
         this.threadName = threadName;
         this.exchange = exchange;
         this.symbol = symbol;
+        this.esID = esID;
 
         initializeWebDriver();
     }
