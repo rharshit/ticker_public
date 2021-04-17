@@ -10,14 +10,14 @@ import javax.sql.DataSource;
 
 @Repository
 @Getter
-public class FetcherRepository extends BaseRepository {
+public class TickerRepository extends BaseRepository {
 
     @Autowired
-    @Qualifier("fetcherDataSource")
+    @Qualifier("tickerDataSource")
     private DataSource dataSource;
 
     @Autowired
-    @Qualifier("fetcherJdbcTemplate")
+    @Qualifier("tickerJdbcTemplate")
     private JdbcTemplate jdbcTemplate;
 
 }

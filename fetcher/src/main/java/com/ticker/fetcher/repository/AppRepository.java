@@ -1,6 +1,7 @@
 package com.ticker.fetcher.repository;
 
 import com.ticker.fetcher.common.repository.FetcherRepository;
+import com.ticker.fetcher.common.repository.TickerRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.jdbc.core.SqlOutParameter;
 import org.springframework.jdbc.core.SqlParameter;
@@ -17,7 +18,10 @@ import static com.ticker.fetcher.common.constants.ProcedureConstants.GET_EXCHANG
 public class AppRepository {
 
     @Autowired
-    FetcherRepository repository;
+    FetcherRepository fetcherRepository;
+
+    @Autowired
+    TickerRepository tickerRepository;
 
 
     public int getExchangeSymbolId(String exchange, String symbol) {
@@ -31,7 +35,7 @@ public class AppRepository {
         inputParameters.put(I_EXCHANGE_ID, exchange);
         inputParameters.put(I_SYMBOL_ID, symbol);
 
-        Map<String, Object> result = repository.executeProcedure(GET_EXCHANGE_SYMBOL_ID_PR, sqlParameters, inputParameters);
+        Map<String, Object> result = tickerRepository.executeProcedure(GET_EXCHANGE_SYMBOL_ID_PR, sqlParameters, inputParameters);
         return (int) result.get(O_EXCHANGE_SYMBOL_ID);
     }
 }

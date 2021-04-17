@@ -12,9 +12,9 @@ import javax.sql.DataSource;
 
 
 @Configuration
-public class FetcherDatabaseConfig {
+public class TickerDatabaseConfig {
 
-    @Value("${spring.datasource.url.fetcher}")
+    @Value("${spring.datasource.url.ticker}")
     private String jdbcUrl;
 
     @Value("${spring.datasource.username}")
@@ -39,7 +39,7 @@ public class FetcherDatabaseConfig {
     private int maxPoolSize;
 
     @Primary
-    @Bean(name = "fetcherDataSource")
+    @Bean(name = "tickerDataSource")
     public DataSource getTickerDataSource() {
         HikariConfig hikariConfig = new HikariConfig();
         hikariConfig.setJdbcUrl(jdbcUrl);
@@ -50,12 +50,12 @@ public class FetcherDatabaseConfig {
         hikariConfig.setMaximumPoolSize(maxPoolSize);
         hikariConfig.setIdleTimeout(idleTimeout);
         hikariConfig.setMaxLifetime(maxLifetime);
-        hikariConfig.setPoolName("HikariPoolFetcher");
+        hikariConfig.setPoolName("HikariPoolTicker");
 
         return new HikariDataSource(hikariConfig);
     }
 
-    @Bean(name = "fetcherJdbcTemplate")
+    @Bean(name = "tickerJdbcTemplate")
     public JdbcTemplate getJdbcTemplate() {
         return new JdbcTemplate(getTickerDataSource());
     }
