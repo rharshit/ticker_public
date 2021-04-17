@@ -1,7 +1,7 @@
 package com.ticker.fetcher.common.rx;
 
 import com.ticker.fetcher.repository.AppRepository;
-import com.ticker.fetcher.service.TickerService;
+import com.ticker.fetcher.service.FetcherService;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 import org.openqa.selenium.WebDriver;
@@ -26,21 +26,23 @@ public class FetcherThread extends Thread {
     private AppRepository repository;
 
     @Autowired
-    private TickerService service;
+    private FetcherService fetcherService;
 
     private String threadName;
     private boolean enabled;
     private String exchange;
     private String symbol;
+    private int esID;
     private WebDriver webDriver;
 
     public static final int RETRY_LIMIT = 5;
 
-    public void setProperties(String threadName, String exchange, String symbol) {
+    public void setProperties(String threadName, String exchange, String symbol, int esID) {
         this.enabled = true;
         this.threadName = threadName;
         this.exchange = exchange;
         this.symbol = symbol;
+        this.esID = esID;
 
         initializeWebDriver();
     }
@@ -75,7 +77,7 @@ public class FetcherThread extends Thread {
         try {
             String url = TRADING_VIEW_BASE + TRADING_VIEW_CHART + exchange + ":" + symbol;
             getWebDriver().get(url);
-            service.setChartSettings(getWebDriver());
+            fetcherService.setChartSettings(getWebDriver());
             stopWatch.stop();
             log.info(exchange + ":" + symbol + " - Initialized in " + stopWatch.getTotalTimeSeconds() + "s");
         } catch (Exception e) {
@@ -89,12 +91,12 @@ public class FetcherThread extends Thread {
     }
 
     protected void doTask() {
-        service.doTask(this);
+        fetcherService.doTask(this);
     }
 
     @Scheduled(fixedRate = 5000)
     protected void scheduledJob() {
-        service.scheduledJob(this);
+        fetcherService.scheduledJob(this);
     }
 
     public void terminateThread() {

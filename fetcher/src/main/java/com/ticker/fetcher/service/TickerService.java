@@ -1,90 +1,130 @@
 package com.ticker.fetcher.service;
 
 import com.ticker.fetcher.common.rx.FetcherThread;
+import com.ticker.fetcher.repository.AppRepository;
 import lombok.extern.slf4j.Slf4j;
-import org.openqa.selenium.By;
-import org.openqa.selenium.Keys;
-import org.openqa.selenium.WebDriver;
-import org.openqa.selenium.WebElement;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.context.ApplicationContext;
 import org.springframework.stereotype.Service;
-import org.springframework.util.CollectionUtils;
 
-import static com.ticker.fetcher.common.util.Util.*;
+import java.time.LocalDate;
+import java.time.format.DateTimeFormatter;
+import java.util.HashMap;
+import java.util.Map;
+import java.util.concurrent.ConcurrentHashMap;
 
 @Service
 @Slf4j
 public class TickerService {
 
+    private static Map<String, FetcherThread> threadPool;
+
     @Autowired
-    private AppService appService;
+    AppRepository repository;
+
+    @Autowired
+    private ApplicationContext ctx;
+
+    private synchronized static Map<String, FetcherThread> getThreadPool() {
+        if (threadPool == null) {
+            initializeThreadPool();
+            log.info("Initializing thread pool");
+        }
+        return threadPool;
+    }
+
+    private synchronized static void initializeThreadPool() {
+        if (threadPool == null) {
+            threadPool = new ConcurrentHashMap<>();
+            log.info("Thread pool initialized");
+        } else {
+            log.info("Thread pool already initialized");
+        }
+    }
+
+    private void destroyThread(String threadName) {
+        Map<String, FetcherThread> threadMap = getThreadPool();
+        if (!threadMap.containsKey(threadName)) {
+            return;
+        }
+        FetcherThread thread = threadMap.get(threadName);
+        thread.terminateThread();
+        threadMap.remove(threadName);
+        log.info("Removed thread: " + threadName);
+    }
+
+    private void createThread(String exchange, String symbol) {
+        String threadName = getThreadName(exchange, symbol);
+        Map<String, FetcherThread> threadMap = getThreadPool();
+
+        if (threadMap.containsKey(threadName)) {
+            return;
+        }
+
+        int esID = getExchangeSymbolId(exchange, symbol);
+
+        FetcherThread thread = (FetcherThread) ctx.getBean("fetcherThread");
+        thread.setProperties(threadName, exchange, symbol, esID);
+
+        threadMap.put(threadName, thread);
+        log.info("Added thread: " + threadName);
+        thread.start();
+    }
 
     /**
-     * Set setting for the charts that are loaded
+     * Add tracking for the ticker, given exchange and symbol
      *
-     * @param webDriver
+     * @param exchange
+     * @param symbol
      */
-    public void setChartSettings(WebDriver webDriver) {
-        // Chart style
-        waitFor(WAIT_LONG);
-        configureMenuByValue(webDriver, "menu-inner", "header-toolbar-chart-styles", "ha");
-
-        // Chart interval
-        waitFor(WAIT_LONG);
-        configureMenuByValue(webDriver, "menu-inner", "header-toolbar-intervals", "1");
-
-        // Indicators
-        waitFor(WAIT_LONG);
-        setIndicators(webDriver, "bb:STD;Bollinger_Bands", "rsi:STD;RSI");
+    public void addTicker(String exchange, String symbol) {
+        createThread(exchange, symbol);
     }
 
-    private void setIndicators(WebDriver webDriver, String... indicators) {
-        WebElement chartStyle = webDriver.findElement(By.id("header-toolbar-indicators"));
-        chartStyle.click();
-        waitFor(WAIT_MEDIUM);
-        WebElement menuBox = webDriver
-                .findElement(By.id("overlap-manager-root"))
-                .findElement(By.cssSelector("div[data-name='indicators-dialog']"));
+    private String getThreadName(String exchange, String symbol) {
+        exchange = exchange.toUpperCase();
+        symbol = symbol.toUpperCase();
 
-        while (!CollectionUtils.isEmpty(menuBox.findElements(By.cssSelector("div[role='progressbar']")))) ;
+        DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy_MM_dd");
+        String date = LocalDate.now().format(formatter);
 
-        for (String indicator : indicators) {
-            String searchText = indicator.split(":")[0];
-            WebElement searchBox = menuBox.findElement(By.cssSelector("input[data-role='search']"));
-            searchBox.click();
-            searchBox.sendKeys(searchText);
-            waitFor(WAIT_SHORT);
+        return symbol + ":" + exchange + "_" + date;
+    }
 
-            String indicatorId = indicator.split(":")[1];
-            WebElement valueElement = menuBox.findElement(By.cssSelector("div[data-id='" + indicatorId + "']"));
-            valueElement.click();
+    private int getExchangeSymbolId(String exchange, String symbol) {
+        return repository.getExchangeSymbolId(exchange, symbol);
+    }
 
-            searchBox.sendKeys(Keys.BACK_SPACE);
-            waitFor(WAIT_SHORT);
+    /**
+     * Remove tracking for the ticker, given exchange and symbol
+     *
+     * @param exchange
+     * @param symbol
+     */
+    public void deleteTicker(String exchange, String symbol) {
+        String threadName = getThreadName(exchange, symbol);
+
+        destroyThread(threadName);
+    }
+
+    /**
+     * Return threadPool
+     *
+     * @return
+     */
+    public Map<String, String> getCurrentTickers() {
+        Map<String, FetcherThread> threadMap = getThreadPool();
+        Map<String, String> tickers = new HashMap<>();
+        for (Map.Entry<String, FetcherThread> entry : threadMap.entrySet()) {
+            tickers.put(entry.getKey(), entry.getValue().toString());
         }
-        WebElement closeBtn = webDriver
-                .findElement(By.id("overlap-manager-root"))
-                .findElement(By.cssSelector("span[data-name='close']"))
-                .findElement(By.tagName("svg"));
-        closeBtn.click();
+        return tickers;
     }
 
-    private void configureMenuByValue(WebDriver webDriver, String dataName, String header, String value) {
-        WebElement chartStyle = webDriver.findElement(By.id(header));
-        chartStyle.click();
-        WebElement menuBox = webDriver
-                .findElement(By.id("overlap-manager-root"))
-                .findElement(By.cssSelector("div[data-name='" + dataName + "']"));
-        WebElement valueElement = menuBox.findElement(By.cssSelector("div[data-value='" + value + "']"));
-        valueElement.click();
-    }
-
-    public void doTask(FetcherThread fetcherThread) {
-        log.info("Running thread: " + fetcherThread.getThreadName());
-        waitFor(WAIT_MEDIUM);
-    }
-
-    public void scheduledJob(FetcherThread fetcherThread) {
-        log.info("ScheduledJob: " + fetcherThread.getThreadName());
+    public void deleteAllTickers() {
+        Map<String, FetcherThread> threadMap = getThreadPool();
+        for (String threadName : threadMap.keySet()) {
+            destroyThread(threadName);
+        }
     }
 }
