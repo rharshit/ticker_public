@@ -2,11 +2,12 @@ package com.ticker.fetcher.common.rx;
 
 import com.ticker.fetcher.repository.AppRepository;
 import com.ticker.fetcher.service.FetcherService;
+import com.ticker.fetcher.service.TickerService;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 import org.openqa.selenium.WebDriver;
-import org.openqa.selenium.chrome.ChromeDriver;
-import org.openqa.selenium.chrome.ChromeOptions;
+import org.openqa.selenium.firefox.FirefoxDriver;
+import org.openqa.selenium.firefox.FirefoxOptions;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Scope;
 import org.springframework.scheduling.annotation.Scheduled;
@@ -27,6 +28,8 @@ public class FetcherThread extends Thread {
 
     @Autowired
     private FetcherService fetcherService;
+
+    private TickerService tickerService;
 
     private String threadName;
     private boolean enabled;
@@ -51,11 +54,11 @@ public class FetcherThread extends Thread {
         if (this.webDriver != null) {
             this.webDriver.close();
         }
-        ChromeOptions options = new ChromeOptions();
+        FirefoxOptions options = new FirefoxOptions();
         //options.setHeadless(true);
         options.addArguments("--window-size=1920,1080");
         options.addArguments("incognito");
-        this.webDriver = new ChromeDriver(options);
+        this.webDriver = new FirefoxDriver(options);
     }
 
     @Override
@@ -86,6 +89,8 @@ public class FetcherThread extends Thread {
             log.error("Time spent: " + stopWatch.getTotalTimeSeconds() + "s");
             if (i < RETRY_LIMIT && isEnabled()) {
                 initialize(i + 1);
+            } else {
+                tickerService.deleteTicker(this.threadName);
             }
         }
     }
@@ -110,5 +115,9 @@ public class FetcherThread extends Thread {
                 "exchange='" + exchange + '\'' +
                 ", symbol='" + symbol + '\'' +
                 '}';
+    }
+
+    public void setTickerServiceBean(TickerService tickerService) {
+        this.tickerService = tickerService;
     }
 }
