@@ -41,7 +41,7 @@ public class BrokerageService {
     private static void initWebdriver() {
         log.info("Initializing webdriver");
         ChromeOptions options = new ChromeOptions();
-        //options.setHeadless(true);
+        options.setHeadless(true);
         options.addArguments("--window-size=1920,1080");
         options.addArguments("incognito");
         webDriver = new ChromeDriver(options);
@@ -150,11 +150,8 @@ public class BrokerageService {
                     continue;
             }
             WebElement tb = input.findElement(By.tagName("input"));
-            String oldVal = tb.getAttribute("value");
-            for (int i = 0; i < oldVal.length(); i++) {
-                tb.sendKeys(Keys.RIGHT);
-                tb.sendKeys(Keys.BACK_SPACE);
-            }
+            tb.click();
+            tb.sendKeys(Keys.COMMAND + "a");
             tb.sendKeys(String.valueOf(val));
         }
     }
