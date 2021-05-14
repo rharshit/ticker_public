@@ -16,8 +16,8 @@ public class BrokerageController {
     @Autowired
     private BrokerageService service;
 
-    @GetMapping("/zerodha/{type}")
-    public Map<String, Double> getZerodhaBrokerage(@PathVariable String type) {
-        return service.getZerodhaBrokerage(type, 0);
+    @GetMapping("/zerodha/{type}/{exchange}")
+    public Map<String, Double> getZerodhaBrokerage(@PathVariable String type, @PathVariable String exchange) {
+        return service.getZerodhaBrokerage(type, exchange, 0);
     }
 }

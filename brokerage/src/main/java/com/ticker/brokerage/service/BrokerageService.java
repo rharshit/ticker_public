@@ -9,10 +9,7 @@ import org.openqa.selenium.chrome.ChromeDriver;
 import org.openqa.selenium.chrome.ChromeOptions;
 import org.springframework.stereotype.Service;
 
-import java.util.Arrays;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 
 import static com.ticker.brokerage.common.constants.WebConstants.ZERODHA_BROKERAGE_URL;
 
@@ -66,7 +63,7 @@ public class BrokerageService {
         throw new TickerException("Cannot find type for '" + type + "'. Valid options are -" + mapping.toString());
     }
 
-    public Map<String, Double> getZerodhaBrokerage(String type, int numTry) {
+    public Map<String, Double> getZerodhaBrokerage(String type, String exchange, int numTry) {
         String tabType = getTabType(type);
         log.info(tabType);
         String divId = null;
@@ -88,6 +85,22 @@ public class BrokerageService {
         try {
             synchronized (webDriver) {
                 WebElement tabDiv = webDriver.findElement(By.id(divId));
+                boolean isExchangeSelected = false;
+                List<WebElement> weExchanges = tabDiv.findElements(By.className("equity-radio"));
+                List<String> exchanges = new ArrayList<>();
+                for (WebElement weExchange : weExchanges) {
+                    WebElement rb = weExchange.findElement(By.tagName("input"));
+                    String exchangeValue = rb.getAttribute("value");
+                    if (exchange.equalsIgnoreCase(exchangeValue)) {
+                        rb.click();
+                        isExchangeSelected = true;
+                        break;
+                    }
+                    exchanges.add(exchangeValue);
+                }
+                if (!isExchangeSelected) {
+                    throw new TickerException("Exchange value '" + exchange + "' is invalid. Valid options are: " + exchanges.toString());
+                }
                 List<WebElement> divs = tabDiv.findElements(By.className("valuation-block"));
                 divs.add(tabDiv.findElement(By.className("net-profit")));
                 for (WebElement div : divs) {
@@ -96,10 +109,12 @@ public class BrokerageService {
                     data.put(convertToCamelCase(label.getText()), Double.valueOf(span.getText()));
                 }
             }
+        } catch (TickerException e) {
+            throw e;
         } catch (Exception e) {
             initWebdriver();
             if (numTry < numTries) {
-                return getZerodhaBrokerage(type, numTry + 1);
+                return getZerodhaBrokerage(type, exchange, numTry + 1);
             } else {
                 throw new TickerException("Error while getting values. Please try again");
             }
