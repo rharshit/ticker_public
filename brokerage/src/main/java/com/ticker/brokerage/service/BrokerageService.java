@@ -27,6 +27,7 @@ public class BrokerageService {
     private static final String FUTURES = "futures";
     private static final String OPTIONS = "options";
     private static final Map<String, List<String>> tabs;
+    public static final int numTries = 3;
 
     static {
         initWebdriver();
@@ -65,7 +66,7 @@ public class BrokerageService {
         throw new TickerException("Cannot find type for '" + type + "'. Valid options are -" + mapping.toString());
     }
 
-    public Map<String, Double> getZerodhaBrokerage(String type) {
+    public Map<String, Double> getZerodhaBrokerage(String type, int numTry) {
         String tabType = getTabType(type);
         log.info(tabType);
         String divId = null;
@@ -97,7 +98,11 @@ public class BrokerageService {
             }
         } catch (Exception e) {
             initWebdriver();
-            throw new TickerException("Error while getting values. Please try again");
+            if (numTry < numTries) {
+                return getZerodhaBrokerage(type, numTry + 1);
+            } else {
+                throw new TickerException("Error while getting values. Please try again");
+            }
         }
 
         return data;

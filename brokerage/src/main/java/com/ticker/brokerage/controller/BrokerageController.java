@@ -18,6 +18,6 @@ public class BrokerageController {
 
     @GetMapping("/zerodha/{type}")
     public Map<String, Double> getZerodhaBrokerage(@PathVariable String type) {
-        return service.getZerodhaBrokerage(type);
+        return service.getZerodhaBrokerage(type, 0);
     }
 }
