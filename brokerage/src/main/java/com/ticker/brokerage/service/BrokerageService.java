@@ -3,6 +3,7 @@ package com.ticker.brokerage.service;
 import com.ticker.brokerage.common.exception.TickerException;
 import lombok.extern.slf4j.Slf4j;
 import org.openqa.selenium.By;
+import org.openqa.selenium.Keys;
 import org.openqa.selenium.WebDriver;
 import org.openqa.selenium.WebElement;
 import org.openqa.selenium.chrome.ChromeDriver;
@@ -63,7 +64,9 @@ public class BrokerageService {
         throw new TickerException("Cannot find type for '" + type + "'. Valid options are -" + mapping.toString());
     }
 
-    public Map<String, Double> getZerodhaBrokerage(String type, String exchange, int numTry) {
+    public Map<String, Double> getZerodhaBrokerage(String type, String exchange,
+                                                   float buy, float sell, float quantity,
+                                                   int numTry) {
         String tabType = getTabType(type);
         log.info(tabType);
         String divId = null;
@@ -85,6 +88,7 @@ public class BrokerageService {
         try {
             synchronized (webDriver) {
                 WebElement tabDiv = webDriver.findElement(By.id(divId));
+                setTabValues(tabDiv, buy, sell, quantity);
                 boolean isExchangeSelected = false;
                 List<WebElement> weExchanges = tabDiv.findElements(By.className("equity-radio"));
                 List<String> exchanges = new ArrayList<>();
@@ -114,7 +118,7 @@ public class BrokerageService {
         } catch (Exception e) {
             initWebdriver();
             if (numTry < numTries) {
-                return getZerodhaBrokerage(type, exchange, numTry + 1);
+                return getZerodhaBrokerage(type, exchange, buy, sell, quantity, numTry + 1);
             } else {
                 throw new TickerException("Error while getting values. Please try again");
             }
@@ -123,6 +127,36 @@ public class BrokerageService {
         data.put("ptb", data.get("pointsToBreakeven"));
         data.put("totalBrokerage", data.get("totalTaxAndCharges"));
         return data;
+    }
+
+    private void setTabValues(WebElement tabDiv, float buy, float sell, float quantity) {
+        List<WebElement> inputs = tabDiv.findElement(By.className("calc-inputs"))
+                .findElements(By.className("brokerage-calculator-input"));
+        for (WebElement input : inputs) {
+            WebElement weLabel = input.findElement(By.tagName("label"));
+            String label = weLabel.getText();
+            float val = 0;
+            switch (label) {
+                case "BUY":
+                    val = buy;
+                    break;
+                case "SELL":
+                    val = sell;
+                    break;
+                case "QUANTITY":
+                    val = quantity;
+                    break;
+                default:
+                    continue;
+            }
+            WebElement tb = input.findElement(By.tagName("input"));
+            String oldVal = tb.getAttribute("value");
+            for (int i = 0; i < oldVal.length(); i++) {
+                tb.sendKeys(Keys.RIGHT);
+                tb.sendKeys(Keys.BACK_SPACE);
+            }
+            tb.sendKeys(String.valueOf(val));
+        }
     }
 
     private String convertToCamelCase(String text) {

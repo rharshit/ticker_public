@@ -2,10 +2,7 @@ package com.ticker.brokerage.controller;
 
 import com.ticker.brokerage.service.BrokerageService;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.PathVariable;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 
 import java.util.Map;
 
@@ -17,7 +14,11 @@ public class BrokerageController {
     private BrokerageService service;
 
     @GetMapping("/zerodha/{type}/{exchange}")
-    public Map<String, Double> getZerodhaBrokerage(@PathVariable String type, @PathVariable String exchange) {
-        return service.getZerodhaBrokerage(type, exchange, 0);
+    public Map<String, Double> getZerodhaBrokerage(@PathVariable String type,
+                                                   @PathVariable String exchange,
+                                                   @RequestParam float buy,
+                                                   @RequestParam float sell,
+                                                   @RequestParam float quantity) {
+        return service.getZerodhaBrokerage(type, exchange, buy, sell, quantity, 0);
     }
 }
