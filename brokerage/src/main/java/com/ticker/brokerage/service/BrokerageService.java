@@ -31,7 +31,7 @@ public class BrokerageService {
         initWebdriver();
 
         tabs = new HashMap<String, List<String>>() {{
-            put(INTRADAY, Arrays.asList(INTRADAY, "id", "ide", "intraday"));
+            put(INTRADAY, Arrays.asList(INTRADAY, "i", "id", "ide", "intraday"));
             put(EQUITY, Arrays.asList(EQUITY, "e", "de", "equities"));
             put(FUTURES, Arrays.asList(FUTURES, "f", "fof", "fnof", "future", "futures"));
             put(OPTIONS, Arrays.asList(OPTIONS, "o", "foo", "fnoo", "option", "options"));
