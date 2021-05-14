@@ -2,7 +2,9 @@ package com.ticker.brokerage.service;
 
 import com.ticker.brokerage.common.exception.TickerException;
 import lombok.extern.slf4j.Slf4j;
+import org.openqa.selenium.By;
 import org.openqa.selenium.WebDriver;
+import org.openqa.selenium.WebElement;
 import org.openqa.selenium.chrome.ChromeDriver;
 import org.openqa.selenium.chrome.ChromeOptions;
 import org.springframework.stereotype.Service;
@@ -19,14 +21,25 @@ import static com.ticker.brokerage.common.constants.WebConstants.ZERODHA_BROKERA
 @Slf4j
 public class BrokerageService {
 
-    private static final WebDriver webDriver;
-    public static final String EQUITY = "equity";
-    public static final String INTRADAY = "intraday";
-    public static final String FUTURES = "futures";
-    public static final String OPTIONS = "options";
+    private static WebDriver webDriver;
+    private static final String EQUITY = "equity";
+    private static final String INTRADAY = "intraday";
+    private static final String FUTURES = "futures";
+    private static final String OPTIONS = "options";
     private static final Map<String, List<String>> tabs;
 
     static {
+        initWebdriver();
+
+        tabs = new HashMap<String, List<String>>() {{
+            put(INTRADAY, Arrays.asList(INTRADAY, "id", "ide", "intraday"));
+            put(EQUITY, Arrays.asList(EQUITY, "e", "de", "equities"));
+            put(FUTURES, Arrays.asList(FUTURES, "f", "fof", "fnof", "future", "futures"));
+            put(OPTIONS, Arrays.asList(OPTIONS, "o", "foo", "fnoo", "option", "options"));
+        }};
+    }
+
+    private static void initWebdriver() {
         log.info("Initializing webdriver");
         ChromeOptions options = new ChromeOptions();
         //options.setHeadless(true);
@@ -35,13 +48,6 @@ public class BrokerageService {
         webDriver = new ChromeDriver(options);
         webDriver.get(ZERODHA_BROKERAGE_URL);
         log.info("Webdriver initialized");
-
-        tabs = new HashMap<String, List<String>>() {{
-            put(INTRADAY, Arrays.asList(INTRADAY, "id", "ide", "intraday"));
-            put(EQUITY, Arrays.asList(EQUITY, "e", "de", "equities"));
-            put(FUTURES, Arrays.asList(FUTURES, "f", "fof", "fnof", "future", "futures"));
-            put(OPTIONS, Arrays.asList(OPTIONS, "o", "foo", "fnoo", "option", "options"));
-        }};
     }
 
     private static String getTabType(String type) {
@@ -59,10 +65,41 @@ public class BrokerageService {
         throw new TickerException("Cannot find type for '" + type + "'. Valid options are -" + mapping.toString());
     }
 
-    public void getZerodhaBrokerage(String type) {
-        synchronized (webDriver) {
-            String tabType = getTabType(type);
-            log.info(tabType);
+    public Map<String, Double> getZerodhaBrokerage(String type) {
+        String tabType = getTabType(type);
+        log.info(tabType);
+        String divId = null;
+        switch (tabType) {
+            case INTRADAY:
+                divId = "intraday-equity-calc";
+                break;
+            case EQUITY:
+                divId = "delivery-equity-calc";
+                break;
+            case FUTURES:
+                divId = "futures-equity-calc";
+                break;
+            case OPTIONS:
+                divId = "options-equity-calc";
+                break;
         }
+        Map<String, Double> data = new HashMap<>();
+        try {
+            synchronized (webDriver) {
+                WebElement tabDiv = webDriver.findElement(By.id(divId));
+                List<WebElement> divs = tabDiv.findElements(By.className("valuation-block"));
+                divs.add(tabDiv.findElement(By.className("net-profit")));
+                for (WebElement div : divs) {
+                    WebElement label = div.findElement(By.tagName("label"));
+                    WebElement span = div.findElement(By.tagName("span"));
+                    data.put(label.getText(), Double.valueOf(span.getText()));
+                }
+            }
+        } catch (Exception e) {
+            initWebdriver();
+            throw new TickerException("Error while getting values. Please try again");
+        }
+
+        return data;
     }
 }
