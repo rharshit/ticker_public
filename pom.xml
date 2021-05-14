@@ -10,6 +10,7 @@
 
     <modules>
         <module>fetcher</module>
+        <module>brokerage</module>
     </modules>
 
 </project>
