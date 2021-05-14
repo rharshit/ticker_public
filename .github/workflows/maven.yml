@@ -21,6 +21,8 @@ jobs:
       with:
         java-version: '8'
         distribution: 'adopt'
+    - name: Build Ticker
+      run: mvn clean install -DskipTests
     - name: Build Fetcher with Maven
       run: mvn -B package --file fetcher/pom.xml -DskipTests
 
