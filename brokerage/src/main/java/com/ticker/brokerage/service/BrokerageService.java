@@ -93,7 +93,7 @@ public class BrokerageService {
                 for (WebElement div : divs) {
                     WebElement label = div.findElement(By.tagName("label"));
                     WebElement span = div.findElement(By.tagName("span"));
-                    data.put(label.getText(), Double.valueOf(span.getText()));
+                    data.put(convertToCamelCase(label.getText()), Double.valueOf(span.getText()));
                 }
             }
         } catch (Exception e) {
@@ -104,7 +104,19 @@ public class BrokerageService {
                 throw new TickerException("Error while getting values. Please try again");
             }
         }
-
+        data.put("pnl", data.get("netPnl"));
+        data.put("ptb", data.get("pointsToBreakeven"));
+        data.put("totalBrokerage", data.get("totalTaxAndCharges"));
         return data;
+    }
+
+    private String convertToCamelCase(String text) {
+        String[] words = text.split("[ -]+");
+        StringBuilder camelCase = new StringBuilder();
+        for (String word : words) {
+            String newWord = word.replace("&", "n");
+            camelCase.append(newWord.substring(0, 1).toUpperCase()).append(newWord.substring(1).toLowerCase());
+        }
+        return camelCase.substring(0, 1).toLowerCase() + camelCase.substring(1);
     }
 }
