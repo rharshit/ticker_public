@@ -6,6 +6,8 @@ import com.ticker.fetcher.service.TickerService;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 import org.openqa.selenium.WebDriver;
+import org.openqa.selenium.chrome.ChromeDriver;
+import org.openqa.selenium.chrome.ChromeOptions;
 import org.openqa.selenium.firefox.FirefoxDriver;
 import org.openqa.selenium.firefox.FirefoxOptions;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -38,7 +40,7 @@ public class FetcherThread extends Thread {
     private int esID;
     private WebDriver webDriver;
 
-    public static final int RETRY_LIMIT = 5;
+    public static final int RETRY_LIMIT = 10;
 
     public void setProperties(String threadName, String exchange, String symbol, int esID) {
         this.enabled = true;
@@ -54,11 +56,11 @@ public class FetcherThread extends Thread {
         if (this.webDriver != null) {
             this.webDriver.close();
         }
-        FirefoxOptions options = new FirefoxOptions();
+        ChromeOptions options = new ChromeOptions();
         //options.setHeadless(true);
         options.addArguments("--window-size=1920,1080");
         options.addArguments("incognito");
-        this.webDriver = new FirefoxDriver(options);
+        this.webDriver = new ChromeDriver(options);
     }
 
     @Override
@@ -73,22 +75,22 @@ public class FetcherThread extends Thread {
         log.info("Terminated thread : " + threadName);
     }
 
-    protected void initialize(int i) {
+    protected void initialize(int iteration) {
         log.info(exchange + ":" + symbol + " - Initializing");
         StopWatch stopWatch = new StopWatch();
         stopWatch.start();
         try {
             String url = TRADING_VIEW_BASE + TRADING_VIEW_CHART + exchange + ":" + symbol;
             getWebDriver().get(url);
-            fetcherService.setChartSettings(getWebDriver());
+            fetcherService.setChartSettings(getWebDriver(), iteration);
             stopWatch.stop();
             log.info(exchange + ":" + symbol + " - Initialized in " + stopWatch.getTotalTimeSeconds() + "s");
         } catch (Exception e) {
             stopWatch.stop();
             log.error("Error while initializing", e);
             log.error("Time spent: " + stopWatch.getTotalTimeSeconds() + "s");
-            if (i < RETRY_LIMIT && isEnabled()) {
-                initialize(i + 1);
+            if (iteration < RETRY_LIMIT && isEnabled()) {
+                initialize(iteration + 1);
             } else {
                 tickerService.deleteTicker(this.threadName);
             }
@@ -101,7 +103,9 @@ public class FetcherThread extends Thread {
 
     @Scheduled(fixedRate = 5000)
     protected void scheduledJob() {
-        fetcherService.scheduledJob(this);
+        if(this.enabled){
+            fetcherService.scheduledJob(this);
+        }
     }
 
     public void terminateThread() {
