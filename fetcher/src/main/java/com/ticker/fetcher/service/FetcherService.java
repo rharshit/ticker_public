@@ -50,7 +50,6 @@ public class FetcherService {
      * @param threshold
      */
     private void waitTillLoad(WebDriver webDriver, long time, int threshold) {
-        log.info("Waiting");
         while (webDriver.findElements(By.cssSelector("div[role='progressbar']")).size() > threshold);
         waitFor(time);
     }
