@@ -6,6 +6,8 @@ import com.ticker.fetcher.service.TickerService;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 import org.openqa.selenium.WebDriver;
+import org.openqa.selenium.chrome.ChromeDriver;
+import org.openqa.selenium.chrome.ChromeOptions;
 import org.openqa.selenium.firefox.FirefoxDriver;
 import org.openqa.selenium.firefox.FirefoxOptions;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -54,11 +56,11 @@ public class FetcherThread extends Thread {
         if (this.webDriver != null) {
             this.webDriver.close();
         }
-        FirefoxOptions options = new FirefoxOptions();
+        ChromeOptions options = new ChromeOptions();
         //options.setHeadless(true);
         options.addArguments("--window-size=1920,1080");
         options.addArguments("incognito");
-        this.webDriver = new FirefoxDriver(options);
+        this.webDriver = new ChromeDriver(options);
     }
 
     @Override
@@ -101,7 +103,9 @@ public class FetcherThread extends Thread {
 
     @Scheduled(fixedRate = 5000)
     protected void scheduledJob() {
-        fetcherService.scheduledJob(this);
+        if(this.enabled){
+            fetcherService.scheduledJob(this);
+        }
     }
 
     public void terminateThread() {
