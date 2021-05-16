@@ -23,44 +23,61 @@ public class FetcherService {
      * Set setting for the charts that are loaded
      *
      * @param webDriver
+     * @param iteration
      */
-    public void setChartSettings(WebDriver webDriver) {
+    public void setChartSettings(WebDriver webDriver, int iteration) {
+        int iterationMultiplier = 200;
+        //spinner loading-indicator
+        waitTillLoad(webDriver, WAIT_SHORT + iteration*iterationMultiplier, 2);
+
         // Chart style
-        waitFor(WAIT_LONG);
+        waitTillLoad(webDriver, WAIT_SHORT + iteration*iterationMultiplier, 2);
         configureMenuByValue(webDriver, "menu-inner", "header-toolbar-chart-styles", "ha");
 
         // Chart interval
-        waitFor(WAIT_LONG);
+        waitTillLoad(webDriver, WAIT_SHORT + iteration*iterationMultiplier, 2);
         configureMenuByValue(webDriver, "menu-inner", "header-toolbar-intervals", "1");
 
         // Indicators
-        waitFor(WAIT_LONG);
+        waitTillLoad(webDriver, WAIT_SHORT + iteration*iterationMultiplier, 2);
         setIndicators(webDriver, "bb:STD;Bollinger_Bands", "rsi:STD;RSI");
+    }
+
+    /**
+     * This method uses a lot extra processing and extra time
+     * @param webDriver
+     * @param time
+     * @param threshold
+     */
+    private void waitTillLoad(WebDriver webDriver, long time, int threshold) {
+        log.info("Waiting");
+        while (webDriver.findElements(By.cssSelector("div[role='progressbar']")).size() > threshold);
+        waitFor(time);
     }
 
     private void setIndicators(WebDriver webDriver, String... indicators) {
         WebElement chartStyle = webDriver.findElement(By.id("header-toolbar-indicators"));
         chartStyle.click();
-        waitFor(WAIT_MEDIUM);
+        waitTillLoad(webDriver, WAIT_SHORT, 2);
         WebElement menuBox = webDriver
                 .findElement(By.id("overlap-manager-root"))
                 .findElement(By.cssSelector("div[data-name='indicators-dialog']"));
 
-        while (!CollectionUtils.isEmpty(menuBox.findElements(By.cssSelector("div[role='progressbar']")))) ;
+        waitTillLoad(webDriver, WAIT_SHORT, 2);
 
         for (String indicator : indicators) {
             String searchText = indicator.split(":")[0];
             WebElement searchBox = menuBox.findElement(By.cssSelector("input[data-role='search']"));
             searchBox.click();
             searchBox.sendKeys(searchText);
-            waitFor(WAIT_SHORT);
+            waitTillLoad(webDriver, WAIT_SHORT, 2);
 
             String indicatorId = indicator.split(":")[1];
             WebElement valueElement = menuBox.findElement(By.cssSelector("div[data-id='" + indicatorId + "']"));
             valueElement.click();
 
             searchBox.sendKeys(Keys.BACK_SPACE);
-            waitFor(WAIT_SHORT);
+            waitTillLoad(webDriver, WAIT_SHORT, 2);
         }
         WebElement closeBtn = webDriver
                 .findElement(By.id("overlap-manager-root"))
