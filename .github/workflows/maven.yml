@@ -25,4 +25,6 @@ jobs:
       run: mvn clean install -DskipTests
     - name: Build Fetcher with Maven
       run: mvn -B package --file fetcher/pom.xml -DskipTests
+    - name: Build Brokerage with Maven
+      run: mvn -B package --file brokerage/pom.xml -DskipTests
 
