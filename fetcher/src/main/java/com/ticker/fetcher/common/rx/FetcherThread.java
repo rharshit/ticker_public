@@ -40,7 +40,7 @@ public class FetcherThread extends Thread {
     private int esID;
     private WebDriver webDriver;
 
-    public static final int RETRY_LIMIT = 5;
+    public static final int RETRY_LIMIT = 10;
 
     public void setProperties(String threadName, String exchange, String symbol, int esID) {
         this.enabled = true;
@@ -75,22 +75,22 @@ public class FetcherThread extends Thread {
         log.info("Terminated thread : " + threadName);
     }
 
-    protected void initialize(int i) {
+    protected void initialize(int iteration) {
         log.info(exchange + ":" + symbol + " - Initializing");
         StopWatch stopWatch = new StopWatch();
         stopWatch.start();
         try {
             String url = TRADING_VIEW_BASE + TRADING_VIEW_CHART + exchange + ":" + symbol;
             getWebDriver().get(url);
-            fetcherService.setChartSettings(getWebDriver());
+            fetcherService.setChartSettings(getWebDriver(), iteration);
             stopWatch.stop();
             log.info(exchange + ":" + symbol + " - Initialized in " + stopWatch.getTotalTimeSeconds() + "s");
         } catch (Exception e) {
             stopWatch.stop();
             log.error("Error while initializing", e);
             log.error("Time spent: " + stopWatch.getTotalTimeSeconds() + "s");
-            if (i < RETRY_LIMIT && isEnabled()) {
-                initialize(i + 1);
+            if (iteration < RETRY_LIMIT && isEnabled()) {
+                initialize(iteration + 1);
             } else {
                 tickerService.deleteTicker(this.threadName);
             }
