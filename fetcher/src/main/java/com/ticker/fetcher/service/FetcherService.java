@@ -130,6 +130,8 @@ public class FetcherService {
         try {
             WebElement table = fetcherThread.getWebDriver()
                     .findElement(By.cssSelector("table[class='chart-markup-table']"));
+            table.click();
+            table.findElement(By.className("price-axis")).click();
             List<WebElement> rows = table.findElements(By.tagName("tr"));
             float o = 0;
             float h = 0;
