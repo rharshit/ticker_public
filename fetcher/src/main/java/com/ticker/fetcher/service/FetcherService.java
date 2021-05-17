@@ -25,6 +25,16 @@ public class FetcherService {
     @Autowired
     private TickerService appService;
 
+    private static final Pattern OLHC = Pattern.compile("^O[0-9.]*H[0-9.]*L[0-9.]*C[0-9.]*.*$");
+    private static final Pattern PATTERNOS = Pattern.compile("^O");
+    private static final Pattern PATTERNOE = Pattern.compile("H[0-9.]*L[0-9.]*C[0-9.]*.*$");
+    private static final Pattern PATTERNHS = Pattern.compile("^O[0-9.]*H");
+    private static final Pattern PATTERNHE = Pattern.compile("L[0-9.]*C[0-9.]*.*$");
+    private static final Pattern PATTERNLS = Pattern.compile("^O[0-9.]*H[0-9.]*L");
+    private static final Pattern PATTERNLE = Pattern.compile("C[0-9.]*.*$");
+    private static final Pattern PATTERNCS = Pattern.compile("^O[0-9.]*H[0-9.]*L[0-9.]*C");
+    private static final Pattern PATTERNCE = Pattern.compile("([−+][0-9.]*|00.00) \\([−+]{0,1}[0-9.]*%\\)$");
+
     /**
      * Set setting for the charts that are loaded
      *
@@ -121,15 +131,6 @@ public class FetcherService {
             WebElement table = fetcherThread.getWebDriver()
                     .findElement(By.cssSelector("table[class='chart-markup-table']"));
             List<WebElement> rows = table.findElements(By.tagName("tr"));
-            Pattern ohlc = Pattern.compile("^O[0-9.]*H[0-9.]*L[0-9.]*C[0-9.]*.*$");
-            Pattern patternos = Pattern.compile("^O");
-            Pattern patternoe = Pattern.compile("H[0-9.]*L[0-9.]*C[0-9.]*.*$");
-            Pattern patternhs = Pattern.compile("^O[0-9.]*H");
-            Pattern patternhe = Pattern.compile("L[0-9.]*C[0-9.]*.*$");
-            Pattern patternls = Pattern.compile("^O[0-9.]*H[0-9.]*L");
-            Pattern patternle = Pattern.compile("C[0-9.]*.*$");
-            Pattern patterncs = Pattern.compile("^O[0-9.]*H[0-9.]*L[0-9.]*C");
-            Pattern patternce = Pattern.compile("([−+][0-9.]*|00.00) \\([−+]{0,1}[0-9.]*%\\)$");
             float o = 0;
             float h = 0;
             float l = 0;
@@ -143,22 +144,19 @@ public class FetcherService {
                 if (!StringUtils.isEmpty(text)) {
                     String[] vals = text.split("\n");
                     for (int i = 0; i < vals.length; i++) {
-                        if (ohlc.matcher(vals[i]).matches()) {
-                            System.out.println("OLHC " + i);
+                        if (OLHC.matcher(vals[i]).matches()) {
                             String val = vals[i];
 
-                            o = getOHCLVal(val, patternos, patternoe);
-                            h = getOHCLVal(val, patternhs, patternhe);
-                            l = getOHCLVal(val, patternls, patternle);
-                            c = getOHCLVal(val, patterncs, patternce);
+                            o = getOHCLVal(val, PATTERNOS, PATTERNOE);
+                            h = getOHCLVal(val, PATTERNHS, PATTERNHE);
+                            l = getOHCLVal(val, PATTERNLS, PATTERNLE);
+                            c = getOHCLVal(val, PATTERNCS, PATTERNCE);
 
                         } else if ("BB".equalsIgnoreCase(vals[i])) {
-                            System.out.println("BB " + i);
                             bbM = Float.parseFloat(vals[i + 2]);
                             bbU = Float.parseFloat(vals[i + 3]);
                             bbL = Float.parseFloat(vals[i + 4]);
                         } else if ("RSI".equalsIgnoreCase(vals[i])) {
-                            System.out.println("RSI " + i);
                             rsi = Float.parseFloat(vals[i + 2]);
                         }
                     }
