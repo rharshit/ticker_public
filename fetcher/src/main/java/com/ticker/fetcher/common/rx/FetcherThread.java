@@ -5,14 +5,20 @@ import com.ticker.fetcher.service.FetcherService;
 import com.ticker.fetcher.service.TickerService;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
+import org.openqa.selenium.By;
 import org.openqa.selenium.WebDriver;
+import org.openqa.selenium.WebElement;
 import org.openqa.selenium.chrome.ChromeDriver;
 import org.openqa.selenium.chrome.ChromeOptions;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Scope;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Component;
+import org.springframework.util.CollectionUtils;
 import org.springframework.util.StopWatch;
+import org.springframework.util.StringUtils;
+
+import java.util.List;
 
 import static com.ticker.fetcher.common.constants.WebConstants.TRADING_VIEW_BASE;
 import static com.ticker.fetcher.common.constants.WebConstants.TRADING_VIEW_CHART;
@@ -37,6 +43,7 @@ public class FetcherThread extends Thread {
     private String symbol;
     private int esID;
     private WebDriver webDriver;
+    private final Object postInitLock = new Object();
 
     public static final int RETRY_LIMIT = 10;
 
@@ -105,13 +112,53 @@ public class FetcherThread extends Thread {
         }
     }
 
+    /**
+     * Remove ads and pop-ups
+     */
+    @Scheduled(fixedRate = 1000)
+    protected void postInitializeSchedule() {
+        synchronized (postInitLock) {
+            try {
+                while (!CollectionUtils.isEmpty(
+                        getWebDriver().findElements(By.cssSelector("div[data-role='toast-container']"))
+                )) {
+                    getWebDriver()
+                            .findElement(By.cssSelector("div[data-role='toast-container']"))
+                            .findElement(By.tagName("article"))
+                            .findElement(By.tagName("button"))
+                            .click();
+                }
+            } catch (Exception ignored) {
+            }
+            try {
+                while (!CollectionUtils.isEmpty(
+                        getWebDriver().findElements(By.cssSelector("div[data-dialog-name='gopro']"))
+                )) {
+                    List<WebElement> buttons = getWebDriver()
+                            .findElement(By.cssSelector("div[data-dialog-name='gopro']"))
+                            .findElements(By.tagName("button"));
+                    for (WebElement button : buttons) {
+                        String classes = button.getAttribute("class");
+                        if (!StringUtils.isEmpty(classes)) {
+                            if (classes.contains("close")) {
+                                button.click();
+                                break;
+                            }
+                        }
+                    }
+                }
+            } catch (Exception ignored) {
+            }
+        }
+    }
+
     protected void doTask() {
         fetcherService.doTask(this);
     }
 
     @Scheduled(fixedRate = 5000)
     protected void scheduledJob() {
-        if(this.enabled){
+        if (this.enabled) {
             fetcherService.scheduledJob(this);
         }
     }
