@@ -10,6 +10,11 @@ import org.openqa.selenium.WebElement;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.util.CollectionUtils;
+import org.springframework.util.StringUtils;
+
+import java.util.List;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 import static com.ticker.fetcher.common.util.Util.*;
 
@@ -112,8 +117,77 @@ public class FetcherService {
     }
 
     public void doTask(FetcherThread fetcherThread) {
-        log.info("Running thread: " + fetcherThread.getThreadName());
+        try {
+            WebElement table = fetcherThread.getWebDriver()
+                    .findElement(By.cssSelector("table[class='chart-markup-table']"));
+            List<WebElement> rows = table.findElements(By.tagName("tr"));
+            Pattern ohlc = Pattern.compile("^O[0-9.]*H[0-9.]*L[0-9.]*C[0-9.]*.*$");
+            Pattern patternos = Pattern.compile("^O");
+            Pattern patternoe = Pattern.compile("H[0-9.]*L[0-9.]*C[0-9.]*.*$");
+            Pattern patternhs = Pattern.compile("^O[0-9.]*H");
+            Pattern patternhe = Pattern.compile("L[0-9.]*C[0-9.]*.*$");
+            Pattern patternls = Pattern.compile("^O[0-9.]*H[0-9.]*L");
+            Pattern patternle = Pattern.compile("C[0-9.]*.*$");
+            Pattern patterncs = Pattern.compile("^O[0-9.]*H[0-9.]*L[0-9.]*C");
+            Pattern patternce = Pattern.compile("([−+][0-9.]*|00.00) \\([−+]{0,1}[0-9.]*%\\)$");
+            float o = 0;
+            float h = 0;
+            float l = 0;
+            float c = 0;
+            float bbM = 0;
+            float bbU = 0;
+            float bbL = 0;
+            float rsi = 0;
+            for (WebElement row : rows) {
+                String text = row.getText();
+                if (!StringUtils.isEmpty(text)) {
+                    String[] vals = text.split("\n");
+                    for (int i = 0; i < vals.length; i++) {
+                        if (ohlc.matcher(vals[i]).matches()) {
+                            System.out.println("OLHC " + i);
+                            String val = vals[i];
+
+                            o = getOHCLVal(val, patternos, patternoe);
+                            h = getOHCLVal(val, patternhs, patternhe);
+                            l = getOHCLVal(val, patternls, patternle);
+                            c = getOHCLVal(val, patterncs, patternce);
+
+                        } else if ("BB".equalsIgnoreCase(vals[i])) {
+                            System.out.println("BB " + i);
+                            bbM = Float.parseFloat(vals[i + 2]);
+                            bbU = Float.parseFloat(vals[i + 3]);
+                            bbL = Float.parseFloat(vals[i + 4]);
+                        } else if ("RSI".equalsIgnoreCase(vals[i])) {
+                            System.out.println("RSI " + i);
+                            rsi = Float.parseFloat(vals[i + 2]);
+                        }
+                    }
+                }
+            }
+            log.info(fetcherThread.getThreadName() + " :\n" +
+                    o + "," + h + "," + l + "," + c + "\n"
+                    + bbL + "," + bbM + "," + bbU + "\n"
+                    + rsi);
+        } catch (Exception e) {
+            log.error("Exception in doTask(): " + fetcherThread.getThreadName());
+            log.error(e.getMessage());
+        }
         waitFor(WAIT_MEDIUM);
+    }
+
+    private float getOHCLVal(String val, Pattern patternStart, Pattern patternEnd) {
+        Matcher matcherStart = patternStart.matcher(val);
+        Matcher matcherEnd = patternEnd.matcher(val);
+        if (!matcherStart.find()) {
+            log.error("No match for start pattern: " + patternStart.pattern());
+            log.error(val);
+        }
+        if (!matcherEnd.find()) {
+            log.error("No match for end pattern: " + patternEnd.pattern());
+            log.error(val);
+        }
+        String valueString = val.substring(matcherStart.end(), matcherEnd.start());
+        return Float.parseFloat(valueString);
     }
 
     public void scheduledJob(FetcherThread fetcherThread) {
