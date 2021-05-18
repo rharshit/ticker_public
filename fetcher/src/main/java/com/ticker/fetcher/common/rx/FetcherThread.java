@@ -10,6 +10,7 @@ import org.openqa.selenium.WebDriver;
 import org.openqa.selenium.WebElement;
 import org.openqa.selenium.chrome.ChromeDriver;
 import org.openqa.selenium.chrome.ChromeOptions;
+import org.openqa.selenium.remote.CapabilityType;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Scope;
 import org.springframework.scheduling.annotation.Scheduled;
@@ -22,6 +23,7 @@ import java.util.List;
 
 import static com.ticker.fetcher.common.constants.WebConstants.TRADING_VIEW_BASE;
 import static com.ticker.fetcher.common.constants.WebConstants.TRADING_VIEW_CHART;
+import static org.openqa.selenium.UnexpectedAlertBehaviour.ACCEPT;
 
 @Getter
 @Slf4j
@@ -60,16 +62,18 @@ public class FetcherThread extends Thread {
     protected void initializeWebDriver() {
         if (this.webDriver != null) {
             try {
-                this.webDriver.close();
+                this.webDriver.quit();
             } catch (Exception e) {
                 log.error("Error while closing webdriver");
             }
 
         }
         ChromeOptions options = new ChromeOptions();
-        //options.setHeadless(true);
+//        options.setHeadless(true);
         options.addArguments("--window-size=1920,1080");
         options.addArguments("incognito");
+        options.setCapability(CapabilityType.UNEXPECTED_ALERT_BEHAVIOUR, ACCEPT);
+        options.setUnhandledPromptBehaviour(ACCEPT);
         this.webDriver = new ChromeDriver(options);
     }
 
@@ -117,39 +121,57 @@ public class FetcherThread extends Thread {
      */
     @Scheduled(fixedRate = 1000)
     protected void postInitializeSchedule() {
-        synchronized (postInitLock) {
-            try {
-                while (!CollectionUtils.isEmpty(
-                        getWebDriver().findElements(By.cssSelector("div[data-role='toast-container']"))
-                )) {
-                    getWebDriver()
-                            .findElement(By.cssSelector("div[data-role='toast-container']"))
-                            .findElement(By.tagName("article"))
-                            .findElement(By.tagName("button"))
-                            .click();
+        if (isEnabled()) {
+            synchronized (postInitLock) {
+                try {
+                    while (!CollectionUtils.isEmpty(
+                            getWebDriver().findElements(By.cssSelector("div[data-role='toast-container']"))
+                    )) {
+                        getWebDriver()
+                                .findElement(By.cssSelector("div[data-role='toast-container']"))
+                                .findElement(By.tagName("article"))
+                                .findElement(By.tagName("button"))
+                                .click();
+                    }
+                } catch (Exception ignored) {
                 }
-            } catch (Exception ignored) {
-            }
-            try {
-                while (!CollectionUtils.isEmpty(
-                        getWebDriver().findElements(By.cssSelector("div[data-dialog-name='gopro']"))
-                )) {
-                    List<WebElement> buttons = getWebDriver()
-                            .findElement(By.cssSelector("div[data-dialog-name='gopro']"))
-                            .findElements(By.tagName("button"));
-                    for (WebElement button : buttons) {
-                        String classes = button.getAttribute("class");
-                        if (!StringUtils.isEmpty(classes)) {
-                            if (classes.contains("close")) {
-                                button.click();
+                try {
+                    while (!CollectionUtils.isEmpty(
+                            getWebDriver().findElements(By.cssSelector("div[data-dialog-name='gopro']"))
+                    )) {
+                        List<WebElement> buttons = getWebDriver()
+                                .findElement(By.cssSelector("div[data-dialog-name='gopro']"))
+                                .findElements(By.tagName("button"));
+                        for (WebElement button : buttons) {
+                            String classes = button.getAttribute("class");
+                            if (!StringUtils.isEmpty(classes)) {
+                                if (classes.contains("close")) {
+                                    button.click();
+                                    break;
+                                }
+                            }
+                        }
+                    }
+                } catch (Exception ignored) {
+                }
+                try {
+                    //style="z-index: 150;"
+                    WebElement overlapManagerRoot = getWebDriver().findElement(By.id("overlap-manager-root"));
+                    List<WebElement> overlaps = overlapManagerRoot.findElements(By.tagName("div"));
+                    if (!CollectionUtils.isEmpty(overlaps)) {
+                        for (WebElement overlap : overlaps) {
+                            String text = overlap.getText();
+                            if (!StringUtils.isEmpty(text) && text.contains("Take your trading to the next level")) {
+                                initialize(0);
                                 break;
                             }
                         }
                     }
+                } catch (Exception ignored) {
                 }
-            } catch (Exception ignored) {
             }
         }
+
     }
 
     protected void doTask() {

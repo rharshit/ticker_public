@@ -119,6 +119,7 @@ public class FetcherService {
         while (CollectionUtils.isEmpty(webDriver.findElements(By.id(header)))) ;
         WebElement chartStyle = webDriver.findElement(By.id(header));
         chartStyle.click();
+        waitFor(WAIT_MEDIUM);
         WebElement menuBox = webDriver
                 .findElement(By.id("overlap-manager-root"))
                 .findElement(By.cssSelector("div[data-name='" + dataName + "']"));
