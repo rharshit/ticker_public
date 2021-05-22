@@ -40,7 +40,8 @@ public class FetcherThread extends Thread {
     private TickerService tickerService;
 
     private String threadName;
-    private boolean enabled;
+    private boolean enabled = false;
+    private boolean initialized = false;
     private String exchange;
     private String symbol;
     private int esID;
@@ -56,7 +57,12 @@ public class FetcherThread extends Thread {
         this.symbol = symbol;
         this.esID = esID;
 
+        initializeBean();
+    }
+
+    private void initializeBean() {
         initializeWebDriver();
+        this.initialized = true;
     }
 
     protected void initializeWebDriver() {
@@ -80,7 +86,7 @@ public class FetcherThread extends Thread {
     @Override
     public void run() {
         initialize(0);
-        while (enabled) {
+        while (isEnabled() && isInitialized()) {
             doTask();
         }
         if (this.webDriver != null) {
@@ -108,7 +114,7 @@ public class FetcherThread extends Thread {
             stopWatch.stop();
             log.error("Error while initializing", e);
             log.error("Time spent: " + stopWatch.getTotalTimeSeconds() + "s");
-            if (iteration < RETRY_LIMIT && isEnabled()) {
+            if (iteration < RETRY_LIMIT && isEnabled() && isInitialized()) {
                 initialize(iteration + 1);
             } else {
                 tickerService.deleteTicker(this.threadName);
@@ -121,7 +127,7 @@ public class FetcherThread extends Thread {
      */
     @Scheduled(fixedRate = 1000)
     protected void postInitializeSchedule() {
-        if (isEnabled()) {
+        if (isEnabled() && isInitialized()) {
             synchronized (postInitLock) {
                 try {
                     while (!CollectionUtils.isEmpty(
