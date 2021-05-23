@@ -68,7 +68,7 @@ public class FetcherThread extends Thread {
     protected void initializeWebDriver() {
         if (this.webDriver != null) {
             try {
-                this.webDriver.quit();
+                this.webDriver.close();
             } catch (Exception e) {
                 log.error("Error while closing webdriver");
             }
@@ -86,21 +86,24 @@ public class FetcherThread extends Thread {
     @Override
     public void run() {
         initialize(0);
-        while (isEnabled() && isInitialized()) {
-            doTask();
+        while (isEnabled()) {
+            while (isEnabled() && isInitialized()) {
+                doTask();
+            }
         }
+
         if (this.webDriver != null) {
             try {
                 this.webDriver.close();
             } catch (Exception e) {
                 log.error("Error while closing webdriver");
             }
-
         }
         log.info("Terminated thread : " + threadName);
     }
 
     protected void initialize(int iteration) {
+        this.initialized = false;
         log.info(exchange + ":" + symbol + " - Initializing");
         StopWatch stopWatch = new StopWatch();
         stopWatch.start();
@@ -110,6 +113,7 @@ public class FetcherThread extends Thread {
             fetcherService.setChartSettings(getWebDriver(), iteration);
             stopWatch.stop();
             log.info(exchange + ":" + symbol + " - Initialized in " + stopWatch.getTotalTimeSeconds() + "s");
+            this.initialized = true;
         } catch (Exception e) {
             stopWatch.stop();
             log.error("Error while initializing", e);
@@ -161,6 +165,18 @@ public class FetcherThread extends Thread {
                 } catch (Exception ignored) {
                 }
                 try {
+                    //indicator-properties-dialog
+                    List<WebElement> buttons = getWebDriver()
+                            .findElement(By.cssSelector("div[data-name='indicator-properties-dialog']"))
+                            .findElements(By.cssSelector("span[data-name='close']"));
+                    for (WebElement button : buttons) {
+                        button.click();
+                        break;
+                    }
+                } catch (Exception ignore) {
+
+                }
+                try {
                     //style="z-index: 150;"
                     WebElement overlapManagerRoot = getWebDriver().findElement(By.id("overlap-manager-root"));
                     List<WebElement> overlaps = overlapManagerRoot.findElements(By.tagName("div"));
@@ -177,7 +193,6 @@ public class FetcherThread extends Thread {
                 }
             }
         }
-
     }
 
     protected void doTask() {
