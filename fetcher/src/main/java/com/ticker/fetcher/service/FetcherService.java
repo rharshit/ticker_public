@@ -117,14 +117,33 @@ public class FetcherService {
 
     private void configureMenuByValue(WebDriver webDriver, String dataName, String header, String value) {
         while (CollectionUtils.isEmpty(webDriver.findElements(By.id(header)))) ;
-        WebElement chartStyle = webDriver.findElement(By.id(header));
-        chartStyle.click();
+        webDriver.findElement(By.id(header)).click();
         waitFor(WAIT_MEDIUM);
         WebElement menuBox = webDriver
                 .findElement(By.id("overlap-manager-root"))
                 .findElement(By.cssSelector("div[data-name='" + dataName + "']"));
-        WebElement valueElement = menuBox.findElement(By.cssSelector("div[data-value='" + value + "']"));
-        valueElement.click();
+        WebElement valueElement = null;
+        do {
+            try {
+                while (CollectionUtils.isEmpty(menuBox.findElements(By.cssSelector("div[data-value='" + value + "']"))))
+                    ;
+                valueElement = menuBox.findElement(By.cssSelector("div[data-value='" + value + "']"));
+                valueElement.click();
+                valueElement = null;
+
+                webDriver.findElement(By.id(header)).click();
+                while (CollectionUtils.isEmpty(menuBox.findElements(By.cssSelector("div[data-value='" + value + "']"))))
+                    ;
+                valueElement = menuBox.findElement(By.cssSelector("div[data-value='" + value + "']"));
+                valueElement = null;
+            } catch (Exception ignored) {
+                log.error("valueElement: " + valueElement);
+                if (valueElement != null) {
+                    log.error(valueElement.getCssValue("class"));
+                }
+            }
+        } while (valueElement != null && !valueElement.getCssValue("class").contains("isActive"));
+        webDriver.findElement(By.id(header)).click();
     }
 
     public void doTask(FetcherThread fetcherThread) {
