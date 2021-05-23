@@ -186,10 +186,19 @@ public class FetcherService {
                     }
                 }
             }
-            log.debug(fetcherThread.getThreadName() + " :\n" +
-                    o + "," + h + "," + l + "," + c + "\n"
-                    + bbL + "," + bbM + "," + bbU + "\n"
-                    + rsi);
+            float valCheck = o * h * l * c * bbL * bbM * bbU * rsi;
+            if (valCheck == 0) {
+                log.error(fetcherThread.getThreadName() + " :\n" +
+                        o + "," + h + "," + l + "," + c + "\n"
+                        + bbL + "," + bbM + "," + bbU + "\n"
+                        + rsi);
+            } else {
+                log.debug(fetcherThread.getThreadName() + " :\n" +
+                        o + "," + h + "," + l + "," + c + "\n"
+                        + bbL + "," + bbM + "," + bbU + "\n"
+                        + rsi);
+            }
+
         } catch (Exception e) {
             String errorMessage = e.getMessage();
             if (errorMessage.contains("element click intercepted")) {
