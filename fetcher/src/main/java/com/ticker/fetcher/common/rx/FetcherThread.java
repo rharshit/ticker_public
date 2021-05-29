@@ -40,7 +40,8 @@ public class FetcherThread extends Thread {
     private TickerService tickerService;
 
     private String threadName;
-    private boolean enabled;
+    private boolean enabled = false;
+    private boolean initialized = false;
     private String exchange;
     private String symbol;
     private int esID;
@@ -56,13 +57,27 @@ public class FetcherThread extends Thread {
         this.symbol = symbol;
         this.esID = esID;
 
+        initializeBean();
+    }
+
+    private void initializeBean() {
         initializeWebDriver();
+        initializeTables();
+    }
+
+    private void initializeTables() {
+        String tableName = generateTableName();
+        fetcherService.createTable(tableName);
+    }
+
+    private String generateTableName() {
+        return this.threadName.replace(":", "_");
     }
 
     protected void initializeWebDriver() {
         if (this.webDriver != null) {
             try {
-                this.webDriver.quit();
+                this.webDriver.close();
             } catch (Exception e) {
                 log.error("Error while closing webdriver");
             }
@@ -80,21 +95,24 @@ public class FetcherThread extends Thread {
     @Override
     public void run() {
         initialize(0);
-        while (enabled) {
-            doTask();
+        while (isEnabled()) {
+            while (isEnabled() && isInitialized()) {
+                doTask();
+            }
         }
+
         if (this.webDriver != null) {
             try {
                 this.webDriver.close();
             } catch (Exception e) {
                 log.error("Error while closing webdriver");
             }
-
         }
         log.info("Terminated thread : " + threadName);
     }
 
     protected void initialize(int iteration) {
+        this.initialized = false;
         log.info(exchange + ":" + symbol + " - Initializing");
         StopWatch stopWatch = new StopWatch();
         stopWatch.start();
@@ -104,11 +122,12 @@ public class FetcherThread extends Thread {
             fetcherService.setChartSettings(getWebDriver(), iteration);
             stopWatch.stop();
             log.info(exchange + ":" + symbol + " - Initialized in " + stopWatch.getTotalTimeSeconds() + "s");
+            this.initialized = true;
         } catch (Exception e) {
             stopWatch.stop();
             log.error("Error while initializing", e);
             log.error("Time spent: " + stopWatch.getTotalTimeSeconds() + "s");
-            if (iteration < RETRY_LIMIT && isEnabled()) {
+            if (iteration < RETRY_LIMIT && isEnabled() && isInitialized()) {
                 initialize(iteration + 1);
             } else {
                 tickerService.deleteTicker(this.threadName);
@@ -121,7 +140,7 @@ public class FetcherThread extends Thread {
      */
     @Scheduled(fixedRate = 1000)
     protected void postInitializeSchedule() {
-        if (isEnabled()) {
+        if (isEnabled() && isInitialized()) {
             synchronized (postInitLock) {
                 try {
                     while (!CollectionUtils.isEmpty(
@@ -155,6 +174,18 @@ public class FetcherThread extends Thread {
                 } catch (Exception ignored) {
                 }
                 try {
+                    //indicator-properties-dialog
+                    List<WebElement> buttons = getWebDriver()
+                            .findElement(By.cssSelector("div[data-name='indicator-properties-dialog']"))
+                            .findElements(By.cssSelector("span[data-name='close']"));
+                    for (WebElement button : buttons) {
+                        button.click();
+                        break;
+                    }
+                } catch (Exception ignore) {
+
+                }
+                try {
                     //style="z-index: 150;"
                     WebElement overlapManagerRoot = getWebDriver().findElement(By.id("overlap-manager-root"));
                     List<WebElement> overlaps = overlapManagerRoot.findElements(By.tagName("div"));
@@ -171,7 +202,6 @@ public class FetcherThread extends Thread {
                 }
             }
         }
-
     }
 
     protected void doTask() {

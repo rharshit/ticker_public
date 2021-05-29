@@ -31,7 +31,7 @@ public abstract class BaseRepository {
         procedure.setFunction(false);
         procedure.setParameters(sqlParameters);
 
-        log.info("Running procedure : " + getDatasourceName());
+        log.debug("Running procedure : " + getDatasourceName());
 
         return procedure.execute(inputParameters);
     }

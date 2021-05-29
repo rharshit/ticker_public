@@ -2,11 +2,9 @@ package com.ticker.fetcher.service;
 
 import com.ticker.fetcher.common.exception.TickerException;
 import com.ticker.fetcher.common.rx.FetcherThread;
+import com.ticker.fetcher.repository.AppRepository;
 import lombok.extern.slf4j.Slf4j;
-import org.openqa.selenium.By;
-import org.openqa.selenium.Keys;
-import org.openqa.selenium.WebDriver;
-import org.openqa.selenium.WebElement;
+import org.openqa.selenium.*;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.util.CollectionUtils;
@@ -24,6 +22,9 @@ public class FetcherService {
 
     @Autowired
     private TickerService appService;
+
+    @Autowired
+    AppRepository repository;
 
     private static final Pattern OLHC = Pattern.compile("^O[0-9.]*H[0-9.]*L[0-9.]*C[0-9.]*.*$");
     private static final Pattern PATTERNOS = Pattern.compile("^O");
@@ -87,10 +88,11 @@ public class FetcherService {
 
     private void selectIndicator(String indicator, WebElement menuBox, int iteration) {
         int numRetries = 5;
-        log.info("Selecting indicator " + indicator);
+        log.debug("Selecting indicator " + indicator);
         try {
             String searchText = indicator.split(":")[0];
             WebElement searchBox = menuBox.findElement(By.cssSelector("input[data-role='search']"));
+            waitFor(WAIT_SHORT);
             searchBox.click();
             searchBox.sendKeys(Keys.COMMAND + "a");
             searchBox.sendKeys(searchText);
@@ -112,19 +114,43 @@ public class FetcherService {
                 throw new TickerException("Cannot select indicator " + indicator);
             }
         }
-        log.info("Selected indicator " + indicator);
+        log.debug("Selected indicator " + indicator);
     }
 
     private void configureMenuByValue(WebDriver webDriver, String dataName, String header, String value) {
         while (CollectionUtils.isEmpty(webDriver.findElements(By.id(header)))) ;
-        WebElement chartStyle = webDriver.findElement(By.id(header));
-        chartStyle.click();
+        webDriver.findElement(By.id(header)).click();
         waitFor(WAIT_MEDIUM);
         WebElement menuBox = webDriver
                 .findElement(By.id("overlap-manager-root"))
                 .findElement(By.cssSelector("div[data-name='" + dataName + "']"));
-        WebElement valueElement = menuBox.findElement(By.cssSelector("div[data-value='" + value + "']"));
-        valueElement.click();
+        WebElement valueElement = null;
+        do {
+            try {
+                while (CollectionUtils.isEmpty(menuBox.findElements(By.cssSelector("div[data-value='" + value + "']"))))
+                    ;
+                valueElement = menuBox.findElement(By.cssSelector("div[data-value='" + value + "']"));
+                valueElement.click();
+                valueElement = null;
+
+                webDriver.findElement(By.id(header)).click();
+                while (CollectionUtils.isEmpty(menuBox.findElements(By.cssSelector("div[data-value='" + value + "']"))))
+                    ;
+                valueElement = menuBox.findElement(By.cssSelector("div[data-value='" + value + "']"));
+            } catch (Exception e) {
+                log.error("valueElement: " + valueElement);
+                if (valueElement != null) {
+                    log.error(valueElement.getCssValue("class"));
+                } else {
+                    if (e instanceof StaleElementReferenceException) {
+                        log.debug("Error in configureMenuByValue", e);
+                    } else {
+                        log.error("Error in configureMenuByValue", e);
+                    }
+                }
+            }
+        } while (valueElement != null && !valueElement.getCssValue("class").contains("isActive"));
+        webDriver.findElement(By.id(header)).click();
     }
 
     public void doTask(FetcherThread fetcherThread) {
@@ -165,13 +191,34 @@ public class FetcherService {
                     }
                 }
             }
-            log.info(fetcherThread.getThreadName() + " :\n" +
-                    o + "," + h + "," + l + "," + c + "\n"
-                    + bbL + "," + bbM + "," + bbU + "\n"
-                    + rsi);
+            float valCheck = o * h * l * c * bbL * bbM * bbU * rsi;
+            if (valCheck == 0) {
+                log.error(fetcherThread.getThreadName() + " :\n" +
+                        o + "," + h + "," + l + "," + c + "\n"
+                        + bbL + "," + bbM + "," + bbU + "\n"
+                        + rsi);
+            } else {
+                log.debug(fetcherThread.getThreadName() + " :\n" +
+                        o + "," + h + "," + l + "," + c + "\n"
+                        + bbL + "," + bbM + "," + bbU + "\n"
+                        + rsi);
+            }
+
         } catch (Exception e) {
-            log.error("Exception in doTask(): " + fetcherThread.getThreadName());
-            log.error(e.getMessage());
+            String errorMessage = e.getMessage();
+            if (errorMessage.contains("element click intercepted")) {
+                log.debug("Element click intercepted");
+            } else if (e instanceof ArrayIndexOutOfBoundsException ||
+                    e instanceof NumberFormatException) {
+                log.debug(e.getClass().getName());
+                StackTraceElement[] stackTraceElements = e.getStackTrace();
+                for (StackTraceElement stackTraceElement : stackTraceElements) {
+                    log.debug("\t" + stackTraceElement.toString());
+                }
+            } else {
+                log.error("Exception in doTask(): " + fetcherThread.getThreadName());
+                log.error(e.getMessage());
+            }
         }
         waitFor(WAIT_MEDIUM);
     }
@@ -192,6 +239,16 @@ public class FetcherService {
     }
 
     public void scheduledJob(FetcherThread fetcherThread) {
-        log.info("ScheduledJob: " + fetcherThread.getThreadName());
+        log.debug("ScheduledJob: " + fetcherThread.getThreadName());
+    }
+
+    public void createTable(String tableName) {
+        try {
+            repository.addTable(tableName);
+        } catch (TickerException e) {
+            throw e;
+        } catch (Exception e) {
+            throw new TickerException("Error while crating table: " + tableName);
+        }
     }
 }
