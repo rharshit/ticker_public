@@ -62,7 +62,16 @@ public class FetcherThread extends Thread {
 
     private void initializeBean() {
         initializeWebDriver();
-        this.initialized = true;
+        initializeTables();
+    }
+
+    private void initializeTables() {
+        String tableName = generateTableName();
+        fetcherService.createTable(tableName);
+    }
+
+    private String generateTableName() {
+        return this.threadName.replace(":", "_");
     }
 
     protected void initializeWebDriver() {

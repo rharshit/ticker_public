@@ -2,6 +2,7 @@ package com.ticker.fetcher.service;
 
 import com.ticker.fetcher.common.exception.TickerException;
 import com.ticker.fetcher.common.rx.FetcherThread;
+import com.ticker.fetcher.repository.AppRepository;
 import lombok.extern.slf4j.Slf4j;
 import org.openqa.selenium.*;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -21,6 +22,9 @@ public class FetcherService {
 
     @Autowired
     private TickerService appService;
+
+    @Autowired
+    AppRepository repository;
 
     private static final Pattern OLHC = Pattern.compile("^O[0-9.]*H[0-9.]*L[0-9.]*C[0-9.]*.*$");
     private static final Pattern PATTERNOS = Pattern.compile("^O");
@@ -88,6 +92,7 @@ public class FetcherService {
         try {
             String searchText = indicator.split(":")[0];
             WebElement searchBox = menuBox.findElement(By.cssSelector("input[data-role='search']"));
+            waitFor(WAIT_SHORT);
             searchBox.click();
             searchBox.sendKeys(Keys.COMMAND + "a");
             searchBox.sendKeys(searchText);
@@ -239,7 +244,9 @@ public class FetcherService {
 
     public void createTable(String tableName) {
         try {
-            fetcherRepository.addTable(tableName);
+            repository.addTable(tableName);
+        } catch (TickerException e) {
+            throw e;
         } catch (Exception e) {
             throw new TickerException("Error while crating table: " + tableName);
         }

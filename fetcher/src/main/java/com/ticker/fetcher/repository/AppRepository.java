@@ -1,5 +1,6 @@
 package com.ticker.fetcher.repository;
 
+import com.ticker.fetcher.common.exception.TickerException;
 import com.ticker.fetcher.common.repository.FetcherRepository;
 import com.ticker.fetcher.common.repository.TickerRepository;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -12,6 +13,7 @@ import java.util.HashMap;
 import java.util.Map;
 
 import static com.ticker.fetcher.common.constants.DBConstants.*;
+import static com.ticker.fetcher.common.constants.ProcedureConstants.ADD_TABLE;
 import static com.ticker.fetcher.common.constants.ProcedureConstants.GET_EXCHANGE_SYMBOL_ID_PR;
 
 @Repository
@@ -37,5 +39,20 @@ public class AppRepository {
 
         Map<String, Object> result = tickerRepository.executeProcedure(GET_EXCHANGE_SYMBOL_ID_PR, sqlParameters, inputParameters);
         return (int) result.get(O_EXCHANGE_SYMBOL_ID);
+    }
+
+    public void addTable(String tableName) {
+        try {
+            SqlParameter[] parameters = {
+                    new SqlParameter(TABLE_NAME, Types.VARCHAR)
+            };
+            Map<String, Object> inputParameters = new HashMap<>();
+            inputParameters.put(TABLE_NAME, tableName);
+            fetcherRepository.executeProcedure(ADD_TABLE, parameters, inputParameters);
+        } catch (Exception e) {
+            throw new TickerException("Error while creating table " + tableName);
+        }
+
+
     }
 }
