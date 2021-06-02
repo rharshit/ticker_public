@@ -1,5 +1,6 @@
 package com.ticker.fetcher.controller;
 
+import com.ticker.fetcher.model.FetcherThreadModel;
 import com.ticker.fetcher.model.ResponseStatus;
 import com.ticker.fetcher.service.TickerService;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -7,6 +8,7 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
+import java.util.List;
 import java.util.Map;
 
 @RestController
@@ -22,7 +24,7 @@ public class AppController {
      * @return
      */
     @GetMapping
-    public ResponseEntity<Map<String, String>> getCurrentTickers() {
+    public ResponseEntity<Map<String, List<FetcherThreadModel>>> getCurrentTickers() {
         return new ResponseEntity<>(service.getCurrentTickers(), HttpStatus.OK);
     }
 

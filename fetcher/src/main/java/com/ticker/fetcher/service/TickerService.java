@@ -1,6 +1,7 @@
 package com.ticker.fetcher.service;
 
 import com.ticker.fetcher.common.rx.FetcherThread;
+import com.ticker.fetcher.model.FetcherThreadModel;
 import com.ticker.fetcher.repository.AppRepository;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -9,7 +10,9 @@ import org.springframework.stereotype.Service;
 
 import java.time.LocalDate;
 import java.time.format.DateTimeFormatter;
+import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 
@@ -123,13 +126,16 @@ public class TickerService {
      *
      * @return
      */
-    public Map<String, String> getCurrentTickers() {
+    public Map<String, List<FetcherThreadModel>> getCurrentTickers() {
         Map<String, FetcherThread> threadMap = getThreadPool();
-        Map<String, String> tickers = new HashMap<>();
+        List<FetcherThreadModel> tickers = new ArrayList<>();
         for (Map.Entry<String, FetcherThread> entry : threadMap.entrySet()) {
-            tickers.put(entry.getKey(), entry.getValue().toString());
+            tickers.add(new FetcherThreadModel(entry.getValue()));
         }
-        return tickers;
+        Map<String, List<FetcherThreadModel>> map = new HashMap<String, List<FetcherThreadModel>>() {{
+            put("tickers", tickers);
+        }};
+        return map;
     }
 
     public void deleteAllTickers() {
