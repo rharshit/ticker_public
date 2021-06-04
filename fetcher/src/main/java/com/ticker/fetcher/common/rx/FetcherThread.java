@@ -86,7 +86,7 @@ public class FetcherThread extends Thread {
 
         }
         ChromeOptions options = new ChromeOptions();
-//        options.setHeadless(true);
+        options.setHeadless(true);
         options.addArguments("--window-size=1920,1080");
         options.addArguments("incognito");
         options.setCapability(CapabilityType.UNEXPECTED_ALERT_BEHAVIOUR, ACCEPT);

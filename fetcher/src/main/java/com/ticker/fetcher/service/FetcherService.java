@@ -31,8 +31,6 @@ public class FetcherService {
     @Autowired
     AppRepository repository;
 
-    private static final Object doTaskLock = new Object();
-
     private static final List<FetcherRepoModel> dataQueue = new ArrayList<>();
 
     /**
@@ -182,14 +180,11 @@ public class FetcherService {
             try {
                 log.debug("doTask() started task: " + fetcherThread.getThreadName());
                 List<String> texts;
-                synchronized (doTaskLock) {
-                    WebElement table = fetcherThread.getWebDriver()
-                            .findElement(By.cssSelector("table[class='chart-markup-table']"));
-                    table.click();
-                    table.findElement(By.className("price-axis")).click();
-                    List<WebElement> rows = table.findElements(By.tagName("tr"));
-                    texts = rows.stream().map(webElement -> webElement.getText()).collect(Collectors.toList());
-                }
+                fetcherThread.getWebDriver().switchTo().window(fetcherThread.getWebDriver().getWindowHandle());
+                WebElement table = fetcherThread.getWebDriver()
+                        .findElement(By.cssSelector("table[class='chart-markup-table']"));
+                List<WebElement> rows = table.findElements(By.tagName("tr"));
+                texts = rows.stream().map(webElement -> webElement.getText()).collect(Collectors.toList());
                 float o = 0;
                 float h = 0;
                 float l = 0;
