@@ -13,9 +13,10 @@ import org.springframework.stereotype.Service;
 import org.springframework.util.CollectionUtils;
 import org.springframework.util.StringUtils;
 
-import java.util.LinkedList;
+import java.time.LocalDateTime;
+import java.time.format.DateTimeFormatter;
+import java.util.ArrayList;
 import java.util.List;
-import java.util.Queue;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -31,7 +32,7 @@ public class FetcherService {
     @Autowired
     AppRepository repository;
 
-    private static final Queue<FetcherRepoModel> dataQueue = new LinkedList<>();
+    private static final List<FetcherRepoModel> dataQueue = new ArrayList<>();
 
     private static final Pattern OLHC = Pattern.compile("^O[0-9.]*H[0-9.]*L[0-9.]*C[0-9.]*.*$");
     private static final Pattern PATTERNOS = Pattern.compile("^O");
@@ -171,7 +172,7 @@ public class FetcherService {
     public void doTask(FetcherThread fetcherThread) {
         if (fetcherThread.isInitialized() && fetcherThread.isEnabled()) {
             try {
-                log.debug("doTask(): " + fetcherThread.getThreadName());
+                log.debug("doTask() started task: " + fetcherThread.getThreadName());
                 WebElement table = fetcherThread.getWebDriver()
                         .findElement(By.cssSelector("table[class='chart-markup-table']"));
                 table.click();
@@ -215,12 +216,13 @@ public class FetcherService {
                             + bbL + "," + bbA + "," + bbU + "\n"
                             + rsi);
                 } else {
-                    log.debug(fetcherThread.getThreadName() + " :\n" +
+                    log.trace(fetcherThread.getThreadName() + " :\n" +
                             o + "," + h + "," + l + "," + c + "\n"
                             + bbL + "," + bbA + "," + bbU + "\n"
                             + rsi);
                     dataQueue.add(new FetcherRepoModel(fetcherThread.getTableName(), System.currentTimeMillis(),
                             o, h, l, c, bbU, bbA, bbL, rsi));
+                    log.debug("doTask() added data: " + fetcherThread.getThreadName() + ", size: " + dataQueue.size());
                 }
 
             } catch (ArrayIndexOutOfBoundsException | NumberFormatException e) {
@@ -236,7 +238,7 @@ public class FetcherService {
             } catch (Exception e) {
                 String errorMessage = e.getMessage();
                 if (errorMessage.contains("element click intercepted")) {
-                    log.debug("Element click intercepted");
+                    log.info("Element click intercepted: " + fetcherThread.getThreadName());
                 } else {
                     log.error("Exception in doTask(): " + fetcherThread.getThreadName());
                     log.error(e.getMessage());
@@ -263,13 +265,21 @@ public class FetcherService {
         return Float.parseFloat(valueString);
     }
 
+    @Async
     @Scheduled(fixedRate = 2000)
     public void scheduledJob() {
-        Queue<FetcherRepoModel> tempDataQueue = new LinkedList<>();
-        while (!dataQueue.isEmpty()) {
-            tempDataQueue.add(dataQueue.remove());
+        DateTimeFormatter dtf = DateTimeFormatter.ofPattern("yyyy/MM/dd HH:mm:ss");
+        LocalDateTime now = LocalDateTime.now();
+        String sNow = dtf.format(now);
+        log.debug("Scheduled task started: " + sNow);
+        List<FetcherRepoModel> tempDataQueue;
+        synchronized (dataQueue) {
+            tempDataQueue = new ArrayList<>(dataQueue);
+            dataQueue.clear();
         }
-        repository.pushData(tempDataQueue);
+        log.debug("Scheduled task populated: " + sNow);
+        repository.pushData(tempDataQueue, sNow);
+        log.debug("Scheduled task ended: " + sNow);
     }
 
     public void createTable(String tableName) {

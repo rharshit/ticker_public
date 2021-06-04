@@ -13,8 +13,8 @@ import org.springframework.stereotype.Repository;
 
 import java.sql.Types;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
-import java.util.Queue;
 
 import static com.ticker.fetcher.common.constants.DBConstants.*;
 import static com.ticker.fetcher.common.constants.ProcedureConstants.ADD_TABLE;
@@ -63,12 +63,13 @@ public class AppRepository {
 
     // TODO: Implement method
     @Async
-    public void pushData(Queue<FetcherRepoModel> dataQueue) {
-        log.info("Pushing data");
-        while (!dataQueue.isEmpty()) {
-            FetcherRepoModel data = dataQueue.remove();
+    public void pushData(List<FetcherRepoModel> dataQueue, String sNow) {
+        log.info("pushData task started: " + sNow);
+        log.info("Pushing data, size: " + dataQueue.size());
+        for (FetcherRepoModel data : dataQueue) {
             log.info(data.toString());
         }
         log.info("Pushed data");
+        log.debug("pushData task ended: " + sNow);
     }
 }
