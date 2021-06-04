@@ -17,8 +17,6 @@ import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.regex.Matcher;
-import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 
 import static com.ticker.fetcher.common.util.Util.*;
@@ -36,16 +34,6 @@ public class FetcherService {
     private static final Object doTaskLock = new Object();
 
     private static final List<FetcherRepoModel> dataQueue = new ArrayList<>();
-
-    private static final Pattern OLHC = Pattern.compile("^O[0-9.]*H[0-9.]*L[0-9.]*C[0-9.]*.*$");
-    private static final Pattern PATTERNOS = Pattern.compile("^O");
-    private static final Pattern PATTERNOE = Pattern.compile("H[0-9.]*L[0-9.]*C[0-9.]*.*$");
-    private static final Pattern PATTERNHS = Pattern.compile("^O[0-9.]*H");
-    private static final Pattern PATTERNHE = Pattern.compile("L[0-9.]*C[0-9.]*.*$");
-    private static final Pattern PATTERNLS = Pattern.compile("^O[0-9.]*H[0-9.]*L");
-    private static final Pattern PATTERNLE = Pattern.compile("C[0-9.]*.*$");
-    private static final Pattern PATTERNCS = Pattern.compile("^O[0-9.]*H[0-9.]*L[0-9.]*C");
-    private static final Pattern PATTERNCE = Pattern.compile("([−+][0-9.]*|00.00) \\([−+]{0,1}[0-9.]*%\\)$");
 
     /**
      * Set setting for the charts that are loaded
@@ -290,21 +278,6 @@ public class FetcherService {
         } else {
             log.debug("Skipping doTask()");
         }
-    }
-
-    private float getOHCLVal(String val, Pattern patternStart, Pattern patternEnd) {
-        Matcher matcherStart = patternStart.matcher(val);
-        Matcher matcherEnd = patternEnd.matcher(val);
-        if (!matcherStart.find()) {
-            log.error("No match for start pattern: " + patternStart.pattern());
-            log.error(val);
-        }
-        if (!matcherEnd.find()) {
-            log.error("No match for end pattern: " + patternEnd.pattern());
-            log.error(val);
-        }
-        String valueString = val.substring(matcherStart.end(), matcherEnd.start());
-        return Float.parseFloat(valueString);
     }
 
     @Async
