@@ -3,20 +3,25 @@ package com.ticker.fetcher.repository;
 import com.ticker.fetcher.common.exception.TickerException;
 import com.ticker.fetcher.common.repository.FetcherRepository;
 import com.ticker.fetcher.common.repository.TickerRepository;
+import com.ticker.fetcher.model.FetcherRepoModel;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.jdbc.core.SqlOutParameter;
 import org.springframework.jdbc.core.SqlParameter;
+import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Repository;
 
 import java.sql.Types;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.Queue;
 
 import static com.ticker.fetcher.common.constants.DBConstants.*;
 import static com.ticker.fetcher.common.constants.ProcedureConstants.ADD_TABLE;
 import static com.ticker.fetcher.common.constants.ProcedureConstants.GET_EXCHANGE_SYMBOL_ID_PR;
 
 @Repository
+@Slf4j
 public class AppRepository {
 
     @Autowired
@@ -54,5 +59,16 @@ public class AppRepository {
         }
 
 
+    }
+
+    // TODO: Implement method
+    @Async
+    public void pushData(Queue<FetcherRepoModel> dataQueue) {
+        log.info("Pushing data");
+        while (!dataQueue.isEmpty()) {
+            FetcherRepoModel data = dataQueue.remove();
+            log.info(data.toString());
+        }
+        log.info("Pushed data");
     }
 }

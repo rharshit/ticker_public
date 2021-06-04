@@ -2,6 +2,7 @@ package com.ticker.fetcher.service;
 
 import com.ticker.fetcher.common.exception.TickerException;
 import com.ticker.fetcher.common.rx.FetcherThread;
+import com.ticker.fetcher.model.FetcherRepoModel;
 import com.ticker.fetcher.repository.AppRepository;
 import lombok.extern.slf4j.Slf4j;
 import org.openqa.selenium.*;
@@ -12,7 +13,9 @@ import org.springframework.stereotype.Service;
 import org.springframework.util.CollectionUtils;
 import org.springframework.util.StringUtils;
 
+import java.util.LinkedList;
 import java.util.List;
+import java.util.Queue;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -27,6 +30,8 @@ public class FetcherService {
 
     @Autowired
     AppRepository repository;
+
+    private static final Queue<FetcherRepoModel> dataQueue = new LinkedList<>();
 
     private static final Pattern OLHC = Pattern.compile("^O[0-9.]*H[0-9.]*L[0-9.]*C[0-9.]*.*$");
     private static final Pattern PATTERNOS = Pattern.compile("^O");
@@ -173,7 +178,7 @@ public class FetcherService {
                 float h = 0;
                 float l = 0;
                 float c = 0;
-                float bbM = 0;
+                float bbA = 0;
                 float bbU = 0;
                 float bbL = 0;
                 float rsi = 0;
@@ -191,7 +196,7 @@ public class FetcherService {
                                 c = getOHCLVal(val, PATTERNCS, PATTERNCE);
 
                             } else if ("BB".equalsIgnoreCase(vals[i])) {
-                                bbM = Float.parseFloat(vals[i + 2]);
+                                bbA = Float.parseFloat(vals[i + 2]);
                                 bbU = Float.parseFloat(vals[i + 3]);
                                 bbL = Float.parseFloat(vals[i + 4]);
                             } else if ("RSI".equalsIgnoreCase(vals[i])) {
@@ -200,17 +205,19 @@ public class FetcherService {
                         }
                     }
                 }
-                float valCheck = o * h * l * c * bbL * bbM * bbU * rsi;
+                float valCheck = o * h * l * c * bbL * bbA * bbU * rsi;
                 if (valCheck == 0) {
                     log.error(fetcherThread.getThreadName() + " :\n" +
                             o + "," + h + "," + l + "," + c + "\n"
-                            + bbL + "," + bbM + "," + bbU + "\n"
+                            + bbL + "," + bbA + "," + bbU + "\n"
                             + rsi);
                 } else {
                     log.debug(fetcherThread.getThreadName() + " :\n" +
                             o + "," + h + "," + l + "," + c + "\n"
-                            + bbL + "," + bbM + "," + bbU + "\n"
+                            + bbL + "," + bbA + "," + bbU + "\n"
                             + rsi);
+                    dataQueue.add(new FetcherRepoModel(fetcherThread.getTableName(), System.currentTimeMillis(),
+                            o, h, l, c, bbU, bbA, bbL, rsi));
                 }
 
             } catch (ArrayIndexOutOfBoundsException | NumberFormatException e) {
@@ -253,9 +260,13 @@ public class FetcherService {
         return Float.parseFloat(valueString);
     }
 
-    @Scheduled(fixedRate = 5000)
+    @Scheduled(fixedRate = 2000)
     public void scheduledJob() {
-        log.debug("ScheduledJob: ");
+        Queue<FetcherRepoModel> tempDataQueue = new LinkedList<>();
+        while (!dataQueue.isEmpty()) {
+            tempDataQueue.add(dataQueue.remove());
+        }
+        repository.pushData(tempDataQueue);
     }
 
     public void createTable(String tableName) {

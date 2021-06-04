@@ -68,11 +68,11 @@ public class FetcherThread extends Thread {
     }
 
     private void initializeTables() {
-        String tableName = generateTableName();
+        String tableName = getTableName();
         fetcherService.createTable(tableName);
     }
 
-    private String generateTableName() {
+    public String getTableName() {
         return this.threadName.replace(":", "_");
     }
 
