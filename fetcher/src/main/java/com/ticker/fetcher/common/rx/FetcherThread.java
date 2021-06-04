@@ -96,7 +96,7 @@ public class FetcherThread extends Thread {
 
     @Override
     public void run() {
-        initialize(0);
+        initialize(0, false);
         while (isEnabled()) {
             while (isEnabled() && isInitialized()) {
                 waitFor(WAIT_LONG);
@@ -113,17 +113,31 @@ public class FetcherThread extends Thread {
         log.info("Terminated thread : " + threadName);
     }
 
-    protected void initialize(int iteration) {
+    protected void initialize(int iteration, boolean refresh) {
         this.initialized = false;
-        log.info(exchange + ":" + symbol + " - Initializing");
+        if (refresh) {
+            log.info(exchange + ":" + symbol + " - Refreshing");
+        } else {
+            log.info(exchange + ":" + symbol + " - Initializing");
+        }
+
         try {
             String url = TRADING_VIEW_BASE + TRADING_VIEW_CHART + exchange + ":" + symbol;
-            getWebDriver().get(url);
-            fetcherService.setChartSettings(this, iteration);
+            if (refresh) {
+                getWebDriver().navigate().refresh();
+            } else {
+                getWebDriver().get(url);
+            }
+            fetcherService.setChartSettings(this, iteration, refresh);
         } catch (Exception e) {
-            log.error("Error while initializing", e);
-            if (iteration < RETRY_LIMIT && isEnabled() && isInitialized()) {
-                initialize(iteration + 1);
+            if (refresh) {
+                log.error("Error while refreshing", e);
+            } else {
+                log.error("Error while initializing", e);
+            }
+
+            if (iteration < RETRY_LIMIT && isEnabled()) {
+                initialize(iteration + 1, refresh);
             } else {
                 destroy();
             }
@@ -189,7 +203,7 @@ public class FetcherThread extends Thread {
                             for (WebElement overlap : overlaps) {
                                 String text = overlap.getText();
                                 if (!StringUtils.isEmpty(text) && text.contains("Take your trading to the next level")) {
-                                    initialize(0);
+                                    initialize(0, true);
                                     break;
                                 }
                             }
@@ -223,5 +237,9 @@ public class FetcherThread extends Thread {
     @Deprecated
     public void destroy() {
         tickerService.deleteTicker(this.threadName);
+    }
+
+    public void refreshBrowser() {
+        initialize(0, true);
     }
 }

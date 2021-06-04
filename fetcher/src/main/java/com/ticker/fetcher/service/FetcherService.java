@@ -49,21 +49,29 @@ public class FetcherService {
      *
      * @param fetcherThread
      * @param iteration
-     * @param stopWatch
+     * @param refresh
      */
-    public void setChartSettings(FetcherThread fetcherThread, int iteration) {
+    public void setChartSettings(FetcherThread fetcherThread, int iteration, boolean refresh) {
         int iterationMultiplier = 200;
-        // Chart style
-        configureMenuByValue(fetcherThread.getWebDriver(), "menu-inner", "header-toolbar-chart-styles", "ha");
+        if (!refresh) {
+            // Chart style
+            configureMenuByValue(fetcherThread.getWebDriver(), "menu-inner", "header-toolbar-chart-styles", "ha");
 
-        // Chart interval
-        configureMenuByValue(fetcherThread.getWebDriver(), "menu-inner", "header-toolbar-intervals", "1");
+            // Chart interval
+            configureMenuByValue(fetcherThread.getWebDriver(), "menu-inner", "header-toolbar-intervals", "1");
+
+        }
 
         // Indicators
         waitTillLoad(fetcherThread.getWebDriver(), WAIT_SHORT + iteration * iterationMultiplier, 2);
         setIndicators(fetcherThread.getWebDriver(), "bb:STD;Bollinger_Bands", "rsi:STD;RSI");
 
-        log.info(fetcherThread.getExchange() + ":" + fetcherThread.getSymbol() + " - Initialized");
+        if (refresh) {
+            log.info(fetcherThread.getExchange() + ":" + fetcherThread.getSymbol() + " - Refreshed");
+        } else {
+            log.info(fetcherThread.getExchange() + ":" + fetcherThread.getSymbol() + " - Initialized");
+        }
+
         fetcherThread.setInitialized(true);
     }
 

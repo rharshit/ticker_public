@@ -164,4 +164,14 @@ public class TickerService {
             }
         }
     }
+
+    public void refreshBrowser(String exchange, String symbol) {
+        String threadName = getThreadName(exchange, symbol);
+        Map<String, FetcherThread> threadMap = getThreadPool();
+        if (!threadMap.containsKey(threadName)) {
+            return;
+        }
+        FetcherThread thread = threadMap.get(threadName);
+        thread.refreshBrowser();
+    }
 }
