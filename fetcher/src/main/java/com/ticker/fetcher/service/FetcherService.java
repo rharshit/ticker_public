@@ -117,11 +117,11 @@ public class FetcherService {
                 ;
         } catch (Exception e) {
             iteration = iteration + 1;
-            log.error("Iteration " + iteration + " failed");
+            log.debug("Iteration " + iteration + " failed");
             if (iteration < numRetries) {
                 selectIndicator(indicator, menuBox, iteration);
             } else {
-                e.printStackTrace();
+                log.error(e.getMessage());
                 throw new TickerException("Cannot select indicator " + indicator);
             }
         }
@@ -149,13 +149,16 @@ public class FetcherService {
                     ;
                 valueElement = menuBox.findElement(By.cssSelector("div[data-value='" + value + "']"));
             } catch (Exception e) {
-                log.error("valueElement: " + valueElement);
+
                 if (valueElement != null) {
                     log.error(valueElement.getCssValue("class"));
                 } else {
+
                     if (e instanceof StaleElementReferenceException) {
+                        log.debug("valueElement: " + valueElement);
                         log.debug("Error in configureMenuByValue", e);
                     } else {
+                        log.error("valueElement: " + valueElement);
                         log.error("Error in configureMenuByValue", e);
                     }
                 }
