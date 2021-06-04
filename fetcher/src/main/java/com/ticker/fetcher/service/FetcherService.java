@@ -6,6 +6,8 @@ import com.ticker.fetcher.repository.AppRepository;
 import lombok.extern.slf4j.Slf4j;
 import org.openqa.selenium.*;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.scheduling.annotation.Async;
+import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
 import org.springframework.util.CollectionUtils;
 import org.springframework.util.StringUtils;
@@ -39,20 +41,24 @@ public class FetcherService {
     /**
      * Set setting for the charts that are loaded
      *
-     * @param webDriver
+     * @param fetcherThread
      * @param iteration
+     * @param stopWatch
      */
-    public void setChartSettings(WebDriver webDriver, int iteration) {
+    public void setChartSettings(FetcherThread fetcherThread, int iteration) {
         int iterationMultiplier = 200;
         // Chart style
-        configureMenuByValue(webDriver, "menu-inner", "header-toolbar-chart-styles", "ha");
+        configureMenuByValue(fetcherThread.getWebDriver(), "menu-inner", "header-toolbar-chart-styles", "ha");
 
         // Chart interval
-        configureMenuByValue(webDriver, "menu-inner", "header-toolbar-intervals", "1");
+        configureMenuByValue(fetcherThread.getWebDriver(), "menu-inner", "header-toolbar-intervals", "1");
 
         // Indicators
-        waitTillLoad(webDriver, WAIT_SHORT + iteration*iterationMultiplier, 2);
-        setIndicators(webDriver, "bb:STD;Bollinger_Bands", "rsi:STD;RSI");
+        waitTillLoad(fetcherThread.getWebDriver(), WAIT_SHORT + iteration * iterationMultiplier, 2);
+        setIndicators(fetcherThread.getWebDriver(), "bb:STD;Bollinger_Bands", "rsi:STD;RSI");
+
+        log.info(fetcherThread.getExchange() + ":" + fetcherThread.getSymbol() + " - Initialized");
+        fetcherThread.setInitialized(true);
     }
 
     /**
@@ -153,74 +159,83 @@ public class FetcherService {
         webDriver.findElement(By.id(header)).click();
     }
 
+    @Async
     public void doTask(FetcherThread fetcherThread) {
-        try {
-            WebElement table = fetcherThread.getWebDriver()
-                    .findElement(By.cssSelector("table[class='chart-markup-table']"));
-            table.click();
-            table.findElement(By.className("price-axis")).click();
-            List<WebElement> rows = table.findElements(By.tagName("tr"));
-            float o = 0;
-            float h = 0;
-            float l = 0;
-            float c = 0;
-            float bbM = 0;
-            float bbU = 0;
-            float bbL = 0;
-            float rsi = 0;
-            for (WebElement row : rows) {
-                String text = row.getText();
-                if (!StringUtils.isEmpty(text)) {
-                    String[] vals = text.split("\n");
-                    for (int i = 0; i < vals.length; i++) {
-                        if (OLHC.matcher(vals[i]).matches()) {
-                            String val = vals[i];
+        if (fetcherThread.isInitialized() && fetcherThread.isEnabled()) {
+            try {
+                log.debug("doTask(): " + fetcherThread.getThreadName());
+                WebElement table = fetcherThread.getWebDriver()
+                        .findElement(By.cssSelector("table[class='chart-markup-table']"));
+                table.click();
+                table.findElement(By.className("price-axis")).click();
+                List<WebElement> rows = table.findElements(By.tagName("tr"));
+                float o = 0;
+                float h = 0;
+                float l = 0;
+                float c = 0;
+                float bbM = 0;
+                float bbU = 0;
+                float bbL = 0;
+                float rsi = 0;
+                for (WebElement row : rows) {
+                    String text = row.getText();
+                    if (!StringUtils.isEmpty(text)) {
+                        String[] vals = text.split("\n");
+                        for (int i = 0; i < vals.length; i++) {
+                            if (OLHC.matcher(vals[i]).matches()) {
+                                String val = vals[i];
 
-                            o = getOHCLVal(val, PATTERNOS, PATTERNOE);
-                            h = getOHCLVal(val, PATTERNHS, PATTERNHE);
-                            l = getOHCLVal(val, PATTERNLS, PATTERNLE);
-                            c = getOHCLVal(val, PATTERNCS, PATTERNCE);
+                                o = getOHCLVal(val, PATTERNOS, PATTERNOE);
+                                h = getOHCLVal(val, PATTERNHS, PATTERNHE);
+                                l = getOHCLVal(val, PATTERNLS, PATTERNLE);
+                                c = getOHCLVal(val, PATTERNCS, PATTERNCE);
 
-                        } else if ("BB".equalsIgnoreCase(vals[i])) {
-                            bbM = Float.parseFloat(vals[i + 2]);
-                            bbU = Float.parseFloat(vals[i + 3]);
-                            bbL = Float.parseFloat(vals[i + 4]);
-                        } else if ("RSI".equalsIgnoreCase(vals[i])) {
-                            rsi = Float.parseFloat(vals[i + 2]);
+                            } else if ("BB".equalsIgnoreCase(vals[i])) {
+                                bbM = Float.parseFloat(vals[i + 2]);
+                                bbU = Float.parseFloat(vals[i + 3]);
+                                bbL = Float.parseFloat(vals[i + 4]);
+                            } else if ("RSI".equalsIgnoreCase(vals[i])) {
+                                rsi = Float.parseFloat(vals[i + 2]);
+                            }
                         }
                     }
                 }
-            }
-            float valCheck = o * h * l * c * bbL * bbM * bbU * rsi;
-            if (valCheck == 0) {
-                log.error(fetcherThread.getThreadName() + " :\n" +
-                        o + "," + h + "," + l + "," + c + "\n"
-                        + bbL + "," + bbM + "," + bbU + "\n"
-                        + rsi);
-            } else {
-                log.debug(fetcherThread.getThreadName() + " :\n" +
-                        o + "," + h + "," + l + "," + c + "\n"
-                        + bbL + "," + bbM + "," + bbU + "\n"
-                        + rsi);
-            }
+                float valCheck = o * h * l * c * bbL * bbM * bbU * rsi;
+                if (valCheck == 0) {
+                    log.error(fetcherThread.getThreadName() + " :\n" +
+                            o + "," + h + "," + l + "," + c + "\n"
+                            + bbL + "," + bbM + "," + bbU + "\n"
+                            + rsi);
+                } else {
+                    log.debug(fetcherThread.getThreadName() + " :\n" +
+                            o + "," + h + "," + l + "," + c + "\n"
+                            + bbL + "," + bbM + "," + bbU + "\n"
+                            + rsi);
+                }
 
-        } catch (Exception e) {
-            String errorMessage = e.getMessage();
-            if (errorMessage.contains("element click intercepted")) {
-                log.debug("Element click intercepted");
-            } else if (e instanceof ArrayIndexOutOfBoundsException ||
-                    e instanceof NumberFormatException) {
+            } catch (ArrayIndexOutOfBoundsException | NumberFormatException e) {
                 log.debug(e.getClass().getName());
                 StackTraceElement[] stackTraceElements = e.getStackTrace();
                 for (StackTraceElement stackTraceElement : stackTraceElements) {
                     log.debug("\t" + stackTraceElement.toString());
                 }
-            } else {
-                log.error("Exception in doTask(): " + fetcherThread.getThreadName());
-                log.error(e.getMessage());
+            } catch (NoSuchSessionException e) {
+                log.error("Destroying: " + fetcherThread.getThreadName());
+                fetcherThread.destroy();
+                throw e;
+            } catch (Exception e) {
+                String errorMessage = e.getMessage();
+                if (errorMessage.contains("element click intercepted")) {
+                    log.debug("Element click intercepted");
+                } else {
+                    log.error("Exception in doTask(): " + fetcherThread.getThreadName());
+                    log.error(e.getMessage());
+                    throw e;
+                }
             }
+        } else {
+            log.debug("Skipping doTask()");
         }
-        waitFor(WAIT_MEDIUM);
     }
 
     private float getOHCLVal(String val, Pattern patternStart, Pattern patternEnd) {
@@ -238,8 +253,9 @@ public class FetcherService {
         return Float.parseFloat(valueString);
     }
 
-    public void scheduledJob(FetcherThread fetcherThread) {
-        log.debug("ScheduledJob: " + fetcherThread.getThreadName());
+    @Scheduled(fixedRate = 5000)
+    public void scheduledJob() {
+        log.debug("ScheduledJob: ");
     }
 
     public void createTable(String tableName) {

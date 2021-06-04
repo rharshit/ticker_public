@@ -6,6 +6,7 @@ import com.ticker.fetcher.repository.AppRepository;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.ApplicationContext;
+import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDate;
@@ -142,6 +143,16 @@ public class TickerService {
         Map<String, FetcherThread> threadMap = getThreadPool();
         for (String threadName : threadMap.keySet()) {
             destroyThread(threadName);
+        }
+    }
+
+    @Scheduled(fixedRate = 1000)
+    public void processTickers() {
+        Map<String, FetcherThread> pool = getThreadPool();
+        for (FetcherThread thread : pool.values()) {
+            if (thread.isEnabled()) {
+                thread.removeUnwantedScreens();
+            }
         }
     }
 }

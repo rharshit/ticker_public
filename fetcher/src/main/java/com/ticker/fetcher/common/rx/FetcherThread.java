@@ -4,6 +4,7 @@ import com.ticker.fetcher.repository.AppRepository;
 import com.ticker.fetcher.service.FetcherService;
 import com.ticker.fetcher.service.TickerService;
 import lombok.Getter;
+import lombok.Setter;
 import lombok.extern.slf4j.Slf4j;
 import org.openqa.selenium.By;
 import org.openqa.selenium.WebDriver;
@@ -13,19 +14,20 @@ import org.openqa.selenium.chrome.ChromeOptions;
 import org.openqa.selenium.remote.CapabilityType;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Scope;
-import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Component;
 import org.springframework.util.CollectionUtils;
-import org.springframework.util.StopWatch;
 import org.springframework.util.StringUtils;
 
 import java.util.List;
 
 import static com.ticker.fetcher.common.constants.WebConstants.TRADING_VIEW_BASE;
 import static com.ticker.fetcher.common.constants.WebConstants.TRADING_VIEW_CHART;
+import static com.ticker.fetcher.common.util.Util.WAIT_MEDIUM;
+import static com.ticker.fetcher.common.util.Util.waitFor;
 import static org.openqa.selenium.UnexpectedAlertBehaviour.ACCEPT;
 
 @Getter
+@Setter
 @Slf4j
 @Component("fetcherThread")
 @Scope("prototype")
@@ -98,6 +100,7 @@ public class FetcherThread extends Thread {
         while (isEnabled()) {
             while (isEnabled() && isInitialized()) {
                 doTask();
+                waitFor(WAIT_MEDIUM);
             }
         }
 
@@ -114,23 +117,16 @@ public class FetcherThread extends Thread {
     protected void initialize(int iteration) {
         this.initialized = false;
         log.info(exchange + ":" + symbol + " - Initializing");
-        StopWatch stopWatch = new StopWatch();
-        stopWatch.start();
         try {
             String url = TRADING_VIEW_BASE + TRADING_VIEW_CHART + exchange + ":" + symbol;
             getWebDriver().get(url);
-            fetcherService.setChartSettings(getWebDriver(), iteration);
-            stopWatch.stop();
-            log.info(exchange + ":" + symbol + " - Initialized in " + stopWatch.getTotalTimeSeconds() + "s");
-            this.initialized = true;
+            fetcherService.setChartSettings(this, iteration);
         } catch (Exception e) {
-            stopWatch.stop();
             log.error("Error while initializing", e);
-            log.error("Time spent: " + stopWatch.getTotalTimeSeconds() + "s");
             if (iteration < RETRY_LIMIT && isEnabled() && isInitialized()) {
                 initialize(iteration + 1);
             } else {
-                tickerService.deleteTicker(this.threadName);
+                destroy();
             }
         }
     }
@@ -138,81 +134,78 @@ public class FetcherThread extends Thread {
     /**
      * Remove ads and pop-ups
      */
-    @Scheduled(fixedRate = 1000)
-    protected void postInitializeSchedule() {
-        if (isEnabled() && isInitialized()) {
-            synchronized (postInitLock) {
-                try {
-                    while (!CollectionUtils.isEmpty(
-                            getWebDriver().findElements(By.cssSelector("div[data-role='toast-container']"))
-                    )) {
-                        getWebDriver()
-                                .findElement(By.cssSelector("div[data-role='toast-container']"))
-                                .findElement(By.tagName("article"))
-                                .findElement(By.tagName("button"))
-                                .click();
+    public void removeUnwantedScreens() {
+        try {
+            log.debug("Removing unwanted screens for " + getThreadName());
+            if (isEnabled() && isInitialized()) {
+                synchronized (postInitLock) {
+                    try {
+                        while (!CollectionUtils.isEmpty(
+                                getWebDriver().findElements(By.cssSelector("div[data-role='toast-container']"))
+                        )) {
+                            getWebDriver()
+                                    .findElement(By.cssSelector("div[data-role='toast-container']"))
+                                    .findElement(By.tagName("article"))
+                                    .findElement(By.tagName("button"))
+                                    .click();
+                        }
+                    } catch (Exception ignored) {
                     }
-                } catch (Exception ignored) {
-                }
-                try {
-                    while (!CollectionUtils.isEmpty(
-                            getWebDriver().findElements(By.cssSelector("div[data-dialog-name='gopro']"))
-                    )) {
+                    try {
+                        while (!CollectionUtils.isEmpty(
+                                getWebDriver().findElements(By.cssSelector("div[data-dialog-name='gopro']"))
+                        )) {
+                            List<WebElement> buttons = getWebDriver()
+                                    .findElement(By.cssSelector("div[data-dialog-name='gopro']"))
+                                    .findElements(By.tagName("button"));
+                            for (WebElement button : buttons) {
+                                String classes = button.getAttribute("class");
+                                if (!StringUtils.isEmpty(classes)) {
+                                    if (classes.contains("close")) {
+                                        button.click();
+                                        break;
+                                    }
+                                }
+                            }
+                        }
+                    } catch (Exception ignored) {
+                    }
+                    try {
+                        //indicator-properties-dialog
                         List<WebElement> buttons = getWebDriver()
-                                .findElement(By.cssSelector("div[data-dialog-name='gopro']"))
-                                .findElements(By.tagName("button"));
+                                .findElement(By.cssSelector("div[data-name='indicator-properties-dialog']"))
+                                .findElements(By.cssSelector("span[data-name='close']"));
                         for (WebElement button : buttons) {
-                            String classes = button.getAttribute("class");
-                            if (!StringUtils.isEmpty(classes)) {
-                                if (classes.contains("close")) {
-                                    button.click();
+                            button.click();
+                            break;
+                        }
+                    } catch (Exception ignore) {
+
+                    }
+                    try {
+                        //style="z-index: 150;"
+                        WebElement overlapManagerRoot = getWebDriver().findElement(By.id("overlap-manager-root"));
+                        List<WebElement> overlaps = overlapManagerRoot.findElements(By.tagName("div"));
+                        if (!CollectionUtils.isEmpty(overlaps)) {
+                            for (WebElement overlap : overlaps) {
+                                String text = overlap.getText();
+                                if (!StringUtils.isEmpty(text) && text.contains("Take your trading to the next level")) {
+                                    initialize(0);
                                     break;
                                 }
                             }
                         }
+                    } catch (Exception ignored) {
                     }
-                } catch (Exception ignored) {
-                }
-                try {
-                    //indicator-properties-dialog
-                    List<WebElement> buttons = getWebDriver()
-                            .findElement(By.cssSelector("div[data-name='indicator-properties-dialog']"))
-                            .findElements(By.cssSelector("span[data-name='close']"));
-                    for (WebElement button : buttons) {
-                        button.click();
-                        break;
-                    }
-                } catch (Exception ignore) {
-
-                }
-                try {
-                    //style="z-index: 150;"
-                    WebElement overlapManagerRoot = getWebDriver().findElement(By.id("overlap-manager-root"));
-                    List<WebElement> overlaps = overlapManagerRoot.findElements(By.tagName("div"));
-                    if (!CollectionUtils.isEmpty(overlaps)) {
-                        for (WebElement overlap : overlaps) {
-                            String text = overlap.getText();
-                            if (!StringUtils.isEmpty(text) && text.contains("Take your trading to the next level")) {
-                                initialize(0);
-                                break;
-                            }
-                        }
-                    }
-                } catch (Exception ignored) {
                 }
             }
+        } catch (Exception e) {
+
         }
     }
 
     protected void doTask() {
         fetcherService.doTask(this);
-    }
-
-    @Scheduled(fixedRate = 5000)
-    protected void scheduledJob() {
-        if (this.enabled) {
-            fetcherService.scheduledJob(this);
-        }
     }
 
     public void terminateThread() {
@@ -230,5 +223,10 @@ public class FetcherThread extends Thread {
 
     public void setTickerServiceBean(TickerService tickerService) {
         this.tickerService = tickerService;
+    }
+
+    @Deprecated
+    public void destroy() {
+        tickerService.deleteTicker(this.threadName);
     }
 }
