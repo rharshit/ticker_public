@@ -2,17 +2,22 @@ package com.ticker.fetcher.service;
 
 import com.ticker.fetcher.common.exception.TickerException;
 import com.ticker.fetcher.common.rx.FetcherThread;
+import com.ticker.fetcher.model.FetcherRepoModel;
 import com.ticker.fetcher.repository.AppRepository;
 import lombok.extern.slf4j.Slf4j;
 import org.openqa.selenium.*;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.scheduling.annotation.Async;
+import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
 import org.springframework.util.CollectionUtils;
 import org.springframework.util.StringUtils;
 
+import java.time.LocalDateTime;
+import java.time.format.DateTimeFormatter;
+import java.util.ArrayList;
 import java.util.List;
-import java.util.regex.Matcher;
-import java.util.regex.Pattern;
+import java.util.stream.Collectors;
 
 import static com.ticker.fetcher.common.util.Util.*;
 
@@ -26,33 +31,37 @@ public class FetcherService {
     @Autowired
     AppRepository repository;
 
-    private static final Pattern OLHC = Pattern.compile("^O[0-9.]*H[0-9.]*L[0-9.]*C[0-9.]*.*$");
-    private static final Pattern PATTERNOS = Pattern.compile("^O");
-    private static final Pattern PATTERNOE = Pattern.compile("H[0-9.]*L[0-9.]*C[0-9.]*.*$");
-    private static final Pattern PATTERNHS = Pattern.compile("^O[0-9.]*H");
-    private static final Pattern PATTERNHE = Pattern.compile("L[0-9.]*C[0-9.]*.*$");
-    private static final Pattern PATTERNLS = Pattern.compile("^O[0-9.]*H[0-9.]*L");
-    private static final Pattern PATTERNLE = Pattern.compile("C[0-9.]*.*$");
-    private static final Pattern PATTERNCS = Pattern.compile("^O[0-9.]*H[0-9.]*L[0-9.]*C");
-    private static final Pattern PATTERNCE = Pattern.compile("([−+][0-9.]*|00.00) \\([−+]{0,1}[0-9.]*%\\)$");
+    private static final List<FetcherRepoModel> dataQueue = new ArrayList<>();
 
     /**
      * Set setting for the charts that are loaded
      *
-     * @param webDriver
+     * @param fetcherThread
      * @param iteration
+     * @param refresh
      */
-    public void setChartSettings(WebDriver webDriver, int iteration) {
+    public void setChartSettings(FetcherThread fetcherThread, int iteration, boolean refresh) {
         int iterationMultiplier = 200;
-        // Chart style
-        configureMenuByValue(webDriver, "menu-inner", "header-toolbar-chart-styles", "ha");
+        if (!refresh) {
+            // Chart style
+            configureMenuByValue(fetcherThread.getWebDriver(), "menu-inner", "header-toolbar-chart-styles", "ha");
 
-        // Chart interval
-        configureMenuByValue(webDriver, "menu-inner", "header-toolbar-intervals", "1");
+            // Chart interval
+            configureMenuByValue(fetcherThread.getWebDriver(), "menu-inner", "header-toolbar-intervals", "1");
+
+        }
 
         // Indicators
-        waitTillLoad(webDriver, WAIT_SHORT + iteration*iterationMultiplier, 2);
-        setIndicators(webDriver, "bb:STD;Bollinger_Bands", "rsi:STD;RSI");
+        waitTillLoad(fetcherThread.getWebDriver(), WAIT_SHORT + iteration * iterationMultiplier, 2);
+        setIndicators(fetcherThread.getWebDriver(), "bb:STD;Bollinger_Bands", "rsi:STD;RSI");
+
+        if (refresh) {
+            log.info(fetcherThread.getExchange() + ":" + fetcherThread.getSymbol() + " - Refreshed");
+        } else {
+            log.info(fetcherThread.getExchange() + ":" + fetcherThread.getSymbol() + " - Initialized");
+        }
+
+        fetcherThread.setInitialized(true);
     }
 
     /**
@@ -106,11 +115,11 @@ public class FetcherService {
                 ;
         } catch (Exception e) {
             iteration = iteration + 1;
-            log.error("Iteration " + iteration + " failed");
+            log.debug("Iteration " + iteration + " failed");
             if (iteration < numRetries) {
                 selectIndicator(indicator, menuBox, iteration);
             } else {
-                e.printStackTrace();
+                log.error(e.getMessage());
                 throw new TickerException("Cannot select indicator " + indicator);
             }
         }
@@ -138,13 +147,16 @@ public class FetcherService {
                     ;
                 valueElement = menuBox.findElement(By.cssSelector("div[data-value='" + value + "']"));
             } catch (Exception e) {
-                log.error("valueElement: " + valueElement);
+
                 if (valueElement != null) {
                     log.error(valueElement.getCssValue("class"));
                 } else {
+
                     if (e instanceof StaleElementReferenceException) {
+                        log.debug("valueElement: " + valueElement);
                         log.debug("Error in configureMenuByValue", e);
                     } else {
+                        log.error("valueElement: " + valueElement);
                         log.error("Error in configureMenuByValue", e);
                     }
                 }
@@ -153,93 +165,131 @@ public class FetcherService {
         webDriver.findElement(By.id(header)).click();
     }
 
+    @Async("fetcherTaskExecutor")
+    @Scheduled(fixedRate = 750)
+    public void doThreadTasks() {
+        List<FetcherThread> pool = appService.getCurrentTickerList();
+        for (FetcherThread thread : pool) {
+            doTask(thread);
+        }
+    }
+
+    @Async("fetcherTaskExecutor")
     public void doTask(FetcherThread fetcherThread) {
-        try {
-            WebElement table = fetcherThread.getWebDriver()
-                    .findElement(By.cssSelector("table[class='chart-markup-table']"));
-            table.click();
-            table.findElement(By.className("price-axis")).click();
-            List<WebElement> rows = table.findElements(By.tagName("tr"));
-            float o = 0;
-            float h = 0;
-            float l = 0;
-            float c = 0;
-            float bbM = 0;
-            float bbU = 0;
-            float bbL = 0;
-            float rsi = 0;
-            for (WebElement row : rows) {
-                String text = row.getText();
-                if (!StringUtils.isEmpty(text)) {
-                    String[] vals = text.split("\n");
-                    for (int i = 0; i < vals.length; i++) {
-                        if (OLHC.matcher(vals[i]).matches()) {
+        if (fetcherThread.isInitialized() && fetcherThread.isEnabled()) {
+            try {
+                log.debug("doTask() started task: " + fetcherThread.getThreadName());
+                List<String> texts;
+                fetcherThread.getWebDriver().switchTo().window(fetcherThread.getWebDriver().getWindowHandle());
+                WebElement table = fetcherThread.getWebDriver()
+                        .findElement(By.cssSelector("table[class='chart-markup-table']"));
+                List<WebElement> rows = table.findElements(By.tagName("tr"));
+                texts = rows.stream().map(webElement -> webElement.getText()).collect(Collectors.toList());
+                float o = 0;
+                float h = 0;
+                float l = 0;
+                float c = 0;
+                float bbA = 0;
+                float bbU = 0;
+                float bbL = 0;
+                float rsi = 0;
+                String ohlcbbRowText = texts.get(0);
+                if (!StringUtils.isEmpty(ohlcbbRowText)) {
+                    String[] vals = ohlcbbRowText.split("\n");
+                    float tmpVal = 0;
+                    for (int i = 0; i < vals.length && tmpVal == 0; i++) {
+                        int io = vals[i].indexOf("O");
+                        int ih = vals[i].indexOf("H");
+                        int il = vals[i].indexOf("L");
+                        int ic = vals[i].indexOf("C");
+                        if (o * h * l * c == 0 && (io < ih && ih < il && il < ic)) {
                             String val = vals[i];
 
-                            o = getOHCLVal(val, PATTERNOS, PATTERNOE);
-                            h = getOHCLVal(val, PATTERNHS, PATTERNHE);
-                            l = getOHCLVal(val, PATTERNLS, PATTERNLE);
-                            c = getOHCLVal(val, PATTERNCS, PATTERNCE);
+                            o = Float.parseFloat(val.substring(io + 1, ih).trim());
+                            h = Float.parseFloat(val.substring(ih + 1, il).trim());
+                            l = Float.parseFloat(val.substring(il + 1, ic).trim());
+                            c = Float.parseFloat(val.substring(ic + 1, ic + val.substring(ic).indexOf(".") + 3).trim());
 
-                        } else if ("BB".equalsIgnoreCase(vals[i])) {
-                            bbM = Float.parseFloat(vals[i + 2]);
+                            log.debug("1OHLC at 0");
+                        } else if (bbL * bbA * bbU == 0 && "BB".equalsIgnoreCase(vals[i])) {
+                            bbA = Float.parseFloat(vals[i + 2]);
                             bbU = Float.parseFloat(vals[i + 3]);
                             bbL = Float.parseFloat(vals[i + 4]);
-                        } else if ("RSI".equalsIgnoreCase(vals[i])) {
+                            log.debug("1BB   at 0");
+
+                        }
+                        tmpVal = o * h * l * c * bbA * bbL * bbU;
+                    }
+                }
+
+                String rsiText = texts.get(4);
+                if (!StringUtils.isEmpty(rsiText)) {
+                    String[] vals = rsiText.split("\n");
+                    for (int i = 0; i < vals.length && rsi == 0; i++) {
+                        if ("RSI".equalsIgnoreCase(vals[i])) {
                             rsi = Float.parseFloat(vals[i + 2]);
+                            log.debug("1RSI  at 4");
                         }
                     }
                 }
-            }
-            float valCheck = o * h * l * c * bbL * bbM * bbU * rsi;
-            if (valCheck == 0) {
-                log.error(fetcherThread.getThreadName() + " :\n" +
-                        o + "," + h + "," + l + "," + c + "\n"
-                        + bbL + "," + bbM + "," + bbU + "\n"
-                        + rsi);
-            } else {
-                log.debug(fetcherThread.getThreadName() + " :\n" +
-                        o + "," + h + "," + l + "," + c + "\n"
-                        + bbL + "," + bbM + "," + bbU + "\n"
-                        + rsi);
-            }
+                float valCheck = o * h * l * c * bbL * bbA * bbU * rsi;
+                if (valCheck == 0) {
+                    log.error(fetcherThread.getThreadName() + " :\n" +
+                            o + "," + h + "," + l + "," + c + "\n"
+                            + bbL + "," + bbA + "," + bbU + "\n"
+                            + rsi);
+                } else {
+                    log.trace(fetcherThread.getThreadName() + " :\n" +
+                            o + "," + h + "," + l + "," + c + "\n"
+                            + bbL + "," + bbA + "," + bbU + "\n"
+                            + rsi);
+                    synchronized (dataQueue) {
+                        dataQueue.add(new FetcherRepoModel(fetcherThread.getTableName(), System.currentTimeMillis(),
+                                o, h, l, c, bbU, bbA, bbL, rsi));
+                    }
+                    log.debug("doTask() added data: " + fetcherThread.getThreadName() + ", size: " + dataQueue.size());
+                }
 
-        } catch (Exception e) {
-            String errorMessage = e.getMessage();
-            if (errorMessage.contains("element click intercepted")) {
-                log.debug("Element click intercepted");
-            } else if (e instanceof ArrayIndexOutOfBoundsException ||
-                    e instanceof NumberFormatException) {
+            } catch (ArrayIndexOutOfBoundsException | NumberFormatException e) {
                 log.debug(e.getClass().getName());
                 StackTraceElement[] stackTraceElements = e.getStackTrace();
                 for (StackTraceElement stackTraceElement : stackTraceElements) {
                     log.debug("\t" + stackTraceElement.toString());
                 }
-            } else {
-                log.error("Exception in doTask(): " + fetcherThread.getThreadName());
-                log.error(e.getMessage());
+            } catch (NoSuchSessionException e) {
+                log.error("Destroying: " + fetcherThread.getThreadName());
+                fetcherThread.destroy();
+                throw e;
+            } catch (Exception e) {
+                String errorMessage = e.getMessage();
+                if (errorMessage.contains("element click intercepted")) {
+                    log.info("Element click intercepted: " + fetcherThread.getThreadName());
+                } else {
+                    log.error("Exception in doTask(): " + fetcherThread.getThreadName());
+                    log.error(e.getMessage());
+                    throw e;
+                }
             }
+        } else {
+            log.debug("Skipping doTask()");
         }
-        waitFor(WAIT_MEDIUM);
     }
 
-    private float getOHCLVal(String val, Pattern patternStart, Pattern patternEnd) {
-        Matcher matcherStart = patternStart.matcher(val);
-        Matcher matcherEnd = patternEnd.matcher(val);
-        if (!matcherStart.find()) {
-            log.error("No match for start pattern: " + patternStart.pattern());
-            log.error(val);
+    @Async
+    @Scheduled(fixedRate = 2000)
+    public void scheduledJob() {
+        DateTimeFormatter dtf = DateTimeFormatter.ofPattern("yyyy/MM/dd HH:mm:ss");
+        LocalDateTime now = LocalDateTime.now();
+        String sNow = dtf.format(now);
+        log.debug("Scheduled task started: " + sNow);
+        List<FetcherRepoModel> tempDataQueue;
+        synchronized (dataQueue) {
+            tempDataQueue = new ArrayList<>(dataQueue);
+            dataQueue.clear();
         }
-        if (!matcherEnd.find()) {
-            log.error("No match for end pattern: " + patternEnd.pattern());
-            log.error(val);
-        }
-        String valueString = val.substring(matcherStart.end(), matcherEnd.start());
-        return Float.parseFloat(valueString);
-    }
-
-    public void scheduledJob(FetcherThread fetcherThread) {
-        log.debug("ScheduledJob: " + fetcherThread.getThreadName());
+        log.debug("Scheduled task populated: " + sNow);
+        repository.pushData(tempDataQueue, sNow);
+        log.debug("Scheduled task ended: " + sNow);
     }
 
     public void createTable(String tableName) {

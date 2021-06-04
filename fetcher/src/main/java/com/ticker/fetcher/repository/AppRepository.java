@@ -3,13 +3,17 @@ package com.ticker.fetcher.repository;
 import com.ticker.fetcher.common.exception.TickerException;
 import com.ticker.fetcher.common.repository.FetcherRepository;
 import com.ticker.fetcher.common.repository.TickerRepository;
+import com.ticker.fetcher.model.FetcherRepoModel;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.jdbc.core.SqlOutParameter;
 import org.springframework.jdbc.core.SqlParameter;
+import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Repository;
 
 import java.sql.Types;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 
 import static com.ticker.fetcher.common.constants.DBConstants.*;
@@ -17,6 +21,7 @@ import static com.ticker.fetcher.common.constants.ProcedureConstants.ADD_TABLE;
 import static com.ticker.fetcher.common.constants.ProcedureConstants.GET_EXCHANGE_SYMBOL_ID_PR;
 
 @Repository
+@Slf4j
 public class AppRepository {
 
     @Autowired
@@ -54,5 +59,17 @@ public class AppRepository {
         }
 
 
+    }
+
+    // TODO: Implement method
+    @Async
+    public void pushData(List<FetcherRepoModel> dataQueue, String sNow) {
+        log.info("pushData task started: " + sNow);
+        log.info("Pushing data, size: " + dataQueue.size());
+        for (FetcherRepoModel data : dataQueue) {
+            log.info(data.toString());
+        }
+        log.info("Pushed data");
+        log.debug("pushData task ended: " + sNow);
     }
 }

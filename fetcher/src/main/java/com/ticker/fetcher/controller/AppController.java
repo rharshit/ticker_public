@@ -41,6 +41,12 @@ public class AppController {
         return new ResponseEntity<>(new ResponseStatus(), HttpStatus.OK);
     }
 
+    @PutMapping("refresh")
+    public ResponseEntity<ResponseStatus> refresh(@RequestParam String exchange, @RequestParam String symbol) {
+        service.refreshBrowser(exchange, symbol);
+        return new ResponseEntity<>(new ResponseStatus(), HttpStatus.OK);
+    }
+
     /**
      * Remove tracking for the ticker, given exchange and symbol
      *

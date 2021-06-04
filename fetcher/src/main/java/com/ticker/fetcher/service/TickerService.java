@@ -6,6 +6,7 @@ import com.ticker.fetcher.repository.AppRepository;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.ApplicationContext;
+import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDate;
@@ -127,10 +128,10 @@ public class TickerService {
      * @return
      */
     public Map<String, List<FetcherThreadModel>> getCurrentTickers() {
-        Map<String, FetcherThread> threadMap = getThreadPool();
+        List<FetcherThread> threads = getCurrentTickerList();
         List<FetcherThreadModel> tickers = new ArrayList<>();
-        for (Map.Entry<String, FetcherThread> entry : threadMap.entrySet()) {
-            tickers.add(new FetcherThreadModel(entry.getValue()));
+        for (FetcherThread thread : threads) {
+            tickers.add(new FetcherThreadModel(thread));
         }
         Map<String, List<FetcherThreadModel>> map = new HashMap<String, List<FetcherThreadModel>>() {{
             put("tickers", tickers);
@@ -138,10 +139,39 @@ public class TickerService {
         return map;
     }
 
+    public List<FetcherThread> getCurrentTickerList() {
+        Map<String, FetcherThread> threadMap = getThreadPool();
+        List<FetcherThread> tickers = new ArrayList<>();
+        for (Map.Entry<String, FetcherThread> entry : threadMap.entrySet()) {
+            tickers.add(entry.getValue());
+        }
+        return tickers;
+    }
+
     public void deleteAllTickers() {
         Map<String, FetcherThread> threadMap = getThreadPool();
         for (String threadName : threadMap.keySet()) {
             destroyThread(threadName);
         }
+    }
+
+    @Scheduled(fixedRate = 1000)
+    public void processTickers() {
+        Map<String, FetcherThread> pool = getThreadPool();
+        for (FetcherThread thread : pool.values()) {
+            if (thread.isEnabled()) {
+                thread.removeUnwantedScreens();
+            }
+        }
+    }
+
+    public void refreshBrowser(String exchange, String symbol) {
+        String threadName = getThreadName(exchange, symbol);
+        Map<String, FetcherThread> threadMap = getThreadPool();
+        if (!threadMap.containsKey(threadName)) {
+            return;
+        }
+        FetcherThread thread = threadMap.get(threadName);
+        thread.refreshBrowser();
     }
 }
