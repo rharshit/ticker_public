@@ -19,6 +19,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
+import java.util.stream.Collectors;
 
 import static com.ticker.fetcher.common.util.Util.*;
 
@@ -31,6 +32,8 @@ public class FetcherService {
 
     @Autowired
     AppRepository repository;
+
+    private static final Object doTaskLock = new Object();
 
     private static final List<FetcherRepoModel> dataQueue = new ArrayList<>();
 
@@ -190,11 +193,15 @@ public class FetcherService {
         if (fetcherThread.isInitialized() && fetcherThread.isEnabled()) {
             try {
                 log.debug("doTask() started task: " + fetcherThread.getThreadName());
-                WebElement table = fetcherThread.getWebDriver()
-                        .findElement(By.cssSelector("table[class='chart-markup-table']"));
-                table.click();
-                table.findElement(By.className("price-axis")).click();
-                List<WebElement> rows = table.findElements(By.tagName("tr"));
+                List<String> texts;
+                synchronized (doTaskLock) {
+                    WebElement table = fetcherThread.getWebDriver()
+                            .findElement(By.cssSelector("table[class='chart-markup-table']"));
+                    table.click();
+                    table.findElement(By.className("price-axis")).click();
+                    List<WebElement> rows = table.findElements(By.tagName("tr"));
+                    texts = rows.stream().map(webElement -> webElement.getText()).collect(Collectors.toList());
+                }
                 float o = 0;
                 float h = 0;
                 float l = 0;
@@ -203,7 +210,7 @@ public class FetcherService {
                 float bbU = 0;
                 float bbL = 0;
                 float rsi = 0;
-                String ohlcbbRowText = rows.get(0).getText();
+                String ohlcbbRowText = texts.get(0);
                 if (!StringUtils.isEmpty(ohlcbbRowText)) {
                     String[] vals = ohlcbbRowText.split("\n");
                     float tmpVal = 0;
@@ -232,7 +239,7 @@ public class FetcherService {
                     }
                 }
 
-                String rsiText = rows.get(4).getText();
+                String rsiText = texts.get(4);
                 if (!StringUtils.isEmpty(rsiText)) {
                     String[] vals = rsiText.split("\n");
                     for (int i = 0; i < vals.length && rsi == 0; i++) {
