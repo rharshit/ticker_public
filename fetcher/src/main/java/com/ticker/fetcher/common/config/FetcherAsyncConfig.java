@@ -14,6 +14,9 @@ public class FetcherAsyncConfig implements AsyncConfigurer {
     @Override
     public Executor getAsyncExecutor() {
         ThreadPoolTaskExecutor executor = new ThreadPoolTaskExecutor();
+        executor.setCorePoolSize(100);
+        executor.setMaxPoolSize(250);
+        executor.setQueueCapacity(400);
         executor.setKeepAliveSeconds(5);
         executor.initialize();
         return executor;
