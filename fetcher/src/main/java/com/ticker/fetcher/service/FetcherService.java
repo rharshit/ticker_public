@@ -168,7 +168,7 @@ public class FetcherService {
         webDriver.findElement(By.id(header)).click();
     }
 
-    @Async
+    @Async("fetcherTaskExecutor")
     @Scheduled(fixedDelay = 750)
     public void doThreadTasks() {
         List<FetcherThread> pool = appService.getCurrentTickerList();
@@ -177,7 +177,7 @@ public class FetcherService {
         }
     }
 
-    @Async
+    @Async("fetcherTaskExecutor")
     public void doTask(FetcherThread fetcherThread) {
         if (fetcherThread.isInitialized() && fetcherThread.isEnabled()) {
             try {
