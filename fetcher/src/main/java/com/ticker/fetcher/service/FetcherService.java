@@ -169,6 +169,15 @@ public class FetcherService {
     }
 
     @Async
+    @Scheduled(fixedDelay = 750)
+    public void doThreadTasks() {
+        List<FetcherThread> pool = appService.getCurrentTickerList();
+        for (FetcherThread thread : pool) {
+            doTask(thread);
+        }
+    }
+
+    @Async
     public void doTask(FetcherThread fetcherThread) {
         if (fetcherThread.isInitialized() && fetcherThread.isEnabled()) {
             try {
@@ -220,9 +229,11 @@ public class FetcherService {
                             o + "," + h + "," + l + "," + c + "\n"
                             + bbL + "," + bbA + "," + bbU + "\n"
                             + rsi);
-                    dataQueue.add(new FetcherRepoModel(fetcherThread.getTableName(), System.currentTimeMillis(),
-                            o, h, l, c, bbU, bbA, bbL, rsi));
-                    log.debug("doTask() added data: " + fetcherThread.getThreadName() + ", size: " + dataQueue.size());
+                    synchronized (dataQueue) {
+                        dataQueue.add(new FetcherRepoModel(fetcherThread.getTableName(), System.currentTimeMillis(),
+                                o, h, l, c, bbU, bbA, bbL, rsi));
+                    }
+                    log.info("doTask() added data: " + fetcherThread.getThreadName() + ", size: " + dataQueue.size());
                 }
 
             } catch (ArrayIndexOutOfBoundsException | NumberFormatException e) {

@@ -2,6 +2,8 @@ package com.ticker.fetcher.model;
 
 import lombok.AllArgsConstructor;
 
+import java.sql.Timestamp;
+
 @AllArgsConstructor
 public class FetcherRepoModel {
     private final String tableName;
@@ -19,7 +21,7 @@ public class FetcherRepoModel {
     public String toString() {
         return "FetcherRepoModel{" +
                 "tableName='" + tableName + '\'' +
-                ", timestamp=" + timestamp +
+                ",\ttimestamp=" + new Timestamp(timestamp) +
                 ", o=" + o +
                 ", h=" + h +
                 ", l=" + l +

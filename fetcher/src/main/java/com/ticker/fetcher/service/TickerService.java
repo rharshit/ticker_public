@@ -128,15 +128,24 @@ public class TickerService {
      * @return
      */
     public Map<String, List<FetcherThreadModel>> getCurrentTickers() {
-        Map<String, FetcherThread> threadMap = getThreadPool();
+        List<FetcherThread> threads = getCurrentTickerList();
         List<FetcherThreadModel> tickers = new ArrayList<>();
-        for (Map.Entry<String, FetcherThread> entry : threadMap.entrySet()) {
-            tickers.add(new FetcherThreadModel(entry.getValue()));
+        for (FetcherThread thread : threads) {
+            tickers.add(new FetcherThreadModel(thread));
         }
         Map<String, List<FetcherThreadModel>> map = new HashMap<String, List<FetcherThreadModel>>() {{
             put("tickers", tickers);
         }};
         return map;
+    }
+
+    public List<FetcherThread> getCurrentTickerList() {
+        Map<String, FetcherThread> threadMap = getThreadPool();
+        List<FetcherThread> tickers = new ArrayList<>();
+        for (Map.Entry<String, FetcherThread> entry : threadMap.entrySet()) {
+            tickers.add(entry.getValue());
+        }
+        return tickers;
     }
 
     public void deleteAllTickers() {

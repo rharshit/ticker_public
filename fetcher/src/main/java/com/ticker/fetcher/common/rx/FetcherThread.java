@@ -22,7 +22,7 @@ import java.util.List;
 
 import static com.ticker.fetcher.common.constants.WebConstants.TRADING_VIEW_BASE;
 import static com.ticker.fetcher.common.constants.WebConstants.TRADING_VIEW_CHART;
-import static com.ticker.fetcher.common.util.Util.WAIT_MEDIUM;
+import static com.ticker.fetcher.common.util.Util.WAIT_LONG;
 import static com.ticker.fetcher.common.util.Util.waitFor;
 import static org.openqa.selenium.UnexpectedAlertBehaviour.ACCEPT;
 
@@ -99,8 +99,7 @@ public class FetcherThread extends Thread {
         initialize(0);
         while (isEnabled()) {
             while (isEnabled() && isInitialized()) {
-                doTask();
-                waitFor(WAIT_MEDIUM);
+                waitFor(WAIT_LONG);
             }
         }
 
@@ -202,10 +201,6 @@ public class FetcherThread extends Thread {
         } catch (Exception e) {
 
         }
-    }
-
-    protected void doTask() {
-        fetcherService.doTask(this);
     }
 
     public void terminateThread() {
