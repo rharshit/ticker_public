@@ -169,7 +169,7 @@ public class FetcherService {
     }
 
     @Async("fetcherTaskExecutor")
-    @Scheduled(fixedDelay = 750)
+    @Scheduled(fixedRate = 750)
     public void doThreadTasks() {
         List<FetcherThread> pool = appService.getCurrentTickerList();
         for (FetcherThread thread : pool) {
@@ -195,26 +195,42 @@ public class FetcherService {
                 float bbU = 0;
                 float bbL = 0;
                 float rsi = 0;
-                for (WebElement row : rows) {
-                    String text = row.getText();
-                    if (!StringUtils.isEmpty(text)) {
-                        String[] vals = text.split("\n");
-                        for (int i = 0; i < vals.length; i++) {
-                            if (OLHC.matcher(vals[i]).matches()) {
-                                String val = vals[i];
+                String ohlcbbRowText = rows.get(0).getText();
+                if (!StringUtils.isEmpty(ohlcbbRowText)) {
+                    String[] vals = ohlcbbRowText.split("\n");
+                    float tmpVal = 0;
+                    for (int i = 0; i < vals.length && tmpVal == 0; i++) {
+                        int io = vals[i].indexOf("O");
+                        int ih = vals[i].indexOf("H");
+                        int il = vals[i].indexOf("L");
+                        int ic = vals[i].indexOf("C");
+                        if (o * h * l * c == 0 && (io < ih && ih < il && il < ic)) {
+                            String val = vals[i];
 
-                                o = getOHCLVal(val, PATTERNOS, PATTERNOE);
-                                h = getOHCLVal(val, PATTERNHS, PATTERNHE);
-                                l = getOHCLVal(val, PATTERNLS, PATTERNLE);
-                                c = getOHCLVal(val, PATTERNCS, PATTERNCE);
+                            o = Float.parseFloat(val.substring(io + 1, ih).trim());
+                            h = Float.parseFloat(val.substring(ih + 1, il).trim());
+                            l = Float.parseFloat(val.substring(il + 1, ic).trim());
+                            c = Float.parseFloat(val.substring(ic + 1, ic + val.substring(ic).indexOf(".") + 3).trim());
 
-                            } else if ("BB".equalsIgnoreCase(vals[i])) {
-                                bbA = Float.parseFloat(vals[i + 2]);
-                                bbU = Float.parseFloat(vals[i + 3]);
-                                bbL = Float.parseFloat(vals[i + 4]);
-                            } else if ("RSI".equalsIgnoreCase(vals[i])) {
-                                rsi = Float.parseFloat(vals[i + 2]);
-                            }
+                            log.debug("1OHLC at 0");
+                        } else if (bbL * bbA * bbU == 0 && "BB".equalsIgnoreCase(vals[i])) {
+                            bbA = Float.parseFloat(vals[i + 2]);
+                            bbU = Float.parseFloat(vals[i + 3]);
+                            bbL = Float.parseFloat(vals[i + 4]);
+                            log.debug("1BB   at 0");
+
+                        }
+                        tmpVal = o * h * l * c * bbA * bbL * bbU;
+                    }
+                }
+
+                String rsiText = rows.get(4).getText();
+                if (!StringUtils.isEmpty(rsiText)) {
+                    String[] vals = rsiText.split("\n");
+                    for (int i = 0; i < vals.length && rsi == 0; i++) {
+                        if ("RSI".equalsIgnoreCase(vals[i])) {
+                            rsi = Float.parseFloat(vals[i + 2]);
+                            log.debug("1RSI  at 4");
                         }
                     }
                 }
@@ -233,7 +249,7 @@ public class FetcherService {
                         dataQueue.add(new FetcherRepoModel(fetcherThread.getTableName(), System.currentTimeMillis(),
                                 o, h, l, c, bbU, bbA, bbL, rsi));
                     }
-                    log.info("doTask() added data: " + fetcherThread.getThreadName() + ", size: " + dataQueue.size());
+                    log.debug("doTask() added data: " + fetcherThread.getThreadName() + ", size: " + dataQueue.size());
                 }
 
             } catch (ArrayIndexOutOfBoundsException | NumberFormatException e) {
