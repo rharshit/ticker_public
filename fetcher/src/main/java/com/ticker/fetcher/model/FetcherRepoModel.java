@@ -1,13 +1,14 @@
 package com.ticker.fetcher.model;
 
-import lombok.AllArgsConstructor;
+import lombok.Data;
 
 import java.sql.Timestamp;
+import java.text.SimpleDateFormat;
 
-@AllArgsConstructor
+@Data
 public class FetcherRepoModel {
     private final String tableName;
-    private final long timestamp;
+    private final String timestamp;
     private final float o;
     private final float h;
     private final float l;
@@ -17,11 +18,24 @@ public class FetcherRepoModel {
     private final float bbL;
     private final float extra;
 
+    public FetcherRepoModel(String tableName, long timestamp, float o, float h, float l, float c, float bbU, float bbA, float bbL, float extra) {
+        this.tableName = tableName;
+        this.timestamp = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss").format(new Timestamp(timestamp));
+        this.o = o;
+        this.h = h;
+        this.l = l;
+        this.c = c;
+        this.bbU = bbU;
+        this.bbA = bbA;
+        this.bbL = bbL;
+        this.extra = extra;
+    }
+
     @Override
     public String toString() {
         return "FetcherRepoModel{" +
                 "tableName='" + tableName + '\'' +
-                ",\ttimestamp=" + new Timestamp(timestamp) +
+                ",\ttimestamp=" + timestamp +
                 ", o=" + o +
                 ", h=" + h +
                 ", l=" + l +

@@ -8,9 +8,11 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.jdbc.core.SqlOutParameter;
 import org.springframework.jdbc.core.SqlParameter;
-import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Repository;
+import org.springframework.util.CollectionUtils;
 
+import java.sql.Connection;
+import java.sql.Statement;
 import java.sql.Types;
 import java.util.HashMap;
 import java.util.List;
@@ -61,15 +63,35 @@ public class AppRepository {
 
     }
 
-    // TODO: Implement method
-    @Async
     public void pushData(List<FetcherRepoModel> dataQueue, String sNow) {
         log.info("pushData task started: " + sNow);
         log.info("Pushing data, size: " + dataQueue.size());
-        for (FetcherRepoModel data : dataQueue) {
-            log.info(data.toString());
+        try {
+            if (!CollectionUtils.isEmpty(dataQueue)) {
+                Connection connection = fetcherRepository.getDataSource().getConnection();
+                Statement statement = connection.createStatement();
+                for (FetcherRepoModel data : dataQueue) {
+                    log.debug(data.toString());
+                    String deleteSql = "DELETE FROM " + data.getTableName() + " WHERE `timestamp`='" + data.getTimestamp() + "'";
+                    log.debug(deleteSql);
+                    statement.addBatch(deleteSql);
+                    String insertSql = "INSERT INTO " + data.getTableName() + " (`timestamp`, O, H, L, C, BB_U, BB_A, BB_L, EXTRA)" +
+                            "VALUES('" + data.getTimestamp() + "', " + data.getO() + ", " + data.getH() +
+                            ", " + data.getL() + ", " + data.getC() + ", " + data.getBbU() + ", " +
+                            data.getBbA() + ", " + data.getBbL() + ", " + data.getExtra() + ")";
+                    log.debug(insertSql);
+                    statement.addBatch(insertSql);
+                }
+                int[] count = statement.executeBatch();
+                log.debug("Data pushed");
+            }
+        } catch (Exception e) {
+            log.error("Error while pushing data to DB");
+            log.error(e.getMessage());
+            throw new TickerException("Error while pushing data to DB");
         }
-        log.info("Pushed data");
+
+        log.debug("Pushed data");
         log.debug("pushData task ended: " + sNow);
     }
 }
