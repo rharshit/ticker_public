@@ -8,6 +8,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.jdbc.core.SqlOutParameter;
 import org.springframework.jdbc.core.SqlParameter;
+import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Repository;
 import org.springframework.util.CollectionUtils;
 
@@ -63,6 +64,7 @@ public class AppRepository {
 
     }
 
+    @Async("repoExecutor")
     public void pushData(List<FetcherRepoModel> dataQueue, String sNow) {
         log.info("pushData task started: " + sNow);
         log.info("Pushing data, size: " + dataQueue.size());

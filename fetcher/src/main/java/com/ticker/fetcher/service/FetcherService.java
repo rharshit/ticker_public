@@ -275,7 +275,7 @@ public class FetcherService {
         }
     }
 
-    @Async
+    @Async("scheduledExecutor")
     @Scheduled(fixedRate = 2000)
     public void scheduledJob() {
         DateTimeFormatter dtf = DateTimeFormatter.ofPattern("yyyy/MM/dd HH:mm:ss");
