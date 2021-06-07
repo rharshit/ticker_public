@@ -1,5 +1,6 @@
 package com.ticker.fetcher.common.config;
 
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.scheduling.annotation.AsyncConfigurer;
@@ -10,6 +11,7 @@ import java.util.concurrent.Executor;
 
 @Configuration
 @EnableAsync
+@Slf4j
 public class AsyncConfig implements AsyncConfigurer {
 
     @Override
@@ -51,8 +53,9 @@ public class AsyncConfig implements AsyncConfigurer {
         ThreadPoolTaskExecutor executor = new ThreadPoolTaskExecutor();
         executor.setCorePoolSize(1);
         executor.setMaxPoolSize(2);
-        executor.setQueueCapacity(10);
+        executor.setQueueCapacity(5);
         executor.setThreadNamePrefix("repoExec-");
+        executor.setRejectedExecutionHandler((r, executor1) -> log.info("Rejected thread: " + r.toString()));
         executor.initialize();
         return executor;
     }
