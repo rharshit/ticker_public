@@ -9,9 +9,17 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.jdbc.core.SqlOutParameter;
 import org.springframework.jdbc.core.SqlParameter;
 import org.springframework.scheduling.annotation.Async;
+import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Repository;
+import org.springframework.util.CollectionUtils;
 
+import java.sql.Connection;
+import java.sql.SQLException;
+import java.sql.Statement;
 import java.sql.Types;
+import java.time.LocalDateTime;
+import java.time.format.DateTimeFormatter;
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -30,6 +38,8 @@ public class AppRepository {
     @Autowired
     TickerRepository tickerRepository;
 
+    private static final List<String> sqlQueue = new ArrayList<>();
+    private Connection fetcherConnection = null;
 
     public int getExchangeSymbolId(String exchange, String symbol) {
         SqlParameter[] sqlParameters = {
@@ -61,15 +71,67 @@ public class AppRepository {
 
     }
 
-    // TODO: Implement method
-    @Async
-    public void pushData(List<FetcherRepoModel> dataQueue, String sNow) {
-        log.info("pushData task started: " + sNow);
-        log.info("Pushing data, size: " + dataQueue.size());
-        for (FetcherRepoModel data : dataQueue) {
-            log.info(data.toString());
+    private Connection getFetcherConnection() {
+        try {
+            if (this.fetcherConnection == null || this.fetcherConnection.isClosed()) {
+                this.fetcherConnection = this.fetcherRepository.getDataSource().getConnection();
+            }
+            return this.fetcherConnection;
+        } catch (SQLException throwables) {
+            return null;
         }
-        log.info("Pushed data");
-        log.debug("pushData task ended: " + sNow);
+    }
+
+    @Async("repoExecutor")
+    @Scheduled(fixedRate = 1000)
+    public void pushData() {
+        DateTimeFormatter dtf = DateTimeFormatter.ofPattern("yyyy/MM/dd HH:mm:ss.n.A");
+        String now = dtf.format(LocalDateTime.now());
+        log.debug("pushData task started: " + now);
+        if (!CollectionUtils.isEmpty(sqlQueue)) {
+            try (Connection connection = getFetcherConnection()) {
+                Statement statement = connection.createStatement();
+                synchronized (sqlQueue) {
+                    log.info("Pushing data, size: " + sqlQueue.size());
+                    log.info(sqlQueue.get(0));
+                    for (String sql : sqlQueue) {
+                        log.trace(sql);
+                        statement.addBatch(sql);
+                    }
+                    sqlQueue.clear();
+                }
+                statement.executeBatch();
+                log.debug("Executed queries");
+                log.debug("Data pushed");
+            } catch (SQLException e) {
+                e.printStackTrace();
+                log.error("Data not pushed");
+            }
+        }
+        log.info("pushData task ended: " + now);
+    }
+
+    public void addToQueue(List<FetcherRepoModel> datas, String sNow) {
+        log.debug("addToQueue task started: " + sNow);
+        log.debug("Adding data, size: " + datas.size());
+        if (!CollectionUtils.isEmpty(datas)) {
+            log.debug("Initial data, size: " + sqlQueue.size());
+            for (FetcherRepoModel data : datas) {
+                synchronized (sqlQueue) {
+                    log.trace(data.toString());
+                    String deleteSql = "DELETE FROM " + data.getTableName() + " WHERE `timestamp`='" + data.getTimestamp() + "'";
+                    log.trace(deleteSql);
+                    sqlQueue.add(deleteSql);
+                    String insertSql = "INSERT INTO " + data.getTableName() + " (`timestamp`, O, H, L, C, BB_U, BB_A, BB_L, EXTRA)" +
+                            "VALUES('" + data.getTimestamp() + "', " + data.getO() + ", " + data.getH() +
+                            ", " + data.getL() + ", " + data.getC() + ", " + data.getBbU() + ", " +
+                            data.getBbA() + ", " + data.getBbL() + ", " + data.getExtra() + ")";
+                    log.trace(insertSql);
+                    sqlQueue.add(insertSql);
+                }
+            }
+            log.debug("Data Added, size: " + sqlQueue.size());
+        }
+        log.debug("addToQueue task ended: " + sNow);
     }
 }

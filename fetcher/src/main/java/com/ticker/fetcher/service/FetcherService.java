@@ -275,8 +275,8 @@ public class FetcherService {
         }
     }
 
-    @Async
-    @Scheduled(fixedRate = 2000)
+    @Async("scheduledExecutor")
+    @Scheduled(fixedRate = 850)
     public void scheduledJob() {
         DateTimeFormatter dtf = DateTimeFormatter.ofPattern("yyyy/MM/dd HH:mm:ss");
         LocalDateTime now = LocalDateTime.now();
@@ -288,7 +288,7 @@ public class FetcherService {
             dataQueue.clear();
         }
         log.debug("Scheduled task populated: " + sNow);
-        repository.pushData(tempDataQueue, sNow);
+        repository.addToQueue(tempDataQueue, sNow);
         log.debug("Scheduled task ended: " + sNow);
     }
 

@@ -14,28 +14,28 @@ import javax.sql.DataSource;
 @Configuration
 public class TickerDatabaseConfig {
 
-    @Value("${spring.datasource.url.ticker}")
+    @Value("${spring.datasource.ticker.url}")
     private String jdbcUrl;
 
-    @Value("${spring.datasource.username}")
+    @Value("${spring.datasource.ticker.username}")
     private String username;
 
-    @Value("${spring.datasource.password}")
+    @Value("${spring.datasource.ticker.password}")
     private String password;
 
-    @Value("${spring.datasource.hikari.connection-timeout}")
+    @Value("${spring.datasource.hikari.ticker.connection-timeout}")
     private long timeout;
 
-    @Value("${spring.datasource.hikari.idle-timeout}")
+    @Value("${spring.datasource.hikari.ticker.idle-timeout}")
     private long idleTimeout;
 
-    @Value("${spring.datasource.hikari.max-lifetime}")
+    @Value("${spring.datasource.hikari.ticker.max-lifetime}")
     private long maxLifetime;
 
-    @Value("${spring.datasource.hikari.minimum-idle}")
+    @Value("${spring.datasource.hikari.ticker.minimum-idle}")
     private int minIdle;
 
-    @Value("${spring.datasource.hikari.maximum-pool-size}")
+    @Value("${spring.datasource.hikari.ticker.maximum-pool-size}")
     private int maxPoolSize;
 
     @Primary
