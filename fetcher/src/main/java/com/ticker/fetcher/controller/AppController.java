@@ -12,7 +12,7 @@ import java.util.List;
 import java.util.Map;
 
 @RestController
-@RequestMapping("/fetcher/")
+@RequestMapping("/")
 public class AppController {
 
     @Autowired
