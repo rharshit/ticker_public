@@ -4,6 +4,8 @@ import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.ticker.fetcher.common.rx.FetcherThread;
 import lombok.Data;
 
+import java.util.Set;
+
 @Data
 public class FetcherThreadModel {
     @JsonIgnore
@@ -35,5 +37,9 @@ public class FetcherThreadModel {
 
     public int getEsID() {
         return this.fetcherThread.getEsID();
+    }
+
+    public Set<String> getFetcherApps() {
+        return this.fetcherThread.getFetcherApps();
     }
 }

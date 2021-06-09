@@ -18,7 +18,11 @@ import org.springframework.stereotype.Component;
 import org.springframework.util.CollectionUtils;
 import org.springframework.util.StringUtils;
 
+import java.util.Arrays;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
+import java.util.stream.Collectors;
 
 import static com.ticker.fetcher.common.constants.WebConstants.TRADING_VIEW_BASE;
 import static com.ticker.fetcher.common.constants.WebConstants.TRADING_VIEW_CHART;
@@ -49,15 +53,17 @@ public class FetcherThread extends Thread {
     private int esID;
     private WebDriver webDriver;
     private final Object postInitLock = new Object();
+    private Set<String> fetcherApps = new HashSet<>();
 
     public static final int RETRY_LIMIT = 10;
 
-    public void setProperties(String threadName, String exchange, String symbol, int esID) {
+    public void setProperties(String threadName, String exchange, String symbol, int esID, String... apps) {
         this.enabled = true;
         this.threadName = threadName;
         this.exchange = exchange;
         this.symbol = symbol;
         this.esID = esID;
+        this.fetcherApps = Arrays.stream(apps).collect(Collectors.toSet());
 
         initializeBean();
     }
@@ -241,5 +247,18 @@ public class FetcherThread extends Thread {
 
     public void refreshBrowser() {
         initialize(0, true);
+    }
+
+    public void addApp(String appName) {
+        getFetcherApps().add(appName);
+    }
+
+    public void removeApp(String appName) {
+        getFetcherApps().remove(appName);
+        if (getFetcherApps().isEmpty()) {
+            log.info("No apps fetching data");
+            log.info("Terminating thread: " + getThreadName());
+            terminateThread();
+        }
     }
 }

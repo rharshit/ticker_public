@@ -29,15 +29,17 @@ public class AppController {
     }
 
     /**
-     * Add tracking for the ticker, given exchange and symbol
+     * Add tracking for the ticker, given exchange and symbol for app
      *
      * @param exchange
      * @param symbol
+     * @param appName
      * @return
      */
     @PostMapping
-    public ResponseEntity<ResponseStatus> addTicker(@RequestParam String exchange, @RequestParam String symbol) {
-        service.addTicker(exchange, symbol);
+    public ResponseEntity<ResponseStatus> addTicker(@RequestParam String exchange, @RequestParam String symbol,
+                                                    @RequestParam String appName) {
+        service.addTicker(exchange, symbol, appName);
         return new ResponseEntity<>(new ResponseStatus(), HttpStatus.OK);
     }
 
@@ -48,13 +50,28 @@ public class AppController {
     }
 
     /**
-     * Remove tracking for the ticker, given exchange and symbol
+     * Remove tracking for the ticker, given exchange and symbol for app
+     *
+     * @param exchange
+     * @param symbol
+     * @param appName
+     * @return
+     */
+    @DeleteMapping
+    public ResponseEntity<ResponseStatus> deleteTicker(@RequestParam String exchange, @RequestParam String symbol,
+                                                       @RequestParam String appName) {
+        service.deleteTicker(exchange, symbol, appName);
+        return new ResponseEntity<>(new ResponseStatus(), HttpStatus.OK);
+    }
+
+    /**
+     * Remove tracking for the ticker, given exchange and symbol for all apps
      *
      * @param exchange
      * @param symbol
      * @return
      */
-    @DeleteMapping
+    @DeleteMapping("/ticker/")
     public ResponseEntity<ResponseStatus> deleteTicker(@RequestParam String exchange, @RequestParam String symbol) {
         service.deleteTicker(exchange, symbol);
         return new ResponseEntity<>(new ResponseStatus(), HttpStatus.OK);

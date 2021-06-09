@@ -57,34 +57,37 @@ public class TickerService {
         log.info("Removed thread: " + threadName);
     }
 
-    private void createThread(String exchange, String symbol) {
+    private void createThread(String exchange, String symbol, String appName) {
         String threadName = getThreadName(exchange, symbol);
         Map<String, FetcherThread> threadMap = getThreadPool();
 
-        if (threadMap.containsKey(threadName)) {
-            return;
+        if (threadMap.containsKey(threadName) && threadMap.get(threadName).isEnabled()) {
+            FetcherThread thread = threadMap.get(threadName);
+            thread.addApp(appName);
+        } else {
+            int esID = getExchangeSymbolId(exchange, symbol);
+
+            FetcherThread thread = (FetcherThread) ctx.getBean("fetcherThread");
+            threadMap.put(threadName, thread);
+            thread.setProperties(threadName, exchange, symbol, esID, appName);
+
+            thread.setTickerServiceBean(this);
+
+            log.info("Added thread: " + threadName);
+            thread.start();
         }
 
-        int esID = getExchangeSymbolId(exchange, symbol);
-
-        FetcherThread thread = (FetcherThread) ctx.getBean("fetcherThread");
-        thread.setProperties(threadName, exchange, symbol, esID);
-
-        thread.setTickerServiceBean(this);
-
-        threadMap.put(threadName, thread);
-        log.info("Added thread: " + threadName);
-        thread.start();
     }
 
     /**
-     * Add tracking for the ticker, given exchange and symbol
+     * Add tracking for the ticker, given exchange and symbol for app
      *
      * @param exchange
      * @param symbol
+     * @param appName
      */
-    public void addTicker(String exchange, String symbol) {
-        createThread(exchange, symbol);
+    public void addTicker(String exchange, String symbol, String appName) {
+        createThread(exchange, symbol, appName);
     }
 
     private String getThreadName(String exchange, String symbol) {
@@ -102,7 +105,7 @@ public class TickerService {
     }
 
     /**
-     * Remove tracking for the ticker, given exchange and symbol
+     * Remove tracking for the ticker, given exchange and symbol for all apps
      *
      * @param exchange
      * @param symbol
@@ -111,6 +114,27 @@ public class TickerService {
         String threadName = getThreadName(exchange, symbol);
 
         destroyThread(threadName);
+    }
+
+    /**
+     * Remove tracking for the ticker, given exchange and symbol for app
+     *
+     * @param exchange
+     * @param symbol
+     * @param appName
+     */
+    public void deleteTicker(String exchange, String symbol, String appName) {
+        String threadName = getThreadName(exchange, symbol);
+        removeAppFromThread(threadName, appName);
+    }
+
+    private void removeAppFromThread(String threadName, String appName) {
+        Map<String, FetcherThread> threadMap = getThreadPool();
+        if (!threadMap.containsKey(threadName)) {
+            return;
+        }
+        FetcherThread thread = threadMap.get(threadName);
+        thread.removeApp(appName);
     }
 
     /**
