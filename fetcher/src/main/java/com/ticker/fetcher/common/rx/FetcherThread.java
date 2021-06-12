@@ -50,8 +50,6 @@ public class FetcherThread extends Thread {
 
     private boolean enabled = false;
     private boolean initialized = false;
-    private String exchange;
-    private String symbol;
     private WebDriver webDriver;
     private final Object postInitLock = new Object();
     private Set<String> fetcherApps = new HashSet<>();
@@ -61,18 +59,14 @@ public class FetcherThread extends Thread {
     /**
      * Constructor to make an object for comparison only
      *
-     * @param exchange
-     * @param symbol
+     * @param entity
      */
-    public FetcherThread(String exchange, String symbol) {
-        this.exchange = exchange;
-        this.symbol = symbol;
+    public FetcherThread(ExchangeSymbolEntity entity) {
+        this.entity = entity;
     }
 
     public void setProperties(String exchange, String symbol, String... apps) {
         this.enabled = true;
-        this.exchange = exchange;
-        this.symbol = symbol;
         this.fetcherApps = Arrays.stream(apps).collect(Collectors.toSet());
 
         initializeBean();
@@ -83,6 +77,14 @@ public class FetcherThread extends Thread {
             throw new TickerException("No entity found for the given exchange and symbol");
         }
         this.entity = entity;
+    }
+
+    public String getExchange() {
+        return entity.getExchangeId();
+    }
+
+    public String getSymbol() {
+        return entity.getSymbolId();
     }
 
     private void initializeBean() {
@@ -139,13 +141,13 @@ public class FetcherThread extends Thread {
     protected void initialize(int iteration, boolean refresh) {
         this.initialized = false;
         if (refresh) {
-            log.info(exchange + ":" + symbol + " - Refreshing");
+            log.info(getExchange() + ":" + getSymbol() + " - Refreshing");
         } else {
-            log.info(exchange + ":" + symbol + " - Initializing");
+            log.info(getExchange() + ":" + getSymbol() + " - Initializing");
         }
 
         try {
-            String url = TRADING_VIEW_BASE + TRADING_VIEW_CHART + exchange + ":" + symbol;
+            String url = TRADING_VIEW_BASE + TRADING_VIEW_CHART + getExchange() + ":" + getSymbol();
             if (refresh) {
                 getWebDriver().navigate().refresh();
             } else {
@@ -248,8 +250,8 @@ public class FetcherThread extends Thread {
     @Override
     public String toString() {
         return "FetcherThread{" +
-                "exchange='" + exchange + '\'' +
-                ", symbol='" + symbol + '\'' +
+                "exchange='" + getExchange() + '\'' +
+                ", symbol='" + getSymbol() + '\'' +
                 '}';
     }
 
@@ -288,13 +290,13 @@ public class FetcherThread extends Thread {
         if (this == o) return true;
         if (o == null || getClass() != o.getClass()) return false;
         FetcherThread thread = (FetcherThread) o;
-        return exchange.equals(thread.exchange) &&
-                symbol.equals(thread.symbol);
+        return getExchange().equals(thread.getExchange()) &&
+                getSymbol().equals(thread.getSymbol());
     }
 
     @Override
     public int hashCode() {
-        return Objects.hash(exchange, symbol);
+        return Objects.hash(getExchange(), getSymbol());
     }
 
     public static class Comparator implements java.util.Comparator<FetcherThread> {

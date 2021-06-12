@@ -42,6 +42,11 @@ public class ExchangeSymbolEntity implements Serializable {
         this.tickerType = tickerType;
     }
 
+    public ExchangeSymbolEntity(String exchangeId, String symbolId) {
+        this.exchangeId = exchangeId;
+        this.symbolId = symbolId;
+    }
+
     public String getFinalTableName() {
         if (tableName != null && tableName.contains(":")) {
             String[] split = tableName.split(":", 2);

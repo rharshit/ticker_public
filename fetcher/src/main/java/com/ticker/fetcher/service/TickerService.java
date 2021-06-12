@@ -51,7 +51,7 @@ public class TickerService {
 
     private FetcherThread getThread(String exchange, String symbol) {
         Set<FetcherThread> threadMap = getThreadPool();
-        FetcherThread compare = new FetcherThread(exchange, symbol);
+        FetcherThread compare = new FetcherThread(new ExchangeSymbolEntity(exchange, symbol));
         return threadMap.stream().filter(compare::equals).findFirst().orElse(null);
     }
 
