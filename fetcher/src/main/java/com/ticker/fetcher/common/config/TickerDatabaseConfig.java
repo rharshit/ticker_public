@@ -5,7 +5,6 @@ import com.zaxxer.hikari.HikariDataSource;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
-import org.springframework.context.annotation.Primary;
 import org.springframework.jdbc.core.JdbcTemplate;
 
 import javax.sql.DataSource;
@@ -38,7 +37,6 @@ public class TickerDatabaseConfig {
     @Value("${spring.datasource.hikari.ticker.maximum-pool-size}")
     private int maxPoolSize;
 
-    @Primary
     @Bean(name = "tickerDataSource")
     public DataSource getTickerDataSource() {
         HikariConfig hikariConfig = new HikariConfig();

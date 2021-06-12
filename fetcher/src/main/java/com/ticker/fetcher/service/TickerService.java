@@ -3,6 +3,8 @@ package com.ticker.fetcher.service;
 import com.ticker.fetcher.common.rx.FetcherThread;
 import com.ticker.fetcher.model.FetcherThreadModel;
 import com.ticker.fetcher.repository.AppRepository;
+import com.ticker.fetcher.repository.exchangesymbol.ExchangeSymbolEntity;
+import com.ticker.fetcher.repository.exchangesymbol.ExchangeSymbolRepository;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.ApplicationContext;
@@ -28,6 +30,9 @@ public class TickerService {
 
     @Autowired
     private ApplicationContext ctx;
+
+    @Autowired
+    private ExchangeSymbolRepository exchangeSymbolRepository;
 
     private synchronized static Map<String, FetcherThread> getThreadPool() {
         if (threadPool == null) {
@@ -197,5 +202,27 @@ public class TickerService {
         }
         FetcherThread thread = threadMap.get(threadName);
         thread.refreshBrowser();
+    }
+
+    public Iterable<ExchangeSymbolEntity> getAllTickers() {
+        return exchangeSymbolRepository.findAll();
+    }
+
+    public ExchangeSymbolEntity addTickerToDB(String exchange, String symbol, String tickerType, Integer minQty, Integer incQty, Integer lotSize) {
+        exchange = exchange.toUpperCase();
+        symbol = symbol.toUpperCase();
+        tickerType = tickerType.toUpperCase();
+        String tableName = symbol + "_" + exchange + "_:yyyy_MM_dd";
+        ExchangeSymbolEntity exchangeSymbolEntity;
+        if (minQty != null || incQty != null || lotSize != null) {
+            exchangeSymbolEntity =
+                    new ExchangeSymbolEntity(exchange, symbol, tableName,
+                            null, null, null, tickerType, minQty, incQty, lotSize);
+        } else {
+            exchangeSymbolEntity =
+                    new ExchangeSymbolEntity(exchange, symbol, tableName,
+                            null, null, null, tickerType);
+        }
+        return exchangeSymbolRepository.save(exchangeSymbolEntity);
     }
 }

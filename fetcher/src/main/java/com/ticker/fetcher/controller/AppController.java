@@ -2,6 +2,7 @@ package com.ticker.fetcher.controller;
 
 import com.ticker.fetcher.model.FetcherThreadModel;
 import com.ticker.fetcher.model.ResponseStatus;
+import com.ticker.fetcher.repository.exchangesymbol.ExchangeSymbolEntity;
 import com.ticker.fetcher.service.TickerService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
@@ -10,6 +11,7 @@ import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 
 @RestController
 @RequestMapping("/")
@@ -17,6 +19,35 @@ public class AppController {
 
     @Autowired
     private TickerService service;
+
+    /**
+     * Get all tickers saved in DB
+     *
+     * @return
+     */
+    @GetMapping("tickers")
+    public Iterable<ExchangeSymbolEntity> getAllTickers() {
+        return service.getAllTickers();
+    }
+
+    /**
+     * Save a new ticker to DB
+     *
+     * @param exchange
+     * @param symbol
+     * @param tickerType
+     * @param minQty
+     * @param incQty
+     * @param lotSize
+     * @return
+     */
+    @PostMapping("ticker")
+    public ExchangeSymbolEntity addTickerToDB(@RequestParam String exchange, @RequestParam String symbol,
+                                              @RequestParam String tickerType, @RequestParam Optional<Integer> minQty
+            , @RequestParam Optional<Integer> incQty, @RequestParam Optional<Integer> lotSize) {
+        return service.addTickerToDB(exchange, symbol, tickerType, minQty.orElse(null), incQty.orElse(null), lotSize.orElse(null));
+    }
+
 
     /**
      * Get a map of all the tickers currently being tracked
