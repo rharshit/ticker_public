@@ -35,10 +35,6 @@ public class FetcherThreadModel {
         return this.fetcherThread.getSymbol();
     }
 
-    public int getEsID() {
-        return this.fetcherThread.getEsID();
-    }
-
     public Set<String> getFetcherApps() {
         return this.fetcherThread.getFetcherApps();
     }

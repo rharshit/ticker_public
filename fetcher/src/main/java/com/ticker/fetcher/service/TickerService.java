@@ -4,6 +4,7 @@ import com.ticker.fetcher.common.rx.FetcherThread;
 import com.ticker.fetcher.model.FetcherThreadModel;
 import com.ticker.fetcher.repository.AppRepository;
 import com.ticker.fetcher.repository.exchangesymbol.ExchangeSymbolEntity;
+import com.ticker.fetcher.repository.exchangesymbol.ExchangeSymbolEntityPK;
 import com.ticker.fetcher.repository.exchangesymbol.ExchangeSymbolRepository;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -13,17 +14,14 @@ import org.springframework.stereotype.Service;
 
 import java.time.LocalDate;
 import java.time.format.DateTimeFormatter;
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.concurrent.ConcurrentHashMap;
+import java.util.*;
+import java.util.concurrent.ConcurrentSkipListSet;
 
 @Service
 @Slf4j
 public class TickerService {
 
-    private static Map<String, FetcherThread> threadPool;
+    private static Set<FetcherThread> threadPool;
 
     @Autowired
     AppRepository repository;
@@ -34,7 +32,7 @@ public class TickerService {
     @Autowired
     private ExchangeSymbolRepository exchangeSymbolRepository;
 
-    private synchronized static Map<String, FetcherThread> getThreadPool() {
+    private synchronized static Set<FetcherThread> getThreadPool() {
         if (threadPool == null) {
             initializeThreadPool();
             log.info("Initializing thread pool");
@@ -44,41 +42,55 @@ public class TickerService {
 
     private synchronized static void initializeThreadPool() {
         if (threadPool == null) {
-            threadPool = new ConcurrentHashMap<>();
+            threadPool = new ConcurrentSkipListSet<>(new FetcherThread.Comparator());
             log.info("Thread pool initialized");
         } else {
             log.info("Thread pool already initialized");
         }
     }
 
-    private void destroyThread(String threadName) {
-        Map<String, FetcherThread> threadMap = getThreadPool();
-        if (!threadMap.containsKey(threadName)) {
+    private FetcherThread getThread(String exchange, String symbol) {
+        Set<FetcherThread> threadMap = getThreadPool();
+        FetcherThread compare = new FetcherThread(exchange, symbol);
+        return threadMap.stream().filter(compare::equals).findFirst().orElse(null);
+    }
+
+    private void destroyThread(FetcherThread thread) {
+        if (thread == null) {
             return;
         }
-        FetcherThread thread = threadMap.get(threadName);
         thread.terminateThread();
-        threadMap.remove(threadName);
-        log.info("Removed thread: " + threadName);
+        getThreadPool().remove(thread);
+        log.info("Removed thread: " + thread.getThreadName());
+    }
+
+    private void destroyThread(String exchange, String symbol) {
+        FetcherThread thread = getThread(exchange, symbol);
+        if (thread == null) {
+            return;
+        }
+        thread.terminateThread();
+        getThreadPool().remove(thread);
+        log.info("Removed thread: " + thread.getThreadName());
     }
 
     private void createThread(String exchange, String symbol, String appName) {
-        String threadName = getThreadName(exchange, symbol);
-        Map<String, FetcherThread> threadMap = getThreadPool();
-
-        if (threadMap.containsKey(threadName) && threadMap.get(threadName).isEnabled()) {
-            FetcherThread thread = threadMap.get(threadName);
+        FetcherThread thread = getThread(exchange, symbol);
+        if (thread != null && thread.isEnabled()) {
             thread.addApp(appName);
         } else {
-            int esID = getExchangeSymbolId(exchange, symbol);
-
-            FetcherThread thread = (FetcherThread) ctx.getBean("fetcherThread");
-            threadMap.put(threadName, thread);
-            thread.setProperties(threadName, exchange, symbol, esID, appName);
+            if (thread != null) {
+                getThreadPool().remove(thread);
+            }
+            ExchangeSymbolEntity entity = exchangeSymbolRepository.findById(new ExchangeSymbolEntityPK(exchange, symbol)).orElse(null);
+            thread = (FetcherThread) ctx.getBean("fetcherThread");
+            thread.setEntity(entity);
+            getThreadPool().add(thread);
+            thread.setProperties(exchange, symbol, appName);
 
             thread.setTickerServiceBean(this);
 
-            log.info("Added thread: " + threadName);
+            log.info("Added thread: " + thread.getThreadName());
             thread.start();
         }
 
@@ -116,10 +128,9 @@ public class TickerService {
      * @param symbol
      */
     public void deleteTicker(String exchange, String symbol) {
-        String threadName = getThreadName(exchange, symbol);
-
-        destroyThread(threadName);
+        destroyThread(exchange, symbol);
     }
+
 
     /**
      * Remove tracking for the ticker, given exchange and symbol for app
@@ -129,26 +140,21 @@ public class TickerService {
      * @param appName
      */
     public void deleteTicker(String exchange, String symbol, String appName) {
-        String threadName = getThreadName(exchange, symbol);
-        removeAppFromThread(threadName, appName);
+        removeAppFromThread(exchange, symbol, appName);
     }
 
-    private void removeAppFromThread(String threadName, String appName) {
-        Map<String, FetcherThread> threadMap = getThreadPool();
-        if (!threadMap.containsKey(threadName)) {
-            return;
-        }
-        FetcherThread thread = threadMap.get(threadName);
+    private void removeAppFromThread(String exchange, String symbol, String appName) {
+        FetcherThread thread = getThread(exchange, symbol);
         thread.removeApp(appName);
     }
 
     /**
-     * Remove tracking for the ticker, given thread name
+     * Remove tracking for the ticker, given the thread
      *
-     * @param threadName
+     * @param thread
      */
-    public void deleteTicker(String threadName) {
-        destroyThread(threadName);
+    public void deleteTicker(FetcherThread thread) {
+        destroyThread(thread);
     }
 
     /**
@@ -169,25 +175,20 @@ public class TickerService {
     }
 
     public List<FetcherThread> getCurrentTickerList() {
-        Map<String, FetcherThread> threadMap = getThreadPool();
-        List<FetcherThread> tickers = new ArrayList<>();
-        for (Map.Entry<String, FetcherThread> entry : threadMap.entrySet()) {
-            tickers.add(entry.getValue());
-        }
-        return tickers;
+        return new ArrayList<>(getThreadPool());
     }
 
     public void deleteAllTickers() {
-        Map<String, FetcherThread> threadMap = getThreadPool();
-        for (String threadName : threadMap.keySet()) {
+        Set<FetcherThread> threadMap = getThreadPool();
+        for (FetcherThread threadName : threadMap) {
             destroyThread(threadName);
         }
     }
 
     @Scheduled(fixedRate = 1000)
     public void processTickers() {
-        Map<String, FetcherThread> pool = getThreadPool();
-        for (FetcherThread thread : pool.values()) {
+        Set<FetcherThread> pool = getThreadPool();
+        for (FetcherThread thread : pool) {
             if (thread.isEnabled()) {
                 thread.removeUnwantedScreens();
             }
@@ -195,12 +196,7 @@ public class TickerService {
     }
 
     public void refreshBrowser(String exchange, String symbol) {
-        String threadName = getThreadName(exchange, symbol);
-        Map<String, FetcherThread> threadMap = getThreadPool();
-        if (!threadMap.containsKey(threadName)) {
-            return;
-        }
-        FetcherThread thread = threadMap.get(threadName);
+        FetcherThread thread = getThread(exchange, symbol);
         thread.refreshBrowser();
     }
 

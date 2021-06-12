@@ -9,6 +9,8 @@ import javax.persistence.Id;
 import javax.persistence.IdClass;
 import javax.persistence.Table;
 import java.io.Serializable;
+import java.time.LocalDate;
+import java.time.format.DateTimeFormatter;
 
 @Data
 @Entity
@@ -38,5 +40,14 @@ public class ExchangeSymbolEntity implements Serializable {
         this.zerodhaExchange = zerodhaExchange;
         this.zerodhaSymbol = zerodhaSymbol;
         this.tickerType = tickerType;
+    }
+
+    public String getFinalTableName() {
+        if (tableName != null && tableName.contains(":")) {
+            String[] split = tableName.split(":", 2);
+            return split[0] + "_" + LocalDate.now().format(DateTimeFormatter.ofPattern(split[1]));
+        } else {
+            return tableName;
+        }
     }
 }
