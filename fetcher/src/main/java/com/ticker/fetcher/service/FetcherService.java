@@ -184,7 +184,7 @@ public class FetcherService {
                 WebElement table = fetcherThread.getWebDriver()
                         .findElement(By.cssSelector("table[class='chart-markup-table']"));
                 List<WebElement> rows = table.findElements(By.tagName("tr"));
-                texts = rows.stream().map(webElement -> webElement.getText()).collect(Collectors.toList());
+                texts = rows.stream().map(WebElement::getText).collect(Collectors.toList());
                 float o = 0;
                 float h = 0;
                 float l = 0;

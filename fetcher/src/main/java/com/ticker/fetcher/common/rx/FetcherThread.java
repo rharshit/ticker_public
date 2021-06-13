@@ -65,7 +65,7 @@ public class FetcherThread extends Thread {
         this.entity = entity;
     }
 
-    public void setProperties(String exchange, String symbol, String... apps) {
+    public void setProperties(String... apps) {
         this.enabled = true;
         this.fetcherApps = Arrays.stream(apps).collect(Collectors.toSet());
 

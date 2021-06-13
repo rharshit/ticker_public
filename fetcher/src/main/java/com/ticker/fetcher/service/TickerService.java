@@ -12,8 +12,6 @@ import org.springframework.context.ApplicationContext;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
 
-import java.time.LocalDate;
-import java.time.format.DateTimeFormatter;
 import java.util.*;
 import java.util.concurrent.ConcurrentSkipListSet;
 
@@ -32,7 +30,7 @@ public class TickerService {
     @Autowired
     private ExchangeSymbolRepository exchangeSymbolRepository;
 
-    private synchronized static Set<FetcherThread> getThreadPool() {
+    private static synchronized Set<FetcherThread> getThreadPool() {
         if (threadPool == null) {
             initializeThreadPool();
             log.info("Initializing thread pool");
@@ -40,7 +38,7 @@ public class TickerService {
         return threadPool;
     }
 
-    private synchronized static void initializeThreadPool() {
+    private static synchronized void initializeThreadPool() {
         if (threadPool == null) {
             threadPool = new ConcurrentSkipListSet<>(new FetcherThread.Comparator());
             log.info("Thread pool initialized");
@@ -86,7 +84,7 @@ public class TickerService {
             thread = (FetcherThread) ctx.getBean("fetcherThread");
             thread.setEntity(entity);
             getThreadPool().add(thread);
-            thread.setProperties(exchange, symbol, appName);
+            thread.setProperties(appName);
 
             thread.setTickerServiceBean(this);
 
@@ -105,20 +103,6 @@ public class TickerService {
      */
     public void addTicker(String exchange, String symbol, String appName) {
         createThread(exchange, symbol, appName);
-    }
-
-    private String getThreadName(String exchange, String symbol) {
-        exchange = exchange.toUpperCase();
-        symbol = symbol.toUpperCase();
-
-        DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy_MM_dd");
-        String date = LocalDate.now().format(formatter);
-
-        return symbol + ":" + exchange + "_" + date;
-    }
-
-    private int getExchangeSymbolId(String exchange, String symbol) {
-        return repository.getExchangeSymbolId(exchange, symbol);
     }
 
     /**
@@ -145,6 +129,9 @@ public class TickerService {
 
     private void removeAppFromThread(String exchange, String symbol, String appName) {
         FetcherThread thread = getThread(exchange, symbol);
+        if (thread == null) {
+            return;
+        }
         thread.removeApp(appName);
     }
 
@@ -168,10 +155,9 @@ public class TickerService {
         for (FetcherThread thread : threads) {
             tickers.add(new FetcherThreadModel(thread));
         }
-        Map<String, List<FetcherThreadModel>> map = new HashMap<String, List<FetcherThreadModel>>() {{
-            put("tickers", tickers);
-        }};
-        return map;
+        Map<String, List<FetcherThreadModel>> list = new HashMap<>();
+        list.put("tickers", tickers);
+        return list;
     }
 
     public List<FetcherThread> getCurrentTickerList() {
@@ -197,6 +183,9 @@ public class TickerService {
 
     public void refreshBrowser(String exchange, String symbol) {
         FetcherThread thread = getThread(exchange, symbol);
+        if (thread == null) {
+            return;
+        }
         thread.refreshBrowser();
     }
 
