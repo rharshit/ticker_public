@@ -11,6 +11,7 @@
     <modules>
         <module>fetcher</module>
         <module>brokerage</module>
+        <module>template</module>
     </modules>
 
 </project>
