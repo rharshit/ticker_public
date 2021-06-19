@@ -1,6 +1,6 @@
 package com.ticker.brokerage.service;
 
-import com.ticker.brokerage.common.exception.TickerException;
+import com.ticker.common.exception.TickerException;
 import lombok.extern.slf4j.Slf4j;
 import org.openqa.selenium.By;
 import org.openqa.selenium.Keys;

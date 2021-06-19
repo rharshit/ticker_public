@@ -1,4 +1,4 @@
-package com.ticker.fetcher.common.repository;
+package com.ticker.common.repository;
 
 import com.zaxxer.hikari.HikariDataSource;
 import lombok.Setter;

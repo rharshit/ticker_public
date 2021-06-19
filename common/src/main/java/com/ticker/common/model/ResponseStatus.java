@@ -1,4 +1,4 @@
-package com.ticker.fetcher.model;
+package com.ticker.common.model;
 
 import com.fasterxml.jackson.annotation.JsonInclude;
 import lombok.Data;

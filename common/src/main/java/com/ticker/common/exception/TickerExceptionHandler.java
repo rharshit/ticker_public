@@ -1,6 +1,6 @@
-package com.ticker.brokerage.common.exception;
+package com.ticker.common.exception;
 
-import com.ticker.brokerage.model.ResponseStatus;
+import com.ticker.common.model.ResponseStatus;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.ControllerAdvice;

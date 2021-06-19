@@ -1,4 +1,5 @@
-package com.ticker.fetcher.common.exception;
+package com.ticker.common.exception;
+
 
 public class TickerException extends RuntimeException {
     public TickerException(String message) {

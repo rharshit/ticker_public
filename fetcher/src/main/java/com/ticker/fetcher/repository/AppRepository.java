@@ -1,6 +1,6 @@
 package com.ticker.fetcher.repository;
 
-import com.ticker.fetcher.common.exception.TickerException;
+import com.ticker.common.exception.TickerException;
 import com.ticker.fetcher.common.repository.FetcherRepository;
 import com.ticker.fetcher.common.repository.TickerRepository;
 import com.ticker.fetcher.model.FetcherRepoModel;

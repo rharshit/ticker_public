@@ -1,6 +1,6 @@
 package com.ticker.fetcher.service;
 
-import com.ticker.fetcher.common.exception.TickerException;
+import com.ticker.common.exception.TickerException;
 import com.ticker.fetcher.common.rx.FetcherThread;
 import com.ticker.fetcher.model.FetcherRepoModel;
 import com.ticker.fetcher.repository.AppRepository;

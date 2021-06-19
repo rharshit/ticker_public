@@ -1,5 +1,6 @@
 package com.ticker.fetcher.common.repository;
 
+import com.ticker.common.repository.BaseRepository;
 import lombok.Getter;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
