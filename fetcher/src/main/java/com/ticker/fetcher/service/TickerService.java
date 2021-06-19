@@ -3,25 +3,23 @@ package com.ticker.fetcher.service;
 import com.ticker.fetcher.common.rx.FetcherThread;
 import com.ticker.fetcher.model.FetcherThreadModel;
 import com.ticker.fetcher.repository.AppRepository;
+import com.ticker.fetcher.repository.exchangesymbol.ExchangeSymbolEntity;
+import com.ticker.fetcher.repository.exchangesymbol.ExchangeSymbolEntityPK;
+import com.ticker.fetcher.repository.exchangesymbol.ExchangeSymbolRepository;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.ApplicationContext;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
 
-import java.time.LocalDate;
-import java.time.format.DateTimeFormatter;
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.concurrent.ConcurrentHashMap;
+import java.util.*;
+import java.util.concurrent.ConcurrentSkipListSet;
 
 @Service
 @Slf4j
 public class TickerService {
 
-    private static Map<String, FetcherThread> threadPool;
+    private static Set<FetcherThread> threadPool;
 
     @Autowired
     AppRepository repository;
@@ -29,7 +27,10 @@ public class TickerService {
     @Autowired
     private ApplicationContext ctx;
 
-    private synchronized static Map<String, FetcherThread> getThreadPool() {
+    @Autowired
+    private ExchangeSymbolRepository exchangeSymbolRepository;
+
+    private static synchronized Set<FetcherThread> getThreadPool() {
         if (threadPool == null) {
             initializeThreadPool();
             log.info("Initializing thread pool");
@@ -37,89 +38,110 @@ public class TickerService {
         return threadPool;
     }
 
-    private synchronized static void initializeThreadPool() {
+    private static synchronized void initializeThreadPool() {
         if (threadPool == null) {
-            threadPool = new ConcurrentHashMap<>();
+            threadPool = new ConcurrentSkipListSet<>(new FetcherThread.Comparator());
             log.info("Thread pool initialized");
         } else {
             log.info("Thread pool already initialized");
         }
     }
 
-    private void destroyThread(String threadName) {
-        Map<String, FetcherThread> threadMap = getThreadPool();
-        if (!threadMap.containsKey(threadName)) {
-            return;
-        }
-        FetcherThread thread = threadMap.get(threadName);
-        thread.terminateThread();
-        threadMap.remove(threadName);
-        log.info("Removed thread: " + threadName);
+    private FetcherThread getThread(String exchange, String symbol) {
+        Set<FetcherThread> threadMap = getThreadPool();
+        FetcherThread compare = new FetcherThread(new ExchangeSymbolEntity(exchange, symbol));
+        return threadMap.stream().filter(compare::equals).findFirst().orElse(null);
     }
 
-    private void createThread(String exchange, String symbol) {
-        String threadName = getThreadName(exchange, symbol);
-        Map<String, FetcherThread> threadMap = getThreadPool();
-
-        if (threadMap.containsKey(threadName)) {
+    private void destroyThread(FetcherThread thread) {
+        if (thread == null) {
             return;
         }
+        thread.terminateThread();
+        getThreadPool().remove(thread);
+        log.info("Removed thread: " + thread.getThreadName());
+    }
 
-        int esID = getExchangeSymbolId(exchange, symbol);
+    private void destroyThread(String exchange, String symbol) {
+        FetcherThread thread = getThread(exchange, symbol);
+        if (thread == null) {
+            return;
+        }
+        thread.terminateThread();
+        getThreadPool().remove(thread);
+        log.info("Removed thread: " + thread.getThreadName());
+    }
 
-        FetcherThread thread = (FetcherThread) ctx.getBean("fetcherThread");
-        thread.setProperties(threadName, exchange, symbol, esID);
+    private void createThread(String exchange, String symbol, String appName) {
+        FetcherThread thread = getThread(exchange, symbol);
+        if (thread != null && thread.isEnabled()) {
+            thread.addApp(appName);
+        } else {
+            if (thread != null) {
+                getThreadPool().remove(thread);
+            }
+            ExchangeSymbolEntity entity = exchangeSymbolRepository.findById(new ExchangeSymbolEntityPK(exchange, symbol)).orElse(null);
+            thread = (FetcherThread) ctx.getBean("fetcherThread");
+            thread.setEntity(entity);
+            getThreadPool().add(thread);
+            thread.setProperties(appName);
 
-        thread.setTickerServiceBean(this);
+            thread.setTickerServiceBean(this);
 
-        threadMap.put(threadName, thread);
-        log.info("Added thread: " + threadName);
-        thread.start();
+            log.info("Added thread: " + thread.getThreadName());
+            thread.start();
+        }
+
     }
 
     /**
-     * Add tracking for the ticker, given exchange and symbol
+     * Add tracking for the ticker, given exchange and symbol for app
      *
      * @param exchange
      * @param symbol
+     * @param appName
      */
-    public void addTicker(String exchange, String symbol) {
-        createThread(exchange, symbol);
-    }
-
-    private String getThreadName(String exchange, String symbol) {
-        exchange = exchange.toUpperCase();
-        symbol = symbol.toUpperCase();
-
-        DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy_MM_dd");
-        String date = LocalDate.now().format(formatter);
-
-        return symbol + ":" + exchange + "_" + date;
-    }
-
-    private int getExchangeSymbolId(String exchange, String symbol) {
-        return repository.getExchangeSymbolId(exchange, symbol);
+    public void addTicker(String exchange, String symbol, String appName) {
+        createThread(exchange, symbol, appName);
     }
 
     /**
-     * Remove tracking for the ticker, given exchange and symbol
+     * Remove tracking for the ticker, given exchange and symbol for all apps
      *
      * @param exchange
      * @param symbol
      */
     public void deleteTicker(String exchange, String symbol) {
-        String threadName = getThreadName(exchange, symbol);
+        destroyThread(exchange, symbol);
+    }
 
-        destroyThread(threadName);
+
+    /**
+     * Remove tracking for the ticker, given exchange and symbol for app
+     *
+     * @param exchange
+     * @param symbol
+     * @param appName
+     */
+    public void deleteTicker(String exchange, String symbol, String appName) {
+        removeAppFromThread(exchange, symbol, appName);
+    }
+
+    private void removeAppFromThread(String exchange, String symbol, String appName) {
+        FetcherThread thread = getThread(exchange, symbol);
+        if (thread == null) {
+            return;
+        }
+        thread.removeApp(appName);
     }
 
     /**
-     * Remove tracking for the ticker, given thread name
+     * Remove tracking for the ticker, given the thread
      *
-     * @param threadName
+     * @param thread
      */
-    public void deleteTicker(String threadName) {
-        destroyThread(threadName);
+    public void deleteTicker(FetcherThread thread) {
+        destroyThread(thread);
     }
 
     /**
@@ -133,32 +155,26 @@ public class TickerService {
         for (FetcherThread thread : threads) {
             tickers.add(new FetcherThreadModel(thread));
         }
-        Map<String, List<FetcherThreadModel>> map = new HashMap<String, List<FetcherThreadModel>>() {{
-            put("tickers", tickers);
-        }};
-        return map;
+        Map<String, List<FetcherThreadModel>> list = new HashMap<>();
+        list.put("tickers", tickers);
+        return list;
     }
 
     public List<FetcherThread> getCurrentTickerList() {
-        Map<String, FetcherThread> threadMap = getThreadPool();
-        List<FetcherThread> tickers = new ArrayList<>();
-        for (Map.Entry<String, FetcherThread> entry : threadMap.entrySet()) {
-            tickers.add(entry.getValue());
-        }
-        return tickers;
+        return new ArrayList<>(getThreadPool());
     }
 
     public void deleteAllTickers() {
-        Map<String, FetcherThread> threadMap = getThreadPool();
-        for (String threadName : threadMap.keySet()) {
+        Set<FetcherThread> threadMap = getThreadPool();
+        for (FetcherThread threadName : threadMap) {
             destroyThread(threadName);
         }
     }
 
     @Scheduled(fixedRate = 1000)
     public void processTickers() {
-        Map<String, FetcherThread> pool = getThreadPool();
-        for (FetcherThread thread : pool.values()) {
+        Set<FetcherThread> pool = getThreadPool();
+        for (FetcherThread thread : pool) {
             if (thread.isEnabled()) {
                 thread.removeUnwantedScreens();
             }
@@ -166,12 +182,32 @@ public class TickerService {
     }
 
     public void refreshBrowser(String exchange, String symbol) {
-        String threadName = getThreadName(exchange, symbol);
-        Map<String, FetcherThread> threadMap = getThreadPool();
-        if (!threadMap.containsKey(threadName)) {
+        FetcherThread thread = getThread(exchange, symbol);
+        if (thread == null) {
             return;
         }
-        FetcherThread thread = threadMap.get(threadName);
         thread.refreshBrowser();
+    }
+
+    public Iterable<ExchangeSymbolEntity> getAllTickers() {
+        return exchangeSymbolRepository.findAll();
+    }
+
+    public ExchangeSymbolEntity addTickerToDB(String exchange, String symbol, String tickerType, Integer minQty, Integer incQty, Integer lotSize) {
+        exchange = exchange.toUpperCase();
+        symbol = symbol.toUpperCase();
+        tickerType = tickerType.toUpperCase();
+        String tableName = symbol + "_" + exchange + ":yyyy_MM_dd";
+        ExchangeSymbolEntity exchangeSymbolEntity;
+        if (minQty != null || incQty != null || lotSize != null) {
+            exchangeSymbolEntity =
+                    new ExchangeSymbolEntity(exchange, symbol, tableName,
+                            null, null, null, tickerType, minQty, incQty, lotSize);
+        } else {
+            exchangeSymbolEntity =
+                    new ExchangeSymbolEntity(exchange, symbol, tableName,
+                            null, null, null, tickerType);
+        }
+        return exchangeSymbolRepository.save(exchangeSymbolEntity);
     }
 }
