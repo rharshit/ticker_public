@@ -1,9 +1,12 @@
 package com.ticker.fetcher.common.rx;
 
+import com.ticker.fetcher.common.exception.TickerException;
 import com.ticker.fetcher.repository.AppRepository;
+import com.ticker.fetcher.repository.exchangesymbol.ExchangeSymbolEntity;
 import com.ticker.fetcher.service.FetcherService;
 import com.ticker.fetcher.service.TickerService;
 import lombok.Getter;
+import lombok.NoArgsConstructor;
 import lombok.Setter;
 import lombok.extern.slf4j.Slf4j;
 import org.openqa.selenium.By;
@@ -18,7 +21,8 @@ import org.springframework.stereotype.Component;
 import org.springframework.util.CollectionUtils;
 import org.springframework.util.StringUtils;
 
-import java.util.List;
+import java.util.*;
+import java.util.stream.Collectors;
 
 import static com.ticker.fetcher.common.constants.WebConstants.TRADING_VIEW_BASE;
 import static com.ticker.fetcher.common.constants.WebConstants.TRADING_VIEW_CHART;
@@ -31,6 +35,7 @@ import static org.openqa.selenium.UnexpectedAlertBehaviour.ACCEPT;
 @Slf4j
 @Component("fetcherThread")
 @Scope("prototype")
+@NoArgsConstructor
 public class FetcherThread extends Thread {
 
     @Autowired
@@ -41,25 +46,45 @@ public class FetcherThread extends Thread {
 
     private TickerService tickerService;
 
-    private String threadName;
+    private ExchangeSymbolEntity entity;
+
     private boolean enabled = false;
     private boolean initialized = false;
-    private String exchange;
-    private String symbol;
-    private int esID;
     private WebDriver webDriver;
     private final Object postInitLock = new Object();
+    private Set<String> fetcherApps = new HashSet<>();
 
     public static final int RETRY_LIMIT = 10;
 
-    public void setProperties(String threadName, String exchange, String symbol, int esID) {
+    /**
+     * Constructor to make an object for comparison only
+     *
+     * @param entity
+     */
+    public FetcherThread(ExchangeSymbolEntity entity) {
+        this.entity = entity;
+    }
+
+    public void setProperties(String... apps) {
         this.enabled = true;
-        this.threadName = threadName;
-        this.exchange = exchange;
-        this.symbol = symbol;
-        this.esID = esID;
+        this.fetcherApps = Arrays.stream(apps).collect(Collectors.toSet());
 
         initializeBean();
+    }
+
+    public void setEntity(ExchangeSymbolEntity entity) {
+        if (entity == null) {
+            throw new TickerException("No entity found for the given exchange and symbol");
+        }
+        this.entity = entity;
+    }
+
+    public String getExchange() {
+        return entity.getExchangeId();
+    }
+
+    public String getSymbol() {
+        return entity.getSymbolId();
     }
 
     private void initializeBean() {
@@ -73,7 +98,7 @@ public class FetcherThread extends Thread {
     }
 
     public String getTableName() {
-        return this.threadName.replace(":", "_");
+        return this.entity.getFinalTableName();
     }
 
     protected void initializeWebDriver() {
@@ -110,19 +135,19 @@ public class FetcherThread extends Thread {
                 log.error("Error while closing webdriver");
             }
         }
-        log.info("Terminated thread : " + threadName);
+        log.info("Terminated thread : " + getThreadName());
     }
 
     protected void initialize(int iteration, boolean refresh) {
         this.initialized = false;
         if (refresh) {
-            log.info(exchange + ":" + symbol + " - Refreshing");
+            log.info(getExchange() + ":" + getSymbol() + " - Refreshing");
         } else {
-            log.info(exchange + ":" + symbol + " - Initializing");
+            log.info(getExchange() + ":" + getSymbol() + " - Initializing");
         }
 
         try {
-            String url = TRADING_VIEW_BASE + TRADING_VIEW_CHART + exchange + ":" + symbol;
+            String url = TRADING_VIEW_BASE + TRADING_VIEW_CHART + getExchange() + ":" + getSymbol();
             if (refresh) {
                 getWebDriver().navigate().refresh();
             } else {
@@ -219,14 +244,14 @@ public class FetcherThread extends Thread {
 
     public void terminateThread() {
         this.enabled = false;
-        log.info("Terminating thread : " + threadName);
+        log.info("Terminating thread : " + getThreadName());
     }
 
     @Override
     public String toString() {
         return "FetcherThread{" +
-                "exchange='" + exchange + '\'' +
-                ", symbol='" + symbol + '\'' +
+                "exchange='" + getExchange() + '\'' +
+                ", symbol='" + getSymbol() + '\'' +
                 '}';
     }
 
@@ -236,10 +261,64 @@ public class FetcherThread extends Thread {
 
     @Deprecated
     public void destroy() {
-        tickerService.deleteTicker(this.threadName);
+        tickerService.deleteTicker(this);
     }
 
     public void refreshBrowser() {
         initialize(0, true);
+    }
+
+    public void addApp(String appName) {
+        getFetcherApps().add(appName);
+    }
+
+    public void removeApp(String appName) {
+        getFetcherApps().remove(appName);
+        if (getFetcherApps().isEmpty()) {
+            log.info("No apps fetching data");
+            log.info("Terminating thread: " + getThreadName());
+            terminateThread();
+        }
+    }
+
+    public String getThreadName() {
+        return getTableName().replace(":", "_");
+    }
+
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (o == null || getClass() != o.getClass()) return false;
+        FetcherThread thread = (FetcherThread) o;
+        return getExchange().equals(thread.getExchange()) &&
+                getSymbol().equals(thread.getSymbol());
+    }
+
+    @Override
+    public int hashCode() {
+        return Objects.hash(getExchange(), getSymbol());
+    }
+
+    public static class Comparator implements java.util.Comparator<FetcherThread> {
+
+        @Override
+        public int compare(FetcherThread o1, FetcherThread o2) {
+            if (o1 == null) {
+                if (o2 == null) {
+                    return 0;
+                } else {
+                    return 1;
+                }
+            } else {
+                if (o2 == null) {
+                    return -1;
+                }
+            }
+            if (o1.getExchange().compareTo(o2.getExchange()) == 0) {
+                return o1.getSymbol().compareTo(o2.getSymbol());
+            } else {
+                return o1.getExchange().compareTo(o2.getExchange());
+            }
+        }
     }
 }
