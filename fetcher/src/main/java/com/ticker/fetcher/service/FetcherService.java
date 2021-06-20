@@ -6,6 +6,7 @@ import com.ticker.fetcher.model.FetcherRepoModel;
 import com.ticker.fetcher.repository.AppRepository;
 import lombok.extern.slf4j.Slf4j;
 import org.openqa.selenium.*;
+import org.openqa.selenium.interactions.Actions;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.scheduling.annotation.Async;
 import org.springframework.scheduling.annotation.Scheduled;
@@ -193,6 +194,10 @@ public class FetcherService {
                 fetcherThread.getWebDriver().switchTo().window(fetcherThread.getWebDriver().getWindowHandle());
                 WebElement table = fetcherThread.getWebDriver()
                         .findElement(By.cssSelector("table[class='chart-markup-table']"));
+                Rectangle hoverBox = table.getRect();
+                Actions actions = new Actions(fetcherThread.getWebDriver());
+                actions.moveToElement(table).perform();
+                actions.moveByOffset(hoverBox.width / 2 - 1, 1 - (hoverBox.height / 2)).perform();
                 List<WebElement> rows = table.findElements(By.tagName("tr"));
                 texts = rows.stream().map(WebElement::getText).collect(Collectors.toList());
                 float o = 0;
@@ -274,6 +279,8 @@ public class FetcherService {
                 String errorMessage = e.getMessage();
                 if (errorMessage.contains("element click intercepted")) {
                     log.info("Element click intercepted: " + fetcherThread.getThreadName());
+                } else if (errorMessage.contains("move target out of bounds")) {
+                    log.info("Move target out of bounds: " + fetcherThread.getThreadName());
                 } else {
                     log.error("Exception in doTask(): " + fetcherThread.getThreadName());
                     log.error(e.getMessage());

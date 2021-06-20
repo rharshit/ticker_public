@@ -116,6 +116,7 @@ public class FetcherThread extends Thread {
         ChromeOptions options = new ChromeOptions();
         options.setHeadless(true);
         options.addArguments("--window-size=1920,1080");
+        options.addArguments("--disable-gpu");
         options.addArguments("incognito");
         options.setCapability(CapabilityType.UNEXPECTED_ALERT_BEHAVIOUR, ACCEPT);
         options.setUnhandledPromptBehaviour(ACCEPT);
@@ -159,14 +160,20 @@ public class FetcherThread extends Thread {
             fetcherService.setChartSettings(this, iteration, refresh);
         } catch (Exception e) {
             if (refresh) {
-                log.error("Error while refreshing", e);
+                log.warn("Error while refreshing " + getThreadName());
             } else {
-                log.error("Error while initializing", e);
+                log.warn("Error while initializing " + getThreadName());
             }
 
             if (iteration < RETRY_LIMIT && isEnabled()) {
                 initialize(iteration + 1, refresh);
             } else {
+                if (refresh) {
+                    log.error("Error while refreshing " + getThreadName(), e);
+                } else {
+                    log.error("Error while initializing " + getThreadName(), e);
+                }
+                log.error("Destorying " + getThreadName());
                 destroy();
             }
         }
