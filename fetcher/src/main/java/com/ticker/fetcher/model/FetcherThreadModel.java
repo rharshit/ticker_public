@@ -38,4 +38,8 @@ public class FetcherThreadModel {
     public Set<String> getFetcherApps() {
         return this.fetcherThread.getFetcherApps();
     }
+
+    public float getCurrentValue() {
+        return this.fetcherThread.getCurrentValue();
+    }
 }

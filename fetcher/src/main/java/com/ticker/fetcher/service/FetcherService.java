@@ -17,6 +17,7 @@ import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 
 import static com.ticker.common.util.Util.*;
@@ -177,7 +178,16 @@ public class FetcherService {
     @Async("fetcherTaskExecutor")
     public void doTask(FetcherThread fetcherThread) {
         if (fetcherThread.isInitialized() && fetcherThread.isEnabled()) {
-            try {
+            try { // Get current value
+                String title = fetcherThread.getWebDriver().getTitle();
+                for (String text : title.split(" ")) {
+                    if (Pattern.matches("^\\d*\\.\\d*$", text)) {
+                        fetcherThread.setCurrentValue(Float.parseFloat(text));
+                    }
+                }
+            } catch (Exception ignored) {
+            }
+            try { // Get OHLC Value
                 log.debug("doTask() started task: " + fetcherThread.getThreadName());
                 List<String> texts;
                 fetcherThread.getWebDriver().switchTo().window(fetcherThread.getWebDriver().getWindowHandle());

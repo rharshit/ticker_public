@@ -31,6 +31,19 @@ public class AppController {
     }
 
     /**
+     * Get current value of the ticker
+     *
+     * @param exchange
+     * @param symbol
+     * @return
+     */
+    @GetMapping("current")
+    public ResponseEntity<ResponseStatus> getCurrentValue(@RequestParam String exchange, @RequestParam String symbol) {
+        service.getCurrent(exchange, symbol);
+        return new ResponseEntity<>(new ResponseStatus(), HttpStatus.OK);
+    }
+
+    /**
      * Save a new ticker to DB
      *
      * @param exchange

@@ -55,6 +55,7 @@ public class FetcherThread extends Thread {
     private Set<String> fetcherApps = new HashSet<>();
 
     public static final int RETRY_LIMIT = 10;
+    private float currentValue;
 
     /**
      * Constructor to make an object for comparison only
