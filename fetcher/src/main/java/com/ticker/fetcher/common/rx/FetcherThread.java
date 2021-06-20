@@ -1,6 +1,6 @@
 package com.ticker.fetcher.common.rx;
 
-import com.ticker.fetcher.common.exception.TickerException;
+import com.ticker.common.exception.TickerException;
 import com.ticker.fetcher.repository.AppRepository;
 import com.ticker.fetcher.repository.exchangesymbol.ExchangeSymbolEntity;
 import com.ticker.fetcher.service.FetcherService;
@@ -24,10 +24,10 @@ import org.springframework.util.StringUtils;
 import java.util.*;
 import java.util.stream.Collectors;
 
+import static com.ticker.common.util.Util.WAIT_LONG;
+import static com.ticker.common.util.Util.waitFor;
 import static com.ticker.fetcher.common.constants.WebConstants.TRADING_VIEW_BASE;
 import static com.ticker.fetcher.common.constants.WebConstants.TRADING_VIEW_CHART;
-import static com.ticker.fetcher.common.util.Util.WAIT_LONG;
-import static com.ticker.fetcher.common.util.Util.waitFor;
 import static org.openqa.selenium.UnexpectedAlertBehaviour.ACCEPT;
 
 @Getter

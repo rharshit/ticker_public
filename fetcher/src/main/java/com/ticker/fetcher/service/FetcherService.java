@@ -19,7 +19,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.stream.Collectors;
 
-import static com.ticker.fetcher.common.util.Util.*;
+import static com.ticker.common.util.Util.*;
 
 @Service
 @Slf4j

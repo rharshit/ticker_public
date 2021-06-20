@@ -8,14 +8,14 @@
 		<version>1.0-SNAPSHOT</version>
 	</parent>
 	<artifactId>brokerage</artifactId>
-	<version>0.0.1-SNAPSHOT</version>
+	<version>${ticker.brokerage.version}</version>
 	<name>Brokerage</name>
 	<description>Get brokerages</description>
 	<dependencies>
 		<dependency>
 			<groupId>com.ticker</groupId>
 			<artifactId>common</artifactId>
-			<version>0.0.1-SNAPSHOT</version>
+			<version>${ticker.common.version}</version>
 		</dependency>
 		<dependency>
 			<groupId>org.springframework.boot</groupId>

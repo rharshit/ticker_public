@@ -10,7 +10,7 @@
     <modelVersion>4.0.0</modelVersion>
 
     <artifactId>common</artifactId>
-    <version>0.0.1-SNAPSHOT</version>
+    <version>${ticker.common.version}</version>
     <name>Common</name>
     <description>Common packages for Ticker</description>
     <dependencies>

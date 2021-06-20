@@ -1,4 +1,4 @@
-package com.ticker.fetcher.common.util;
+package com.ticker.common.util;
 
 import lombok.extern.slf4j.Slf4j;
 

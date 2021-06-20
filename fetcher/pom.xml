@@ -8,14 +8,14 @@
 		<version>1.0-SNAPSHOT</version>
 	</parent>
 	<artifactId>fetcher</artifactId>
-	<version>0.0.1-SNAPSHOT</version>
+	<version>${ticker.fetcher.version}</version>
 	<name>Fetcher</name>
 	<description>Fetch tickers</description>
 	<dependencies>
 		<dependency>
 			<groupId>com.ticker</groupId>
 			<artifactId>common</artifactId>
-			<version>0.0.1-SNAPSHOT</version>
+			<version>${ticker.common.version}</version>
 		</dependency>
 		<dependency>
 			<groupId>org.springframework.boot</groupId>
