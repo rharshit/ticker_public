@@ -23,8 +23,8 @@ jobs:
         distribution: 'adopt'
     - name: Build Ticker
       run: mvn clean install -DskipTests
-    - name: Build Template with Maven
-      run: mvn -B package --file template/pom.xml -DskipTests
+    - name: Build Common with Maven
+      run: mvn -B package --file common/pom.xml -DskipTests
     - name: Build Fetcher with Maven
       run: mvn -B package --file fetcher/pom.xml -DskipTests
     - name: Build Brokerage with Maven
