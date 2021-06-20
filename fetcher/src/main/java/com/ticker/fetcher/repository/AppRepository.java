@@ -92,8 +92,8 @@ public class AppRepository {
             try (Connection connection = getFetcherConnection()) {
                 Statement statement = connection.createStatement();
                 synchronized (sqlQueue) {
-                    log.info("Pushing data, size: " + sqlQueue.size());
-                    log.info(sqlQueue.get(0));
+                    log.debug("Pushing data, size: " + sqlQueue.size());
+                    log.debug(sqlQueue.get(0));
                     for (String sql : sqlQueue) {
                         log.trace(sql);
                         statement.addBatch(sql);
@@ -108,7 +108,7 @@ public class AppRepository {
                 log.error("Data not pushed");
             }
         }
-        log.info("pushData task ended: " + now);
+        log.debug("pushData task ended: " + now);
     }
 
     public void addToQueue(List<FetcherRepoModel> datas, String sNow) {
