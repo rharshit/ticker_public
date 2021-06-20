@@ -54,8 +54,10 @@ public class FetcherThread extends Thread {
     private final Object postInitLock = new Object();
     private Set<String> fetcherApps = new HashSet<>();
 
-    public static final int RETRY_LIMIT = 10;
     private float currentValue;
+    private long updatedAt;
+
+    public static final int RETRY_LIMIT = 10;
 
     /**
      * Constructor to make an object for comparison only
@@ -284,6 +286,11 @@ public class FetcherThread extends Thread {
 
     public String getThreadName() {
         return getTableName().replace(":", "_");
+    }
+
+    public void setCurrentValue(float currentValue) {
+        this.currentValue = currentValue;
+        this.updatedAt = System.currentTimeMillis();
     }
 
     @Override

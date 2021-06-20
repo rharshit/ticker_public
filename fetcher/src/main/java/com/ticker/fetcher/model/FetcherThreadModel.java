@@ -42,4 +42,9 @@ public class FetcherThreadModel {
     public float getCurrentValue() {
         return this.fetcherThread.getCurrentValue();
     }
+
+    public long getUpdatedAt() {
+        return this.fetcherThread.getUpdatedAt();
+    }
+
 }
