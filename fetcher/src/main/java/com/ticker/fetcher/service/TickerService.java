@@ -1,11 +1,11 @@
 package com.ticker.fetcher.service;
 
+import com.ticker.common.fetcher.repository.exchangesymbol.ExchangeSymbolEntity;
+import com.ticker.common.fetcher.repository.exchangesymbol.ExchangeSymbolEntityPK;
+import com.ticker.common.fetcher.repository.exchangesymbol.ExchangeSymbolRepository;
 import com.ticker.fetcher.common.rx.FetcherThread;
 import com.ticker.fetcher.model.FetcherThreadModel;
 import com.ticker.fetcher.repository.AppRepository;
-import com.ticker.fetcher.repository.exchangesymbol.ExchangeSymbolEntity;
-import com.ticker.fetcher.repository.exchangesymbol.ExchangeSymbolEntityPK;
-import com.ticker.fetcher.repository.exchangesymbol.ExchangeSymbolRepository;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.ApplicationContext;
@@ -189,6 +189,14 @@ public class TickerService {
         thread.refreshBrowser();
     }
 
+    public float getCurrent(String exchange, String symbol) {
+        FetcherThread thread = getThread(exchange, symbol);
+        if (thread == null) {
+            return 0;
+        }
+        return thread.getCurrentValue();
+    }
+
     public Iterable<ExchangeSymbolEntity> getAllTickers() {
         return exchangeSymbolRepository.findAll();
     }
@@ -199,14 +207,16 @@ public class TickerService {
         tickerType = tickerType.toUpperCase();
         String tableName = symbol + "_" + exchange + ":yyyy_MM_dd";
         ExchangeSymbolEntity exchangeSymbolEntity;
-        if (minQty != null || incQty != null || lotSize != null) {
-            exchangeSymbolEntity =
-                    new ExchangeSymbolEntity(exchange, symbol, tableName,
-                            null, null, null, tickerType, minQty, incQty, lotSize);
-        } else {
-            exchangeSymbolEntity =
-                    new ExchangeSymbolEntity(exchange, symbol, tableName,
-                            null, null, null, tickerType);
+        exchangeSymbolEntity = new ExchangeSymbolEntity(exchange, symbol, tableName,
+                null, null, null, tickerType);
+        if (minQty != null) {
+            exchangeSymbolEntity.setMinQty(minQty);
+        }
+        if (incQty != null) {
+            exchangeSymbolEntity.setIncQty(incQty);
+        }
+        if (lotSize != null) {
+            exchangeSymbolEntity.setLotSize(lotSize);
         }
         return exchangeSymbolRepository.save(exchangeSymbolEntity);
     }

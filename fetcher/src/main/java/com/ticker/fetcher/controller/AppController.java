@@ -1,8 +1,8 @@
 package com.ticker.fetcher.controller;
 
+import com.ticker.common.fetcher.repository.exchangesymbol.ExchangeSymbolEntity;
 import com.ticker.common.model.ResponseStatus;
 import com.ticker.fetcher.model.FetcherThreadModel;
-import com.ticker.fetcher.repository.exchangesymbol.ExchangeSymbolEntity;
 import com.ticker.fetcher.service.TickerService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
@@ -28,6 +28,19 @@ public class AppController {
     @GetMapping("tickers")
     public Iterable<ExchangeSymbolEntity> getAllTickers() {
         return service.getAllTickers();
+    }
+
+    /**
+     * Get current value of the ticker
+     *
+     * @param exchange
+     * @param symbol
+     * @return
+     */
+    @GetMapping("current")
+    public ResponseEntity<ResponseStatus> getCurrentValue(@RequestParam String exchange, @RequestParam String symbol) {
+        service.getCurrent(exchange, symbol);
+        return new ResponseEntity<>(new ResponseStatus(), HttpStatus.OK);
     }
 
     /**

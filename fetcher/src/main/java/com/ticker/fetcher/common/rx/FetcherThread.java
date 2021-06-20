@@ -1,8 +1,8 @@
 package com.ticker.fetcher.common.rx;
 
 import com.ticker.common.exception.TickerException;
+import com.ticker.common.fetcher.repository.exchangesymbol.ExchangeSymbolEntity;
 import com.ticker.fetcher.repository.AppRepository;
-import com.ticker.fetcher.repository.exchangesymbol.ExchangeSymbolEntity;
 import com.ticker.fetcher.service.FetcherService;
 import com.ticker.fetcher.service.TickerService;
 import lombok.Getter;
@@ -53,6 +53,9 @@ public class FetcherThread extends Thread {
     private WebDriver webDriver;
     private final Object postInitLock = new Object();
     private Set<String> fetcherApps = new HashSet<>();
+
+    private float currentValue;
+    private long updatedAt;
 
     public static final int RETRY_LIMIT = 10;
 
@@ -113,6 +116,7 @@ public class FetcherThread extends Thread {
         ChromeOptions options = new ChromeOptions();
         options.setHeadless(true);
         options.addArguments("--window-size=1920,1080");
+        options.addArguments("--disable-gpu");
         options.addArguments("incognito");
         options.setCapability(CapabilityType.UNEXPECTED_ALERT_BEHAVIOUR, ACCEPT);
         options.setUnhandledPromptBehaviour(ACCEPT);
@@ -156,14 +160,20 @@ public class FetcherThread extends Thread {
             fetcherService.setChartSettings(this, iteration, refresh);
         } catch (Exception e) {
             if (refresh) {
-                log.error("Error while refreshing", e);
+                log.warn("Error while refreshing " + getThreadName());
             } else {
-                log.error("Error while initializing", e);
+                log.warn("Error while initializing " + getThreadName());
             }
 
             if (iteration < RETRY_LIMIT && isEnabled()) {
                 initialize(iteration + 1, refresh);
             } else {
+                if (refresh) {
+                    log.error("Error while refreshing " + getThreadName(), e);
+                } else {
+                    log.error("Error while initializing " + getThreadName(), e);
+                }
+                log.error("Destorying " + getThreadName());
                 destroy();
             }
         }
@@ -283,6 +293,11 @@ public class FetcherThread extends Thread {
 
     public String getThreadName() {
         return getTableName().replace(":", "_");
+    }
+
+    public void setCurrentValue(float currentValue) {
+        this.currentValue = currentValue;
+        this.updatedAt = System.currentTimeMillis();
     }
 
     @Override

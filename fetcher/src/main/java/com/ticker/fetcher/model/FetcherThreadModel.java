@@ -6,6 +6,9 @@ import lombok.Data;
 
 import java.util.Set;
 
+import static com.ticker.fetcher.common.constants.WebConstants.TRADING_VIEW_BASE;
+import static com.ticker.fetcher.common.constants.WebConstants.TRADING_VIEW_CHART;
+
 @Data
 public class FetcherThreadModel {
     @JsonIgnore
@@ -37,5 +40,17 @@ public class FetcherThreadModel {
 
     public Set<String> getFetcherApps() {
         return this.fetcherThread.getFetcherApps();
+    }
+
+    public float getCurrentValue() {
+        return this.fetcherThread.getCurrentValue();
+    }
+
+    public long getUpdatedAt() {
+        return this.fetcherThread.getUpdatedAt();
+    }
+
+    public String getUrl() {
+        return TRADING_VIEW_BASE + TRADING_VIEW_CHART + getExchange() + ":" + getSymbol();
     }
 }
