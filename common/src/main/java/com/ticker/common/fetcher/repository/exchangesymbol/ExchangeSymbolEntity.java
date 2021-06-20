@@ -1,4 +1,4 @@
-package com.ticker.fetcher.repository.exchangesymbol;
+package com.ticker.common.fetcher.repository.exchangesymbol;
 
 import lombok.AllArgsConstructor;
 import lombok.Data;

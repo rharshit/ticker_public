@@ -1,8 +1,8 @@
 package com.ticker.fetcher.controller;
 
+import com.ticker.common.fetcher.repository.exchangesymbol.ExchangeSymbolEntity;
 import com.ticker.common.model.ResponseStatus;
 import com.ticker.fetcher.model.FetcherThreadModel;
-import com.ticker.fetcher.repository.exchangesymbol.ExchangeSymbolEntity;
 import com.ticker.fetcher.service.TickerService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;

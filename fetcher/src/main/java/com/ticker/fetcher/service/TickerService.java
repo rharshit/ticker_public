@@ -1,11 +1,11 @@
 package com.ticker.fetcher.service;
 
+import com.ticker.common.fetcher.repository.exchangesymbol.ExchangeSymbolEntity;
+import com.ticker.common.fetcher.repository.exchangesymbol.ExchangeSymbolEntityPK;
+import com.ticker.common.fetcher.repository.exchangesymbol.ExchangeSymbolRepository;
 import com.ticker.fetcher.common.rx.FetcherThread;
 import com.ticker.fetcher.model.FetcherThreadModel;
 import com.ticker.fetcher.repository.AppRepository;
-import com.ticker.fetcher.repository.exchangesymbol.ExchangeSymbolEntity;
-import com.ticker.fetcher.repository.exchangesymbol.ExchangeSymbolEntityPK;
-import com.ticker.fetcher.repository.exchangesymbol.ExchangeSymbolRepository;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.ApplicationContext;

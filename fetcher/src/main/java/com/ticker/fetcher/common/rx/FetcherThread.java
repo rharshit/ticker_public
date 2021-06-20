@@ -1,8 +1,8 @@
 package com.ticker.fetcher.common.rx;
 
 import com.ticker.common.exception.TickerException;
+import com.ticker.common.fetcher.repository.exchangesymbol.ExchangeSymbolEntity;
 import com.ticker.fetcher.repository.AppRepository;
-import com.ticker.fetcher.repository.exchangesymbol.ExchangeSymbolEntity;
 import com.ticker.fetcher.service.FetcherService;
 import com.ticker.fetcher.service.TickerService;
 import lombok.Getter;
