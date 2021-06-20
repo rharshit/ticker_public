@@ -14,6 +14,7 @@
         <module>fetcher</module>
         <module>brokerage</module>
         <module>common</module>
+        <module>strat</module>
     </modules>
 
     <properties>
@@ -23,6 +24,7 @@
         <ticker.fetcher.version>0.0.1-SNAPSHOT</ticker.fetcher.version>
         <ticker.brokerage.version>0.0.1-SNAPSHOT</ticker.brokerage.version>
         <ticker.common.version>0.0.1-SNAPSHOT</ticker.common.version>
+        <ticker.strat.version>0.0.1-SNAPSHOT</ticker.strat.version>
 
         <spring.version>2.4.4</spring.version>
         <lombok.version>1.18.20</lombok.version>
