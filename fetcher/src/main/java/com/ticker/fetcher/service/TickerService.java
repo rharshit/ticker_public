@@ -207,14 +207,16 @@ public class TickerService {
         tickerType = tickerType.toUpperCase();
         String tableName = symbol + "_" + exchange + ":yyyy_MM_dd";
         ExchangeSymbolEntity exchangeSymbolEntity;
-        if (minQty != null || incQty != null || lotSize != null) {
-            exchangeSymbolEntity =
-                    new ExchangeSymbolEntity(exchange, symbol, tableName,
-                            null, null, null, tickerType, minQty, incQty, lotSize);
-        } else {
-            exchangeSymbolEntity =
-                    new ExchangeSymbolEntity(exchange, symbol, tableName,
-                            null, null, null, tickerType);
+        exchangeSymbolEntity = new ExchangeSymbolEntity(exchange, symbol, tableName,
+                null, null, null, tickerType);
+        if (minQty != null) {
+            exchangeSymbolEntity.setMinQty(minQty);
+        }
+        if (incQty != null) {
+            exchangeSymbolEntity.setIncQty(incQty);
+        }
+        if (lotSize != null) {
+            exchangeSymbolEntity.setLotSize(lotSize);
         }
         return exchangeSymbolRepository.save(exchangeSymbolEntity);
     }
