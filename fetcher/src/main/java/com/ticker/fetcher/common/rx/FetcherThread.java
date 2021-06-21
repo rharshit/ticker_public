@@ -2,6 +2,7 @@ package com.ticker.fetcher.common.rx;
 
 import com.ticker.common.exception.TickerException;
 import com.ticker.common.fetcher.repository.exchangesymbol.ExchangeSymbolEntity;
+import com.ticker.common.rx.TickerThread;
 import com.ticker.fetcher.repository.AppRepository;
 import com.ticker.fetcher.service.FetcherService;
 import com.ticker.fetcher.service.TickerService;
@@ -21,7 +22,10 @@ import org.springframework.stereotype.Component;
 import org.springframework.util.CollectionUtils;
 import org.springframework.util.StringUtils;
 
-import java.util.*;
+import java.util.Arrays;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Set;
 import java.util.stream.Collectors;
 
 import static com.ticker.common.util.Util.WAIT_LONG;
@@ -36,7 +40,7 @@ import static org.openqa.selenium.UnexpectedAlertBehaviour.ACCEPT;
 @Component("fetcherThread")
 @Scope("prototype")
 @NoArgsConstructor
-public class FetcherThread extends Thread {
+public class FetcherThread extends TickerThread<TickerService> {
 
     @Autowired
     private AppRepository repository;
@@ -44,12 +48,6 @@ public class FetcherThread extends Thread {
     @Autowired
     private FetcherService fetcherService;
 
-    private TickerService tickerService;
-
-    private ExchangeSymbolEntity entity;
-
-    private boolean enabled = false;
-    private boolean initialized = false;
     private WebDriver webDriver;
     private final Object postInitLock = new Object();
     private Set<String> fetcherApps = new HashSet<>();
@@ -67,20 +65,11 @@ public class FetcherThread extends Thread {
 
     public static final int RETRY_LIMIT = 10;
 
-    /**
-     * Constructor to make an object for comparison only
-     *
-     * @param entity
-     */
-    public FetcherThread(ExchangeSymbolEntity entity) {
-        this.entity = entity;
-    }
-
     public void setProperties(String... apps) {
         this.enabled = true;
         this.fetcherApps = Arrays.stream(apps).collect(Collectors.toSet());
 
-        initializeBean();
+        initialize();
     }
 
     public void setEntity(ExchangeSymbolEntity entity) {
@@ -98,7 +87,8 @@ public class FetcherThread extends Thread {
         return entity.getSymbolId();
     }
 
-    private void initializeBean() {
+    @Override
+    protected void initialize() {
         initializeWebDriver();
         initializeTables();
     }
@@ -260,11 +250,6 @@ public class FetcherThread extends Thread {
         }
     }
 
-    public void terminateThread() {
-        this.enabled = false;
-        log.info("Terminating thread : " + getThreadName());
-    }
-
     @Override
     public String toString() {
         return "FetcherThread{" +
@@ -273,13 +258,9 @@ public class FetcherThread extends Thread {
                 '}';
     }
 
-    public void setTickerServiceBean(TickerService tickerService) {
-        this.tickerService = tickerService;
-    }
-
     @Deprecated
     public void destroy() {
-        tickerService.deleteTicker(this);
+        service.deleteTicker(this);
     }
 
     public void refreshBrowser() {
@@ -306,42 +287,5 @@ public class FetcherThread extends Thread {
     public void setCurrentValue(float currentValue) {
         this.currentValue = currentValue;
         this.updatedAt = System.currentTimeMillis();
-    }
-
-    @Override
-    public boolean equals(Object o) {
-        if (this == o) return true;
-        if (o == null || getClass() != o.getClass()) return false;
-        FetcherThread thread = (FetcherThread) o;
-        return getExchange().equals(thread.getExchange()) &&
-                getSymbol().equals(thread.getSymbol());
-    }
-
-    @Override
-    public int hashCode() {
-        return Objects.hash(getExchange(), getSymbol());
-    }
-
-    public static class Comparator implements java.util.Comparator<FetcherThread> {
-
-        @Override
-        public int compare(FetcherThread o1, FetcherThread o2) {
-            if (o1 == null) {
-                if (o2 == null) {
-                    return 0;
-                } else {
-                    return 1;
-                }
-            } else {
-                if (o2 == null) {
-                    return -1;
-                }
-            }
-            if (o1.getExchange().compareTo(o2.getExchange()) == 0) {
-                return o1.getSymbol().compareTo(o2.getSymbol());
-            } else {
-                return o1.getExchange().compareTo(o2.getExchange());
-            }
-        }
     }
 }

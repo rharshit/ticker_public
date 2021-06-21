@@ -1,22 +1,10 @@
 package com.ticker.mwave.model;
 
-import com.fasterxml.jackson.annotation.JsonIgnore;
-import com.ticker.mwave.rx.MWaveThread;
-import lombok.AllArgsConstructor;
-import lombok.Data;
+import com.ticker.common.model.TickerThreadModel;
+import com.ticker.common.rx.TickerThread;
 
-@Data
-@AllArgsConstructor
-public class MWaveThreadModel {
-
-    @JsonIgnore
-    private MWaveThread thread;
-
-    public String getExchange() {
-        return this.thread.getExchange();
-    }
-
-    public String getSymbol() {
-        return this.thread.getSymbol();
+public class MWaveThreadModel extends TickerThreadModel {
+    public MWaveThreadModel(TickerThread thread) {
+        super(thread);
     }
 }

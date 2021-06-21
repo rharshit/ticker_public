@@ -1,81 +1,31 @@
 package com.ticker.fetcher.service;
 
+import com.ticker.common.exception.TickerException;
 import com.ticker.common.fetcher.repository.exchangesymbol.ExchangeSymbolEntity;
 import com.ticker.common.fetcher.repository.exchangesymbol.ExchangeSymbolEntityPK;
-import com.ticker.common.fetcher.repository.exchangesymbol.ExchangeSymbolRepository;
+import com.ticker.common.service.TickerThreadService;
 import com.ticker.fetcher.common.rx.FetcherThread;
 import com.ticker.fetcher.model.FetcherThreadModel;
 import com.ticker.fetcher.repository.AppRepository;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.context.ApplicationContext;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
 
-import java.util.*;
-import java.util.concurrent.ConcurrentSkipListSet;
+import java.util.Set;
 
 @Service
 @Slf4j
-public class TickerService {
-
-    private static Set<FetcherThread> threadPool;
+public class TickerService extends TickerThreadService<FetcherThread, FetcherThreadModel> {
 
     @Autowired
     AppRepository repository;
 
-    @Autowired
-    private ApplicationContext ctx;
-
-    @Autowired
-    private ExchangeSymbolRepository exchangeSymbolRepository;
-
-    private static synchronized Set<FetcherThread> getThreadPool() {
-        if (threadPool == null) {
-            initializeThreadPool();
-            log.info("Initializing thread pool");
-        }
-        return threadPool;
-    }
-
-    private static synchronized void initializeThreadPool() {
-        if (threadPool == null) {
-            threadPool = new ConcurrentSkipListSet<>(new FetcherThread.Comparator());
-            log.info("Thread pool initialized");
-        } else {
-            log.info("Thread pool already initialized");
-        }
-    }
-
-    private FetcherThread getThread(String exchange, String symbol) {
-        Set<FetcherThread> threadMap = getThreadPool();
-        FetcherThread compare = new FetcherThread(new ExchangeSymbolEntity(exchange, symbol));
-        return threadMap.stream().filter(compare::equals).findFirst().orElse(null);
-    }
-
-    private void destroyThread(FetcherThread thread) {
-        if (thread == null) {
-            return;
-        }
-        thread.terminateThread();
-        getThreadPool().remove(thread);
-        log.info("Removed thread: " + thread.getThreadName());
-    }
-
-    private void destroyThread(String exchange, String symbol) {
-        FetcherThread thread = getThread(exchange, symbol);
-        if (thread == null) {
-            return;
-        }
-        thread.terminateThread();
-        getThreadPool().remove(thread);
-        log.info("Removed thread: " + thread.getThreadName());
-    }
-
-    private void createThread(String exchange, String symbol, String appName) {
+    @Override
+    public void createThread(String exchange, String symbol) {
         FetcherThread thread = getThread(exchange, symbol);
         if (thread != null && thread.isEnabled()) {
-            thread.addApp(appName);
+            return;
         } else {
             if (thread != null) {
                 getThreadPool().remove(thread);
@@ -84,14 +34,14 @@ public class TickerService {
             thread = (FetcherThread) ctx.getBean("fetcherThread");
             thread.setEntity(entity);
             getThreadPool().add(thread);
-            thread.setProperties(appName);
 
-            thread.setTickerServiceBean(this);
-
-            log.info("Added thread: " + thread.getThreadName());
-            thread.start();
+            thread.setService(this);
         }
+    }
 
+    @Override
+    public FetcherThreadModel createTickerThreadModel(FetcherThread thread) {
+        return new FetcherThreadModel(thread);
     }
 
     /**
@@ -101,8 +51,21 @@ public class TickerService {
      * @param symbol
      * @param appName
      */
-    public void addTicker(String exchange, String symbol, String appName) {
-        createThread(exchange, symbol, appName);
+    public void createThread(String exchange, String symbol, String appName) {
+        FetcherThread thread = getThread(exchange, symbol);
+        if (thread != null && thread.isEnabled()) {
+            thread.addApp(appName);
+            log.info("Added thread: " + thread.getThreadName());
+        } else {
+            createThread(exchange, symbol);
+            thread = getThread(exchange, symbol);
+            if (thread == null) {
+                throw new TickerException("Error while adding thread");
+            }
+            thread.setProperties(appName);
+            thread.start();
+        }
+
     }
 
     /**
@@ -123,11 +86,7 @@ public class TickerService {
      * @param symbol
      * @param appName
      */
-    public void deleteTicker(String exchange, String symbol, String appName) {
-        removeAppFromThread(exchange, symbol, appName);
-    }
-
-    private void removeAppFromThread(String exchange, String symbol, String appName) {
+    public void removeAppFromThread(String exchange, String symbol, String appName) {
         FetcherThread thread = getThread(exchange, symbol);
         if (thread == null) {
             return;
@@ -142,26 +101,6 @@ public class TickerService {
      */
     public void deleteTicker(FetcherThread thread) {
         destroyThread(thread);
-    }
-
-    /**
-     * Return threadPool
-     *
-     * @return
-     */
-    public Map<String, List<FetcherThreadModel>> getCurrentTickers() {
-        List<FetcherThread> threads = getCurrentTickerList();
-        List<FetcherThreadModel> tickers = new ArrayList<>();
-        for (FetcherThread thread : threads) {
-            tickers.add(new FetcherThreadModel(thread));
-        }
-        Map<String, List<FetcherThreadModel>> list = new HashMap<>();
-        list.put("tickers", tickers);
-        return list;
-    }
-
-    public List<FetcherThread> getCurrentTickerList() {
-        return new ArrayList<>(getThreadPool());
     }
 
     public void deleteAllTickers() {
