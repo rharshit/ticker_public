@@ -14,7 +14,7 @@
         <module>fetcher</module>
         <module>brokerage</module>
         <module>common</module>
-        <module>strat</module>
+        <module>template</module>
         <module>mwave</module>
     </modules>
 
@@ -25,7 +25,7 @@
         <ticker.fetcher.version>0.0.1-SNAPSHOT</ticker.fetcher.version>
         <ticker.brokerage.version>0.0.1-SNAPSHOT</ticker.brokerage.version>
         <ticker.common.version>0.0.1-SNAPSHOT</ticker.common.version>
-        <ticker.strat.version>0.0.1-SNAPSHOT</ticker.strat.version>
+        <ticker.template.version>0.0.1-SNAPSHOT</ticker.template.version>
         <ticker.mwave.version>0.0.1-SNAPSHOT</ticker.mwave.version>
 
         <spring.version>2.4.4</spring.version>
