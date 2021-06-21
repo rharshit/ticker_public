@@ -278,12 +278,13 @@ public class FetcherService {
                     log.debug("doTask() added data: " + fetcherThread.getThreadName() + ", size: " + dataQueue.size());
                 }
 
-            } catch (ArrayIndexOutOfBoundsException | NumberFormatException e) {
+            } catch (IndexOutOfBoundsException | NumberFormatException e) {
                 log.debug(e.getClass().getName());
                 StackTraceElement[] stackTraceElements = e.getStackTrace();
                 for (StackTraceElement stackTraceElement : stackTraceElements) {
                     log.debug("\t" + stackTraceElement.toString());
                 }
+                log.info(fetcherThread.getThreadName() + " : " + e.getMessage());
             } catch (NoSuchSessionException e) {
                 log.error("Destroying: " + fetcherThread.getThreadName());
                 fetcherThread.destroy();
