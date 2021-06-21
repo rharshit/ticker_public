@@ -2,8 +2,7 @@ package com.ticker.common.util;
 
 import lombok.extern.slf4j.Slf4j;
 
-import static com.ticker.common.contants.TickerConstants.APPLICATION_BROKERAGE;
-import static com.ticker.common.contants.TickerConstants.APPLICATION_FETCHER;
+import static com.ticker.common.contants.TickerConstants.*;
 
 @Slf4j
 public abstract class Util {
@@ -28,6 +27,8 @@ public abstract class Util {
                 return "http://localhost:8081/";
             case APPLICATION_BROKERAGE:
                 return "http://localhost:8082/";
+            case APPLICATION_MWAVE:
+                return "http://localhost:8181/";
             default:
                 return null;
         }
