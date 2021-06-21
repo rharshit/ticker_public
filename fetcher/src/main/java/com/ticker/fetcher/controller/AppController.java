@@ -82,7 +82,7 @@ public class AppController {
     @PostMapping
     public ResponseEntity<ResponseStatus> addTicker(@RequestParam String exchange, @RequestParam String symbol,
                                                     @RequestParam String appName) {
-        service.addTicker(exchange, symbol, appName);
+        service.createThread(exchange, symbol, appName);
         return new ResponseEntity<>(new ResponseStatus(), HttpStatus.OK);
     }
 
@@ -103,7 +103,7 @@ public class AppController {
     @DeleteMapping
     public ResponseEntity<ResponseStatus> deleteTicker(@RequestParam String exchange, @RequestParam String symbol,
                                                        @RequestParam String appName) {
-        service.deleteTicker(exchange, symbol, appName);
+        service.removeAppFromThread(exchange, symbol, appName);
         return new ResponseEntity<>(new ResponseStatus(), HttpStatus.OK);
     }
 

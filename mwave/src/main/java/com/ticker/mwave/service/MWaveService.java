@@ -26,11 +26,16 @@ public class MWaveService extends TickerThreadService<MWaveThread, MWaveThreadMo
             thread.setEntity(entity);
             getThreadPool().add(thread);
 
-            thread.setMWaveService(this);
+            thread.setService(this);
 
             log.info(thread.getThreadName() + " : added thread");
             thread.start();
         }
 
+    }
+
+    @Override
+    public MWaveThreadModel createTickerThreadModel(MWaveThread thread) {
+        return new MWaveThreadModel(thread);
     }
 }

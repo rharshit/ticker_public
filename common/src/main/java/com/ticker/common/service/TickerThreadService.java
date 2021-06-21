@@ -43,7 +43,7 @@ public abstract class TickerThreadService<T extends TickerThread, TM extends Tic
         return threadPool;
     }
 
-    private void destroyThread(T thread) {
+    protected void destroyThread(T thread) {
         if (thread == null) {
             return;
         }
@@ -72,11 +72,13 @@ public abstract class TickerThreadService<T extends TickerThread, TM extends Tic
         return new ArrayList<>(getThreadPool());
     }
 
+    public abstract TM createTickerThreadModel(T thread);
+
     public Map<String, List<TM>> getCurrentTickers() {
         List<T> threads = getCurrentTickerList();
         List<TM> tickers = new ArrayList<>();
         for (T thread : threads) {
-            tickers.add((TM) new TickerThreadModel(thread));
+            tickers.add(createTickerThreadModel(thread));
         }
         Map<String, List<TM>> list = new HashMap<>();
         list.put("tickers", tickers);

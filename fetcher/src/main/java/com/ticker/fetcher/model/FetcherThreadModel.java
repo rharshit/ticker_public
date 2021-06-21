@@ -1,53 +1,29 @@
 package com.ticker.fetcher.model;
 
-import com.fasterxml.jackson.annotation.JsonIgnore;
+import com.ticker.common.model.TickerThreadModel;
 import com.ticker.fetcher.common.rx.FetcherThread;
-import lombok.Data;
 
 import java.util.Set;
 
 import static com.ticker.fetcher.common.constants.WebConstants.TRADING_VIEW_BASE;
 import static com.ticker.fetcher.common.constants.WebConstants.TRADING_VIEW_CHART;
 
-@Data
-public class FetcherThreadModel {
-    @JsonIgnore
-    private final FetcherThread fetcherThread;
+public class FetcherThreadModel extends TickerThreadModel<FetcherThread> {
 
-    public FetcherThreadModel(FetcherThread fetcherThread) {
-        this.fetcherThread = fetcherThread;
-    }
-
-    public String getThreadName() {
-        return this.fetcherThread.getThreadName();
-    }
-
-    public boolean isEnabled() {
-        return this.fetcherThread.isEnabled();
-    }
-
-    public boolean isInitialized() {
-        return this.fetcherThread.isInitialized();
-    }
-
-    public String getExchange() {
-        return this.fetcherThread.getExchange();
-    }
-
-    public String getSymbol() {
-        return this.fetcherThread.getSymbol();
+    public FetcherThreadModel(FetcherThread thread) {
+        super(thread);
     }
 
     public Set<String> getFetcherApps() {
-        return this.fetcherThread.getFetcherApps();
+        return this.thread.getFetcherApps();
     }
 
     public float getCurrentValue() {
-        return this.fetcherThread.getCurrentValue();
+        return this.thread.getCurrentValue();
     }
 
     public long getUpdatedAt() {
-        return this.fetcherThread.getUpdatedAt();
+        return this.thread.getUpdatedAt();
     }
 
     public String getUrl() {
@@ -55,34 +31,34 @@ public class FetcherThreadModel {
     }
 
     public float getO() {
-        return fetcherThread.getO();
+        return thread.getO();
     }
 
     public float getH() {
-        return fetcherThread.getH();
+        return thread.getH();
     }
 
     public float getL() {
-        return fetcherThread.getL();
+        return thread.getL();
     }
 
     public float getC() {
-        return fetcherThread.getC();
+        return thread.getC();
     }
 
     public float getBbU() {
-        return fetcherThread.getBbU();
+        return thread.getBbU();
     }
 
     public float getBbA() {
-        return fetcherThread.getBbA();
+        return thread.getBbA();
     }
 
     public float getBbL() {
-        return fetcherThread.getBbL();
+        return thread.getBbL();
     }
 
     public float getRsi() {
-        return fetcherThread.getRsi();
+        return thread.getRsi();
     }
 }

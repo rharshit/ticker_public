@@ -23,7 +23,7 @@ public abstract class TickerThread<S extends TickerThreadService> extends Thread
     protected boolean enabled = false;
     protected boolean initialized = false;
 
-    protected S mWaveService;
+    protected S service;
     protected ExchangeSymbolEntity entity;
 
     public TickerThread(ExchangeSymbolEntity entity) {

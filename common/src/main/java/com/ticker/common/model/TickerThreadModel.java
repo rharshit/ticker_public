@@ -10,7 +10,7 @@ import lombok.Data;
 public class TickerThreadModel<T extends TickerThread> {
 
     @JsonIgnore
-    private T thread;
+    protected T thread;
 
     public String getThreadName() {
         return this.thread.getThreadName();
