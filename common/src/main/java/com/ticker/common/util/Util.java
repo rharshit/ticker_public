@@ -2,6 +2,9 @@ package com.ticker.common.util;
 
 import lombok.extern.slf4j.Slf4j;
 
+import static com.ticker.common.contants.TickerConstants.APPLICATION_BROKERAGE;
+import static com.ticker.common.contants.TickerConstants.APPLICATION_FETCHER;
+
 @Slf4j
 public abstract class Util {
     public static final long WAIT_QUICK = 25;
@@ -17,5 +20,16 @@ public abstract class Util {
             log.error("Error while waiting", e);
         }
         log.debug("Resume");
+    }
+
+    public static String getApplicationUrl(String application) {
+        switch (application) {
+            case APPLICATION_FETCHER:
+                return "http://localhost:8081/";
+            case APPLICATION_BROKERAGE:
+                return "http://localhost:8082/";
+            default:
+                return null;
+        }
     }
 }
