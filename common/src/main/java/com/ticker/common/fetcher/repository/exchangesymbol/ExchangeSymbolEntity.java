@@ -1,4 +1,4 @@
-package com.ticker.fetcher.repository.exchangesymbol;
+package com.ticker.common.fetcher.repository.exchangesymbol;
 
 import lombok.AllArgsConstructor;
 import lombok.Data;
@@ -28,7 +28,7 @@ public class ExchangeSymbolEntity implements Serializable {
     private String zerodhaExchange;
     private String zerodhaSymbol;
     private String tickerType;
-    private Integer minQty = 0;
+    private Integer minQty = 1;
     private Integer incQty = 1;
     private Integer lotSize = 1;
 
