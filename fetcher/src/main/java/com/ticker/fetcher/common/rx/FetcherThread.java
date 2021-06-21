@@ -54,6 +54,14 @@ public class FetcherThread extends Thread {
     private final Object postInitLock = new Object();
     private Set<String> fetcherApps = new HashSet<>();
 
+    private float o;
+    private float h;
+    private float l;
+    private float c;
+    private float bbU;
+    private float bbA;
+    private float bbL;
+    private float rsi;
     private float currentValue;
     private long updatedAt;
 

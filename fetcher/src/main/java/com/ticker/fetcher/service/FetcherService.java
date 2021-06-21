@@ -225,11 +225,21 @@ public class FetcherService {
                             l = Float.parseFloat(val.substring(il + 1, ic).trim());
                             c = Float.parseFloat(val.substring(ic + 1, ic + val.substring(ic).indexOf(".") + 3).trim());
 
+                            fetcherThread.setO(o);
+                            fetcherThread.setH(h);
+                            fetcherThread.setL(l);
+                            fetcherThread.setC(c);
+
                             log.debug("1OHLC at 0");
                         } else if (bbL * bbA * bbU == 0 && "BB".equalsIgnoreCase(vals[i])) {
                             bbA = Float.parseFloat(vals[i + 2]);
                             bbU = Float.parseFloat(vals[i + 3]);
                             bbL = Float.parseFloat(vals[i + 4]);
+
+                            fetcherThread.setBbA(bbA);
+                            fetcherThread.setBbU(bbU);
+                            fetcherThread.setBbL(bbL);
+
                             log.debug("1BB   at 0");
 
                         }
@@ -243,6 +253,9 @@ public class FetcherService {
                     for (int i = 0; i < vals.length && rsi == 0; i++) {
                         if ("RSI".equalsIgnoreCase(vals[i])) {
                             rsi = Float.parseFloat(vals[i + 2]);
+
+                            fetcherThread.setRsi(rsi);
+
                             log.debug("1RSI  at 4");
                         }
                     }

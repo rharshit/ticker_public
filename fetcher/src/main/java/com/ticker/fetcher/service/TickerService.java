@@ -189,12 +189,13 @@ public class TickerService {
         thread.refreshBrowser();
     }
 
-    public float getCurrent(String exchange, String symbol) {
+    public FetcherThreadModel getCurrent(String exchange, String symbol) {
         FetcherThread thread = getThread(exchange, symbol);
         if (thread == null) {
-            return 0;
+            return null;
         }
-        return thread.getCurrentValue();
+
+        return new FetcherThreadModel(thread);
     }
 
     public Iterable<ExchangeSymbolEntity> getAllTickers() {

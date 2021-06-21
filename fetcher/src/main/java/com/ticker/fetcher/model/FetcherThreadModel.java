@@ -53,4 +53,36 @@ public class FetcherThreadModel {
     public String getUrl() {
         return TRADING_VIEW_BASE + TRADING_VIEW_CHART + getExchange() + ":" + getSymbol();
     }
+
+    public float getO() {
+        return fetcherThread.getO();
+    }
+
+    public float getH() {
+        return fetcherThread.getH();
+    }
+
+    public float getL() {
+        return fetcherThread.getL();
+    }
+
+    public float getC() {
+        return fetcherThread.getC();
+    }
+
+    public float getBbU() {
+        return fetcherThread.getBbU();
+    }
+
+    public float getBbA() {
+        return fetcherThread.getBbA();
+    }
+
+    public float getBbL() {
+        return fetcherThread.getBbL();
+    }
+
+    public float getRsi() {
+        return fetcherThread.getRsi();
+    }
 }

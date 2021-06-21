@@ -38,9 +38,8 @@ public class AppController {
      * @return
      */
     @GetMapping("current")
-    public ResponseEntity<ResponseStatus> getCurrentValue(@RequestParam String exchange, @RequestParam String symbol) {
-        service.getCurrent(exchange, symbol);
-        return new ResponseEntity<>(new ResponseStatus(), HttpStatus.OK);
+    public ResponseEntity<FetcherThreadModel> getCurrentValue(@RequestParam String exchange, @RequestParam String symbol) {
+        return new ResponseEntity<>(service.getCurrent(exchange, symbol), HttpStatus.OK);
     }
 
     /**
