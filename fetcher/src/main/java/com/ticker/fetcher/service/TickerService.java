@@ -206,7 +206,9 @@ public class TickerService {
         exchange = exchange.toUpperCase();
         symbol = symbol.toUpperCase();
         tickerType = tickerType.toUpperCase();
-        String tableName = symbol + "_" + exchange + ":yyyy_MM_dd";
+        String tableName = (symbol + "_" + exchange + ":yyyy_MM_dd")
+                .replace("!", "_excl_")
+                .replaceAll("__*", "_");
         ExchangeSymbolEntity exchangeSymbolEntity;
         exchangeSymbolEntity = new ExchangeSymbolEntity(exchange, symbol, tableName,
                 null, null, null, tickerType);
