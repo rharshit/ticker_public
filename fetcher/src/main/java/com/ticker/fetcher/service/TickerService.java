@@ -189,12 +189,13 @@ public class TickerService {
         thread.refreshBrowser();
     }
 
-    public float getCurrent(String exchange, String symbol) {
+    public FetcherThreadModel getCurrent(String exchange, String symbol) {
         FetcherThread thread = getThread(exchange, symbol);
         if (thread == null) {
-            return 0;
+            return null;
         }
-        return thread.getCurrentValue();
+
+        return new FetcherThreadModel(thread);
     }
 
     public Iterable<ExchangeSymbolEntity> getAllTickers() {
@@ -205,7 +206,9 @@ public class TickerService {
         exchange = exchange.toUpperCase();
         symbol = symbol.toUpperCase();
         tickerType = tickerType.toUpperCase();
-        String tableName = symbol + "_" + exchange + ":yyyy_MM_dd";
+        String tableName = (symbol + "_" + exchange + ":yyyy_MM_dd")
+                .replace("!", "_excl_")
+                .replaceAll("__*", "_");
         ExchangeSymbolEntity exchangeSymbolEntity;
         exchangeSymbolEntity = new ExchangeSymbolEntity(exchange, symbol, tableName,
                 null, null, null, tickerType);
