@@ -21,6 +21,10 @@ import static com.ticker.common.util.Util.*;
 public class MWaveThread extends TickerThread<MWaveService> {
 
     private boolean fetching = false;
+    private int currentState;
+
+    private float currentValue;
+    private long updatedAt;
 
     public MWaveThread(ExchangeSymbolEntity entity) {
         super(entity);
@@ -30,7 +34,7 @@ public class MWaveThread extends TickerThread<MWaveService> {
     public void run() {
         initialize();
         if (entity != null) {
-            while (!fetching) {
+            while (!isFetching() && isEnabled()) {
                 waitFor(WAIT_LONG);
             }
             while (isEnabled()) {
@@ -44,13 +48,13 @@ public class MWaveThread extends TickerThread<MWaveService> {
 
     @Override
     public void destroy() {
-
+        service.destroyThread(this);
     }
 
     @Override
     protected void initialize() {
-        fetching = true;
         enabled = true;
+        getService().initializeThread(this);
         initialized = true;
     }
 

@@ -31,7 +31,13 @@ public class MWaveController {
 
     @DeleteMapping
     public ResponseEntity<ResponseStatus> deleteTicker(@RequestParam String exchange, @RequestParam String symbol) {
-        service.destroyThread(exchange, symbol);
+        service.stopFetching(exchange, symbol);
+        return new ResponseEntity<>(new ResponseStatus(), HttpStatus.OK);
+    }
+
+    @DeleteMapping("all/")
+    public ResponseEntity<ResponseStatus> deleteAllTickers() {
+        service.stopFetchingAll();
         return new ResponseEntity<>(new ResponseStatus(), HttpStatus.OK);
     }
 }

@@ -2,6 +2,8 @@ package com.ticker.common.util;
 
 import lombok.extern.slf4j.Slf4j;
 
+import java.util.Map;
+
 import static com.ticker.common.contants.TickerConstants.*;
 
 @Slf4j
@@ -32,5 +34,16 @@ public abstract class Util {
             default:
                 return null;
         }
+    }
+
+    public static String generateQueryParameters(Map<String, Object> params) {
+        StringBuilder url = new StringBuilder();
+        for (Map.Entry<String, Object> param : params.entrySet()) {
+            url.append(url.length() == 0 ? "?" : "&")
+                    .append(param.getKey())
+                    .append("=")
+                    .append(param.getValue() == null ? "" : param.getValue().toString());
+        }
+        return url.toString();
     }
 }
