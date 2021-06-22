@@ -111,4 +111,10 @@ public class MWaveService extends TickerThreadService<MWaveThread, MWaveThreadMo
         String deleteFetchUrl = baseUrl + Util.generateQueryParameters(params);
         restTemplate.delete(deleteFetchUrl);
     }
+
+    public void stopFetchingAll() {
+        for (MWaveThread thread : getCurrentTickerList()) {
+            stopFetching(thread.getExchange(), thread.getSymbol());
+        }
+    }
 }
