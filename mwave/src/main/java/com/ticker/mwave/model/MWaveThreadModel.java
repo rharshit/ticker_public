@@ -27,4 +27,8 @@ public class MWaveThreadModel extends TickerThreadModel<MWaveThread> {
         return TRADING_VIEW_BASE + TRADING_VIEW_CHART + getExchange() + ":" + getSymbol();
     }
 
+    public int getCurrentState() {
+        return this.thread.getCurrentState();
+    }
+
 }

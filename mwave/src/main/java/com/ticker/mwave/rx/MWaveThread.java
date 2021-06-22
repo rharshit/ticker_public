@@ -53,7 +53,7 @@ public class MWaveThread extends TickerThread<MWaveService> {
 
     @Override
     public void destroy() {
-        service.destroyThread(this);
+        service.stopFetching(getExchange(), getSymbol());
     }
 
     @Override
