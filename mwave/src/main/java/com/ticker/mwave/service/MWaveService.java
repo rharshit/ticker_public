@@ -101,4 +101,14 @@ public class MWaveService extends TickerThreadService<MWaveThread, MWaveThreadMo
     }
 
 
+    public void stopFetching(String exchange, String symbol) {
+        destroyThread(exchange, symbol);
+        String baseUrl = Util.getApplicationUrl(APPLICATION_FETCHER);
+        Map<String, Object> params = new HashMap<>();
+        params.put("exchange", exchange);
+        params.put("symbol", symbol);
+        params.put("appName", appName);
+        String deleteFetchUrl = baseUrl + Util.generateQueryParameters(params);
+        restTemplate.delete(deleteFetchUrl);
+    }
 }
