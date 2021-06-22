@@ -2,12 +2,14 @@ package com.ticker.fetcher.model;
 
 import com.ticker.common.model.TickerThreadModel;
 import com.ticker.fetcher.common.rx.FetcherThread;
+import lombok.NoArgsConstructor;
 
 import java.util.Set;
 
 import static com.ticker.fetcher.common.constants.WebConstants.TRADING_VIEW_BASE;
 import static com.ticker.fetcher.common.constants.WebConstants.TRADING_VIEW_CHART;
 
+@NoArgsConstructor
 public class FetcherThreadModel extends TickerThreadModel<FetcherThread> {
 
     public FetcherThreadModel(FetcherThread thread) {

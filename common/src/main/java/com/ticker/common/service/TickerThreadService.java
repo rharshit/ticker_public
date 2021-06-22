@@ -43,7 +43,7 @@ public abstract class TickerThreadService<T extends TickerThread, TM extends Tic
         return threadPool;
     }
 
-    protected void destroyThread(T thread) {
+    public void destroyThread(T thread) {
         if (thread == null) {
             return;
         }
@@ -53,13 +53,7 @@ public abstract class TickerThreadService<T extends TickerThread, TM extends Tic
     }
 
     public void destroyThread(String exchange, String symbol) {
-        T thread = getThread(exchange, symbol);
-        if (thread == null) {
-            return;
-        }
-        thread.terminateThread();
-        getThreadPool().remove(thread);
-        log.info(thread.getThreadName() + " : removed thread");
+        destroyThread(getThread(exchange, symbol));
     }
 
     protected T getThread(String exchange, String symbol) {

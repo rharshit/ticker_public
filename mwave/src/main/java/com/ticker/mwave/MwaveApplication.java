@@ -11,7 +11,11 @@ import org.springframework.scheduling.annotation.EnableScheduling;
 @EnableScheduling
 @EnableJpaRepositories(basePackages = {"com.ticker.common.fetcher.repository.exchangesymbol"})
 @EntityScan(basePackages = {"com.ticker.common.fetcher.repository.exchangesymbol"})
-@ComponentScan({"com.ticker.common.fetcher.repository.exchangesymbol", "com.ticker.mwave"})
+@ComponentScan({
+		"com.ticker.common.fetcher.repository.exchangesymbol",
+		"com.ticker.common.config",
+		"com.ticker.mwave"
+})
 @SpringBootApplication(exclude = DataSourceAutoConfiguration.class)
 public class MwaveApplication {
 
