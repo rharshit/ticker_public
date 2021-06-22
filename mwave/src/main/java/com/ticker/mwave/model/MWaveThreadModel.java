@@ -11,4 +11,12 @@ public class MWaveThreadModel extends TickerThreadModel<MWaveThread> {
     public boolean isFetching() {
         return this.thread.isFetching();
     }
+
+    public float getCurrentValue() {
+        return this.thread.getCurrentValue();
+    }
+
+    public long getUpdatedAt() {
+        return this.thread.getUpdatedAt();
+    }
 }

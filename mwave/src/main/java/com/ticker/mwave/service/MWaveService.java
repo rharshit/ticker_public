@@ -75,6 +75,8 @@ public class MWaveService extends TickerThreadService<MWaveThread, MWaveThreadMo
                         restTemplate.getForObject(getCurrentTickerUrl + Util.generateQueryParameters(params),
                                 Map.class);
                 thread.setFetching((Double) ticker.get("currentValue") != 0);
+                thread.setCurrentValue(((Double) ticker.get("currentValue")).floatValue());
+                thread.setUpdatedAt(System.currentTimeMillis());
             } catch (Exception e) {
                 thread.setFetching(false);
             }

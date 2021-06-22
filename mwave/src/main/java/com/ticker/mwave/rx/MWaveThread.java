@@ -23,6 +23,9 @@ public class MWaveThread extends TickerThread<MWaveService> {
     private boolean fetching = false;
     private int currentState;
 
+    private float currentValue;
+    private long updatedAt;
+
     public MWaveThread(ExchangeSymbolEntity entity) {
         super(entity);
     }
