@@ -6,8 +6,8 @@ import lombok.NoArgsConstructor;
 
 import java.util.Set;
 
-import static com.ticker.fetcher.common.constants.WebConstants.TRADING_VIEW_BASE;
-import static com.ticker.fetcher.common.constants.WebConstants.TRADING_VIEW_CHART;
+import static com.ticker.common.contants.WebConstants.TRADING_VIEW_BASE;
+import static com.ticker.common.contants.WebConstants.TRADING_VIEW_CHART;
 
 @NoArgsConstructor
 public class FetcherThreadModel extends TickerThreadModel<FetcherThread> {
