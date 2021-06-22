@@ -50,9 +50,8 @@ public class MWaveThread extends TickerThread<MWaveService> {
 
     @Override
     protected void initialize() {
-        getService().initializeThread(this);
-        fetching = true;
         enabled = true;
+        getService().initializeThread(this);
         initialized = true;
     }
 
