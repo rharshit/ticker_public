@@ -74,12 +74,19 @@ public class MWaveService extends TickerThreadService<MWaveThread, MWaveThreadMo
                 Map<String, Object> ticker =
                         restTemplate.getForObject(getCurrentTickerUrl + Util.generateQueryParameters(params),
                                 Map.class);
-                thread.setFetching((Double) ticker.get("currentValue") != 0);
-                thread.setCurrentValue(((Double) ticker.get("currentValue")).floatValue());
-                thread.setUpdatedAt(System.currentTimeMillis());
+                if (ticker == null) {
+                    thread.setInitialized(false);
+                    thread.setFetching(false);
+                    thread.setCurrentValue(0);
+                } else {
+                    thread.setFetching((Double) ticker.get("currentValue") != 0);
+                    thread.setCurrentValue(((Double) ticker.get("currentValue")).floatValue());
+                }
             } catch (Exception e) {
                 thread.setFetching(false);
+                thread.setCurrentValue(0);
             }
+            thread.setUpdatedAt(System.currentTimeMillis());
         }
     }
 
@@ -118,5 +125,10 @@ public class MWaveService extends TickerThreadService<MWaveThread, MWaveThreadMo
         for (MWaveThread thread : getCurrentTickerList()) {
             stopFetching(thread.getExchange(), thread.getSymbol());
         }
+    }
+
+    public void refreshBrowser(String exchange, String symbol) {
+        MWaveThread thread = getThread(exchange, symbol);
+        thread.initialize();
     }
 }
