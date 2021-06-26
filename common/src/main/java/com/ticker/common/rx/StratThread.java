@@ -6,8 +6,6 @@ import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.context.annotation.Scope;
-import org.springframework.stereotype.Component;
 
 import static com.ticker.common.util.Util.WAIT_LONG;
 import static com.ticker.common.util.Util.waitFor;
@@ -15,8 +13,6 @@ import static com.ticker.common.util.Util.waitFor;
 @Getter
 @Setter
 @Slf4j
-@Component("stratThread")
-@Scope("prototype")
 @NoArgsConstructor
 public abstract class StratThread<S extends StratTickerService> extends TickerThread<S> {
 

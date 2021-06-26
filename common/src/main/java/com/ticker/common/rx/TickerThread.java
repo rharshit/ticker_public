@@ -7,16 +7,12 @@ import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.context.annotation.Scope;
-import org.springframework.stereotype.Component;
 
 import java.util.Objects;
 
 @Getter
 @Setter
 @Slf4j
-@Component("tickerThread")
-@Scope("prototype")
 @NoArgsConstructor
 public abstract class TickerThread<S extends TickerThreadService> extends Thread {
 
