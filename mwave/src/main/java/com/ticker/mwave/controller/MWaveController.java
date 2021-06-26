@@ -29,6 +29,12 @@ public class MWaveController {
         return new ResponseEntity<>(new ResponseStatus(), HttpStatus.OK);
     }
 
+    @PutMapping("refresh")
+    public ResponseEntity<ResponseStatus> refresh(@RequestParam String exchange, @RequestParam String symbol) {
+        service.refreshBrowser(exchange, symbol);
+        return new ResponseEntity<>(new ResponseStatus(), HttpStatus.OK);
+    }
+
     @DeleteMapping
     public ResponseEntity<ResponseStatus> deleteTicker(@RequestParam String exchange, @RequestParam String symbol) {
         service.stopFetching(exchange, symbol);

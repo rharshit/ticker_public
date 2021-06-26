@@ -10,7 +10,8 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.context.annotation.Scope;
 import org.springframework.stereotype.Component;
 
-import static com.ticker.common.util.Util.*;
+import static com.ticker.common.util.Util.WAIT_LONG;
+import static com.ticker.common.util.Util.waitFor;
 
 @Getter
 @Setter
@@ -32,6 +33,7 @@ public class MWaveThread extends TickerThread<MWaveService> {
 
     @Override
     public void run() {
+        enabled = true;
         initialize();
         if (entity != null) {
             while (!isFetching() && isEnabled()) {
@@ -39,7 +41,10 @@ public class MWaveThread extends TickerThread<MWaveService> {
             }
             while (isEnabled()) {
                 while (isEnabled() && isInitialized()) {
-                    waitFor(WAIT_SHORT);
+                    waitFor(WAIT_LONG);
+                }
+                if (isEnabled()) {
+                    initialize();
                 }
             }
         }
@@ -48,12 +53,12 @@ public class MWaveThread extends TickerThread<MWaveService> {
 
     @Override
     public void destroy() {
-        service.destroyThread(this);
+        service.stopFetching(getExchange(), getSymbol());
     }
 
     @Override
-    protected void initialize() {
-        enabled = true;
+    public void initialize() {
+        initialized = false;
         getService().initializeThread(this);
         initialized = true;
     }

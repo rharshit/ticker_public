@@ -20,6 +20,8 @@ import java.util.HashMap;
 import java.util.Map;
 
 import static com.ticker.common.contants.TickerConstants.APPLICATION_FETCHER;
+import static com.ticker.mwave.constants.MWaveConstants.MWAVE_THREAD_STATE_STRAT_FAILED;
+import static com.ticker.mwave.constants.MWaveConstants.MWAVE_THREAD_STATE_WAITING_FOR_ACTION;
 
 @Slf4j
 @Service
@@ -62,7 +64,8 @@ public class MWaveService extends TickerThreadService<MWaveThread, MWaveThreadMo
         startFetching(mWaveThread);
     }
 
-    @Scheduled(fixedDelay = 1500)
+    @Async("scheduledExecutor")
+    @Scheduled(fixedDelay = 2000)
     public void checkFetchingForApps() {
         String baseUrl = Util.getApplicationUrl(APPLICATION_FETCHER);
         String getCurrentTickerUrl = baseUrl + "current/";
@@ -74,13 +77,54 @@ public class MWaveService extends TickerThreadService<MWaveThread, MWaveThreadMo
                 Map<String, Object> ticker =
                         restTemplate.getForObject(getCurrentTickerUrl + Util.generateQueryParameters(params),
                                 Map.class);
-                thread.setFetching((Double) ticker.get("currentValue") != 0);
-                thread.setCurrentValue(((Double) ticker.get("currentValue")).floatValue());
-                thread.setUpdatedAt(System.currentTimeMillis());
+                if (ticker == null) {
+                    thread.setInitialized(false);
+                    thread.setFetching(false);
+                    thread.setCurrentValue(0);
+                } else {
+                    thread.setFetching((Double) ticker.get("currentValue") != 0);
+                    thread.setCurrentValue(((Double) ticker.get("currentValue")).floatValue());
+                }
             } catch (Exception e) {
                 thread.setFetching(false);
+                thread.setCurrentValue(0);
+            }
+            thread.setUpdatedAt(System.currentTimeMillis());
+        }
+    }
+
+    @Scheduled(fixedDelay = 750)
+    public void runStrategy() {
+        for (MWaveThread thread : getCurrentTickerList()) {
+            try {
+                doAction(thread);
+            } catch (Exception e) {
+                log.debug(thread.getThreadName() + " : " + e.getMessage());
             }
         }
+    }
+
+    @Async("stratTaskExecutor")
+    private void doAction(MWaveThread thread) {
+        if (!thread.isFetching()) {
+            return;
+        }
+        switch (thread.getCurrentState()) {
+            case 0:
+                thread.setCurrentState(MWAVE_THREAD_STATE_WAITING_FOR_ACTION);
+                break;
+            case MWAVE_THREAD_STATE_WAITING_FOR_ACTION:
+                checkState(thread);
+                break;
+            case MWAVE_THREAD_STATE_STRAT_FAILED:
+                thread.destroy();
+                break;
+        }
+    }
+
+    // TODO: Implement method
+    private void checkState(MWaveThread thread) {
+        log.trace(thread.getThreadName() + " : checkState");
     }
 
     @Async
@@ -118,5 +162,10 @@ public class MWaveService extends TickerThreadService<MWaveThread, MWaveThreadMo
         for (MWaveThread thread : getCurrentTickerList()) {
             stopFetching(thread.getExchange(), thread.getSymbol());
         }
+    }
+
+    public void refreshBrowser(String exchange, String symbol) {
+        MWaveThread thread = getThread(exchange, symbol);
+        thread.initialize();
     }
 }

@@ -28,10 +28,10 @@ import java.util.List;
 import java.util.Set;
 import java.util.stream.Collectors;
 
+import static com.ticker.common.contants.WebConstants.TRADING_VIEW_BASE;
+import static com.ticker.common.contants.WebConstants.TRADING_VIEW_CHART;
 import static com.ticker.common.util.Util.WAIT_LONG;
 import static com.ticker.common.util.Util.waitFor;
-import static com.ticker.fetcher.common.constants.WebConstants.TRADING_VIEW_BASE;
-import static com.ticker.fetcher.common.constants.WebConstants.TRADING_VIEW_CHART;
 import static org.openqa.selenium.UnexpectedAlertBehaviour.ACCEPT;
 
 @Getter

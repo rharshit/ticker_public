@@ -1,4 +1,4 @@
-package com.ticker.fetcher.common.constants;
+package com.ticker.common.contants;
 
 public abstract class WebConstants {
     public static final String TRADING_VIEW_BASE = "https://in.tradingview.com/";
