@@ -147,4 +147,6 @@ public abstract class StratTickerService<T extends StratThread, TM extends Strat
         T thread = getThread(exchange, symbol);
         thread.initialize();
     }
+
+    public abstract Map<Integer, String> getStateValueMap();
 }

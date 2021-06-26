@@ -25,6 +25,11 @@ public class MWaveController {
         return new ResponseEntity<>(service.getCurrentTickers(), HttpStatus.OK);
     }
 
+    @GetMapping("state-value")
+    public ResponseEntity<Map<Integer, String>> getStateValueMap() {
+        return new ResponseEntity<>(service.getStateValueMap(), HttpStatus.OK);
+    }
+
     @PostMapping
     public ResponseEntity<ResponseStatus> addTicker(@RequestParam String exchange, @RequestParam String symbol) {
         service.createThread(exchange, symbol, new String[]{MWAVE_THREAD_COMP_NAME});

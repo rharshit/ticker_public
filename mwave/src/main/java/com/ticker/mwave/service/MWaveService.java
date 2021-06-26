@@ -7,6 +7,9 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Service;
 
+import java.util.HashMap;
+import java.util.Map;
+
 import static com.ticker.mwave.constants.MWaveConstants.MWAVE_THREAD_STATE_STRAT_FAILED;
 import static com.ticker.mwave.constants.MWaveConstants.MWAVE_THREAD_STATE_WAITING_FOR_ACTION;
 
@@ -19,6 +22,10 @@ public class MWaveService extends StratTickerService<MWaveThread, MWaveThreadMod
         return new MWaveThreadModel(thread);
     }
 
+    private static final Map<Integer, String> stateValueMap = new HashMap<Integer, String>() {{
+        put(MWAVE_THREAD_STATE_STRAT_FAILED, "Thread failed");
+        put(MWAVE_THREAD_STATE_WAITING_FOR_ACTION, "Waiting for action");
+    }};
 
     @Override
     @Async("stratTaskExecutor")
@@ -37,6 +44,11 @@ public class MWaveService extends StratTickerService<MWaveThread, MWaveThreadMod
                 thread.destroy();
                 break;
         }
+    }
+
+    @Override
+    public Map<Integer, String> getStateValueMap() {
+        return stateValueMap;
     }
 
     // TODO: Implement method
