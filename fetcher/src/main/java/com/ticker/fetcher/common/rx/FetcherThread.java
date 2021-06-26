@@ -32,12 +32,13 @@ import static com.ticker.common.contants.WebConstants.TRADING_VIEW_BASE;
 import static com.ticker.common.contants.WebConstants.TRADING_VIEW_CHART;
 import static com.ticker.common.util.Util.WAIT_LONG;
 import static com.ticker.common.util.Util.waitFor;
+import static com.ticker.fetcher.common.constants.FetcherConstants.FETCHER_THREAD_COMP_NAME;
 import static org.openqa.selenium.UnexpectedAlertBehaviour.ACCEPT;
 
 @Getter
 @Setter
 @Slf4j
-@Component("fetcherThread")
+@Component(FETCHER_THREAD_COMP_NAME)
 @Scope("prototype")
 @NoArgsConstructor
 public class FetcherThread extends TickerThread<TickerService> {

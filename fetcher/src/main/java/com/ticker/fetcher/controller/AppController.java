@@ -82,7 +82,7 @@ public class AppController {
     @PostMapping
     public ResponseEntity<ResponseStatus> addTicker(@RequestParam String exchange, @RequestParam String symbol,
                                                     @RequestParam String appName) {
-        service.createThread(exchange, symbol, appName);
+        service.createThread(exchange, symbol, new String[]{appName});
         return new ResponseEntity<>(new ResponseStatus(), HttpStatus.OK);
     }
 

@@ -2,7 +2,6 @@ package com.ticker.fetcher.service;
 
 import com.ticker.common.exception.TickerException;
 import com.ticker.common.fetcher.repository.exchangesymbol.ExchangeSymbolEntity;
-import com.ticker.common.fetcher.repository.exchangesymbol.ExchangeSymbolEntityPK;
 import com.ticker.common.service.TickerThreadService;
 import com.ticker.fetcher.common.rx.FetcherThread;
 import com.ticker.fetcher.model.FetcherThreadModel;
@@ -14,30 +13,14 @@ import org.springframework.stereotype.Service;
 
 import java.util.Set;
 
+import static com.ticker.fetcher.common.constants.FetcherConstants.FETCHER_THREAD_COMP_NAME;
+
 @Service
 @Slf4j
 public class TickerService extends TickerThreadService<FetcherThread, FetcherThreadModel> {
 
     @Autowired
     AppRepository repository;
-
-    @Override
-    public void createThread(String exchange, String symbol) {
-        FetcherThread thread = getThread(exchange, symbol);
-        if (thread != null && thread.isEnabled()) {
-            return;
-        } else {
-            if (thread != null) {
-                getThreadPool().remove(thread);
-            }
-            ExchangeSymbolEntity entity = exchangeSymbolRepository.findById(new ExchangeSymbolEntityPK(exchange, symbol)).orElse(null);
-            thread = (FetcherThread) ctx.getBean("fetcherThread");
-            thread.setEntity(entity);
-            getThreadPool().add(thread);
-
-            thread.setService(this);
-        }
-    }
 
     @Override
     public FetcherThreadModel createTickerThreadModel(FetcherThread thread) {
@@ -49,23 +32,23 @@ public class TickerService extends TickerThreadService<FetcherThread, FetcherThr
      *
      * @param exchange
      * @param symbol
-     * @param appName
+     * @param extras   appName
      */
-    public void createThread(String exchange, String symbol, String appName) {
+    @Override
+    public void createThread(String exchange, String symbol, String... extras) {
         FetcherThread thread = getThread(exchange, symbol);
         if (thread != null && thread.isEnabled()) {
-            thread.addApp(appName);
+            thread.addApp(extras[0]);
             log.info("Added thread: " + thread.getThreadName());
         } else {
-            createThread(exchange, symbol);
+            createThread(exchange, symbol, FETCHER_THREAD_COMP_NAME);
             thread = getThread(exchange, symbol);
             if (thread == null) {
                 throw new TickerException("Error while adding thread");
             }
-            thread.setProperties(appName);
+            thread.setProperties(extras[0]);
             thread.start();
         }
-
     }
 
     /**

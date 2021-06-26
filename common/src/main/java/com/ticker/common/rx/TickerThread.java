@@ -15,7 +15,7 @@ import java.util.Objects;
 @Getter
 @Setter
 @Slf4j
-@Component("fetcherThread")
+@Component("tickerThread")
 @Scope("prototype")
 @NoArgsConstructor
 public abstract class TickerThread<S extends TickerThreadService> extends Thread {

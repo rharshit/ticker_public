@@ -1,6 +1,7 @@
 package com.ticker.common.service;
 
 import com.ticker.common.fetcher.repository.exchangesymbol.ExchangeSymbolEntity;
+import com.ticker.common.fetcher.repository.exchangesymbol.ExchangeSymbolEntityPK;
 import com.ticker.common.fetcher.repository.exchangesymbol.ExchangeSymbolRepository;
 import com.ticker.common.model.TickerThreadModel;
 import com.ticker.common.rx.TickerThread;
@@ -24,7 +25,32 @@ public abstract class TickerThreadService<T extends TickerThread, TM extends Tic
     @Autowired
     protected ExchangeSymbolRepository exchangeSymbolRepository;
 
-    public abstract void createThread(String exchange, String symbol);
+    public abstract void createThread(String exchange, String symbol, String... extras);
+
+    /**
+     * Override the var arg method in your service
+     *
+     * @param exchange
+     * @param symbol
+     * @param threadBeanName
+     */
+    @Deprecated
+    public void createThread(String exchange, String symbol, String threadBeanName) {
+        T thread = getThread(exchange, symbol);
+        if (thread != null && thread.isEnabled()) {
+            return;
+        } else {
+            if (thread != null) {
+                getThreadPool().remove(thread);
+            }
+            ExchangeSymbolEntity entity = exchangeSymbolRepository.findById(new ExchangeSymbolEntityPK(exchange, symbol)).orElse(null);
+            thread = (T) ctx.getBean(threadBeanName);
+            thread.setEntity(entity);
+            getThreadPool().add(thread);
+
+            thread.setService(this);
+        }
+    }
 
     private synchronized void initializeThreadPool() {
         if (threadPool == null) {

@@ -11,6 +11,8 @@ import org.springframework.web.bind.annotation.*;
 import java.util.List;
 import java.util.Map;
 
+import static com.ticker.mwave.constants.MWaveConstants.MWAVE_THREAD_COMP_NAME;
+
 @RestController
 @RequestMapping("/")
 public class MWaveController {
@@ -25,7 +27,7 @@ public class MWaveController {
 
     @PostMapping
     public ResponseEntity<ResponseStatus> addTicker(@RequestParam String exchange, @RequestParam String symbol) {
-        service.createThread(exchange, symbol);
+        service.createThread(exchange, symbol, new String[]{MWAVE_THREAD_COMP_NAME});
         return new ResponseEntity<>(new ResponseStatus(), HttpStatus.OK);
     }
 
