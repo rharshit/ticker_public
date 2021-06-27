@@ -1,56 +1,19 @@
 package com.ticker.mwave.controller;
 
-import com.ticker.common.model.ResponseStatus;
+import com.ticker.common.controller.StratController;
 import com.ticker.mwave.model.MWaveThreadModel;
 import com.ticker.mwave.service.MWaveService;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.http.HttpStatus;
-import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.*;
-
-import java.util.List;
-import java.util.Map;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RestController;
 
 import static com.ticker.mwave.constants.MWaveConstants.MWAVE_THREAD_COMP_NAME;
 
 @RestController
 @RequestMapping("/")
-public class MWaveController {
+public class MWaveController extends StratController<MWaveService, MWaveThreadModel> {
 
-    @Autowired
-    private MWaveService service;
-
-    @GetMapping
-    public ResponseEntity<Map<String, List<MWaveThreadModel>>> getCurrentTickers() {
-        return new ResponseEntity<>(service.getCurrentTickers(), HttpStatus.OK);
-    }
-
-    @GetMapping("state-value")
-    public ResponseEntity<Map<Integer, String>> getStateValueMap() {
-        return new ResponseEntity<>(service.getStateValueMap(), HttpStatus.OK);
-    }
-
-    @PostMapping
-    public ResponseEntity<ResponseStatus> addTicker(@RequestParam String exchange, @RequestParam String symbol) {
-        service.createThread(exchange, symbol, new String[]{MWAVE_THREAD_COMP_NAME});
-        return new ResponseEntity<>(new ResponseStatus(), HttpStatus.OK);
-    }
-
-    @PutMapping("refresh")
-    public ResponseEntity<ResponseStatus> refresh(@RequestParam String exchange, @RequestParam String symbol) {
-        service.refreshBrowser(exchange, symbol);
-        return new ResponseEntity<>(new ResponseStatus(), HttpStatus.OK);
-    }
-
-    @DeleteMapping
-    public ResponseEntity<ResponseStatus> deleteTicker(@RequestParam String exchange, @RequestParam String symbol) {
-        service.stopFetching(exchange, symbol);
-        return new ResponseEntity<>(new ResponseStatus(), HttpStatus.OK);
-    }
-
-    @DeleteMapping("all/")
-    public ResponseEntity<ResponseStatus> deleteAllTickers() {
-        service.stopFetchingAll();
-        return new ResponseEntity<>(new ResponseStatus(), HttpStatus.OK);
+    @Override
+    public String getThreadCompName() {
+        return MWAVE_THREAD_COMP_NAME;
     }
 }
