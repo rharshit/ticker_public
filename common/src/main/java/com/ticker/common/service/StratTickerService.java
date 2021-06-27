@@ -15,10 +15,14 @@ import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
 import org.springframework.web.client.RestTemplate;
 
+import java.util.Date;
 import java.util.HashMap;
 import java.util.Map;
 
+import static com.ticker.common.contants.DateTimeConstants.*;
 import static com.ticker.common.contants.TickerConstants.APPLICATION_FETCHER;
+import static com.ticker.common.util.Util.WAIT_LONG;
+import static com.ticker.common.util.Util.waitFor;
 
 @Slf4j
 @Service
@@ -149,6 +153,57 @@ public abstract class StratTickerService<T extends StratThread, TM extends Strat
     public void refreshBrowser(String exchange, String symbol) {
         T thread = getThread(exchange, symbol);
         thread.initialize();
+    }
+
+    protected boolean isUpwardTrend(T thread) {
+        return thread.getO() <= thread.getC();
+    }
+
+    protected boolean isDownwardTrend(T thread) {
+        return thread.getO() >= thread.getC();
+    }
+
+    protected boolean isEomTrigger() {
+        return isEomTrigger(50);
+    }
+
+    protected boolean isEomTrigger(int eom) {
+        return Integer.parseInt(DATE_TIME_FORMATTER_TIME_ONLY_SECONDS.format(System.currentTimeMillis())) >= eom;
+    }
+
+    protected boolean isSameMinTrigger(long triggerTime) {
+        return DATE_TIME_FORMATTER_TIME_MINUTES.format(new Date(triggerTime)).equals(
+                DATE_TIME_FORMATTER_TIME_MINUTES.format(new Date(System.currentTimeMillis())));
+    }
+
+    // TODO
+    protected void buy(T thread, int qty) {
+        waitFor(WAIT_LONG);
+        log.info("Bought " + qty +
+                " of " + thread.getExchange() + ":" + thread.getSymbol() +
+                " at " + DATE_TIME_FORMATTER_TIME_SECONDS.format(new Date(System.currentTimeMillis())) +
+                " for " + thread.getCurrentValue());
+        thread.setPositionQty(thread.getPositionQty() + qty);
+    }
+
+    // TODO
+    protected void sell(T thread, int qty) {
+        waitFor(WAIT_LONG);
+        log.info("Sold " + qty +
+                " of " + thread.getExchange() + ":" + thread.getSymbol() +
+                " at " + DATE_TIME_FORMATTER_TIME_SECONDS.format(new Date(System.currentTimeMillis())) +
+                " for " + thread.getCurrentValue());
+        thread.setPositionQty(thread.getPositionQty() - qty);
+    }
+
+    protected void squareOff(T thread) {
+        if (thread.getPositionQty() == 0) {
+            log.warn(thread.getThreadName() + " : No positions to square-off");
+        } else if (thread.getPositionQty() > 0) {
+            sell(thread, thread.getPositionQty());
+        } else if (thread.getPositionQty() < 0) {
+            buy(thread, -thread.getPositionQty());
+        }
     }
 
     public abstract Map<Integer, String> getStateValueMap();

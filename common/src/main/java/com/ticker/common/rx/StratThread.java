@@ -32,6 +32,11 @@ public abstract class StratThread<S extends StratTickerService> extends TickerTh
     private float currentValue;
     private long updatedAt;
 
+
+    private float triggerStartValue;
+    private long triggerStartTime;
+    private int positionQty = 0;
+
     public StratThread(ExchangeSymbolEntity entity) {
         super(entity);
     }
@@ -88,5 +93,10 @@ public abstract class StratThread<S extends StratTickerService> extends TickerTh
             setFetching(false);
             setCurrentValue(0);
         }
+    }
+
+    public void resetTriggers() {
+        triggerStartValue = 0;
+        triggerStartTime = 0;
     }
 }

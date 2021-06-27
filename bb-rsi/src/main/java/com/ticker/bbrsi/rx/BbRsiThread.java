@@ -23,4 +23,15 @@ public class BbRsiThread extends StratThread<BbRsiService> {
     public BbRsiThread(ExchangeSymbolEntity entity) {
         super(entity);
     }
+
+    private long triggerWaveEndTime;
+    private long tradeStartTime;
+
+    private float targetValue = 0;
+
+    @Override
+    public void resetTriggers() {
+        super.resetTriggers();
+        triggerWaveEndTime = 0;
+    }
 }
