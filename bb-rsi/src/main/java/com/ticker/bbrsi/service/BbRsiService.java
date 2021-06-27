@@ -219,7 +219,12 @@ public class BbRsiService extends StratTickerService<BbRsiThread, BbRsiThreadMod
         } else {
             log.info(thread.getName() + " : Resetting triggers");
             thread.resetTriggers();
-            thread.setCurrentState(BB_RSI_THREAD_STATE_WAITING_FOR_TRIGGER);
+            if (thread.getRsi() <= RSI_LOWER_LIMIT) {
+                thread.setCurrentState(BB_RSI_THREAD_STATE_LT_TRIGGER_START);
+            } else {
+                thread.setCurrentState(BB_RSI_THREAD_STATE_WAITING_FOR_TRIGGER);
+            }
+
         }
         doAction(thread);
     }
@@ -244,7 +249,12 @@ public class BbRsiService extends StratTickerService<BbRsiThread, BbRsiThreadMod
         } else {
             log.info(thread.getName() + " : Resetting triggers");
             thread.resetTriggers();
-            thread.setCurrentState(BB_RSI_THREAD_STATE_WAITING_FOR_TRIGGER);
+            if (thread.getRsi() <= RSI_LOWER_LIMIT) {
+                thread.setCurrentState(BB_RSI_THREAD_STATE_UT_TRIGGER_START);
+            } else {
+                thread.setCurrentState(BB_RSI_THREAD_STATE_WAITING_FOR_TRIGGER);
+            }
+
         }
         doAction(thread);
     }
