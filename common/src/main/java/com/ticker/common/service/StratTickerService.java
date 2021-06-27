@@ -127,14 +127,18 @@ public abstract class StratTickerService<T extends StratThread, TM extends Strat
 
 
     public void stopFetching(String exchange, String symbol) {
-        destroyThread(exchange, symbol);
-        String baseUrl = Util.getApplicationUrl(APPLICATION_FETCHER);
-        Map<String, Object> params = new HashMap<>();
-        params.put("exchange", exchange);
-        params.put("symbol", symbol);
-        params.put("appName", appName);
-        String deleteFetchUrl = baseUrl + Util.generateQueryParameters(params);
-        restTemplate.delete(deleteFetchUrl);
+        try {
+            destroyThread(exchange, symbol);
+            String baseUrl = Util.getApplicationUrl(APPLICATION_FETCHER);
+            Map<String, Object> params = new HashMap<>();
+            params.put("exchange", exchange);
+            params.put("symbol", symbol);
+            params.put("appName", appName);
+            String deleteFetchUrl = baseUrl + Util.generateQueryParameters(params);
+            restTemplate.delete(deleteFetchUrl);
+        } catch (Exception e) {
+            log.error(e.getMessage());
+        }
     }
 
     public void stopFetchingAll() {

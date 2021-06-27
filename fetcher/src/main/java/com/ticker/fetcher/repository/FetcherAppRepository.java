@@ -30,7 +30,7 @@ import static com.ticker.fetcher.common.constants.ProcedureConstants.GET_EXCHANG
 
 @Repository
 @Slf4j
-public class AppRepository {
+public class FetcherAppRepository {
 
     @Autowired
     FetcherRepository fetcherRepository;
