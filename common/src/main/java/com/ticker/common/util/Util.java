@@ -29,8 +29,10 @@ public abstract class Util {
                 return "http://localhost:8081/";
             case APPLICATION_BROKERAGE:
                 return "http://localhost:8082/";
-            case APPLICATION_MWAVE:
+            case APPLICATION_BB_RSI:
                 return "http://localhost:8181/";
+            case APPLICATION_MWAVE:
+                return "http://localhost:8182/";
             default:
                 return null;
         }

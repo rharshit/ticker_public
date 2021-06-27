@@ -15,6 +15,7 @@
         <module>brokerage</module>
         <module>common</module>
         <module>template</module>
+        <module>bb-rsi</module>
         <module>mwave</module>
     </modules>
 
@@ -26,6 +27,7 @@
         <ticker.brokerage.version>0.0.1-SNAPSHOT</ticker.brokerage.version>
         <ticker.common.version>0.0.1-SNAPSHOT</ticker.common.version>
         <ticker.template.version>0.0.1-SNAPSHOT</ticker.template.version>
+        <ticker.bb-rsi.version>0.0.1-SNAPSHOT</ticker.bb-rsi.version>
         <ticker.mwave.version>0.0.1-SNAPSHOT</ticker.mwave.version>
 
         <spring.version>2.4.4</spring.version>
