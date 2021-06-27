@@ -106,7 +106,7 @@ public class FetcherThread extends TickerThread<TickerService> {
     protected void initializeWebDriver() {
         if (this.webDriver != null) {
             try {
-                this.webDriver.close();
+                this.webDriver.quit();
             } catch (Exception e) {
                 log.error("Error while closing webdriver");
             }
@@ -133,7 +133,7 @@ public class FetcherThread extends TickerThread<TickerService> {
 
         if (this.webDriver != null) {
             try {
-                this.webDriver.close();
+                this.webDriver.quit();
             } catch (Exception e) {
                 log.error("Error while closing webdriver");
             }

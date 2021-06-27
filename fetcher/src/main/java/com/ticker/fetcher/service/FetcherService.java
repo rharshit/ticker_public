@@ -172,7 +172,12 @@ public class FetcherService {
     public void doThreadTasks() {
         List<FetcherThread> pool = appService.getCurrentTickerList();
         for (FetcherThread thread : pool) {
-            doTask(thread);
+            try {
+                doTask(thread);
+            } catch (Exception e) {
+                log.error(thread == null ? "" : (thread.getThreadName() + " : ") + e.getMessage());
+            }
+
         }
     }
 
