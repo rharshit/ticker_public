@@ -81,8 +81,7 @@ public abstract class StratTickerService<T extends StratThread, TM extends Strat
                     thread.setFetching(false);
                     thread.setCurrentValue(0);
                 } else {
-                    thread.setFetching((Double) ticker.get("currentValue") != 0);
-                    thread.setCurrentValue(((Double) ticker.get("currentValue")).floatValue());
+                    thread.setFetchMetrics(ticker);
                 }
             } catch (Exception e) {
                 thread.setFetching(false);

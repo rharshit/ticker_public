@@ -18,6 +18,38 @@ public class StratThreadModel<T extends StratThread> extends TickerThreadModel<T
         return this.thread.getCurrentValue();
     }
 
+    public float getO() {
+        return thread.getO();
+    }
+
+    public float getH() {
+        return thread.getH();
+    }
+
+    public float getL() {
+        return thread.getL();
+    }
+
+    public float getC() {
+        return thread.getC();
+    }
+
+    public float getBbU() {
+        return thread.getBbU();
+    }
+
+    public float getBbA() {
+        return thread.getBbA();
+    }
+
+    public float getBbL() {
+        return thread.getBbL();
+    }
+
+    public float getRsi() {
+        return thread.getRsi();
+    }
+
     public long getUpdatedAt() {
         return this.thread.getUpdatedAt();
     }
