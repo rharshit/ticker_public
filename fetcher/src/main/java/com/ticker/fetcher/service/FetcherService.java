@@ -3,7 +3,7 @@ package com.ticker.fetcher.service;
 import com.ticker.common.exception.TickerException;
 import com.ticker.fetcher.common.rx.FetcherThread;
 import com.ticker.fetcher.model.FetcherRepoModel;
-import com.ticker.fetcher.repository.AppRepository;
+import com.ticker.fetcher.repository.FetcherAppRepository;
 import lombok.extern.slf4j.Slf4j;
 import org.openqa.selenium.*;
 import org.openqa.selenium.interactions.Actions;
@@ -31,7 +31,7 @@ public class FetcherService {
     private TickerService appService;
 
     @Autowired
-    AppRepository repository;
+    FetcherAppRepository repository;
 
     private static final List<FetcherRepoModel> dataQueue = new ArrayList<>();
 

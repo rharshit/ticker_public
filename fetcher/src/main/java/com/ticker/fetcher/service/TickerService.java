@@ -5,7 +5,7 @@ import com.ticker.common.fetcher.repository.exchangesymbol.ExchangeSymbolEntity;
 import com.ticker.common.service.TickerThreadService;
 import com.ticker.fetcher.common.rx.FetcherThread;
 import com.ticker.fetcher.model.FetcherThreadModel;
-import com.ticker.fetcher.repository.AppRepository;
+import com.ticker.fetcher.repository.FetcherAppRepository;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.scheduling.annotation.Scheduled;
@@ -20,7 +20,7 @@ import static com.ticker.fetcher.common.constants.FetcherConstants.FETCHER_THREA
 public class TickerService extends TickerThreadService<FetcherThread, FetcherThreadModel> {
 
     @Autowired
-    AppRepository repository;
+    FetcherAppRepository repository;
 
     @Override
     public FetcherThreadModel createTickerThreadModel(FetcherThread thread) {

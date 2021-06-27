@@ -3,7 +3,7 @@ package com.ticker.fetcher.common.rx;
 import com.ticker.common.exception.TickerException;
 import com.ticker.common.fetcher.repository.exchangesymbol.ExchangeSymbolEntity;
 import com.ticker.common.rx.TickerThread;
-import com.ticker.fetcher.repository.AppRepository;
+import com.ticker.fetcher.repository.FetcherAppRepository;
 import com.ticker.fetcher.service.FetcherService;
 import com.ticker.fetcher.service.TickerService;
 import lombok.Getter;
@@ -44,7 +44,7 @@ import static org.openqa.selenium.UnexpectedAlertBehaviour.ACCEPT;
 public class FetcherThread extends TickerThread<TickerService> {
 
     @Autowired
-    private AppRepository repository;
+    private FetcherAppRepository repository;
 
     @Autowired
     private FetcherService fetcherService;
