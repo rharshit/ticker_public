@@ -62,4 +62,8 @@ public class StratThreadModel<T extends StratThread> extends TickerThreadModel<T
         return this.thread.getCurrentState();
     }
 
+    public float getTargetThreshold() {
+        return this.thread.getTargetThreshold();
+    }
+
 }

@@ -37,6 +37,8 @@ public abstract class StratThread<S extends StratTickerService> extends TickerTh
     private long triggerStartTime;
     private int positionQty = 0;
 
+    private float targetThreshold;
+
     public StratThread(ExchangeSymbolEntity entity) {
         super(entity);
     }
@@ -49,6 +51,7 @@ public abstract class StratThread<S extends StratTickerService> extends TickerTh
             while (!isFetching() && isEnabled()) {
                 waitFor(WAIT_LONG);
             }
+            service.setTargetThreshold(this);
             while (isEnabled()) {
                 while (isEnabled() && isInitialized()) {
                     waitFor(WAIT_LONG);

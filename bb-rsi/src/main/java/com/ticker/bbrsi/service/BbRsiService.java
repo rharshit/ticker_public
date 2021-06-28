@@ -35,6 +35,8 @@ public class BbRsiService extends StratTickerService<BbRsiThread, BbRsiThreadMod
         put(BB_RSI_THREAD_STATE_UT_WAIT_WAVE_ENDED2, "Upper trigger wave ended2");
         put(BB_RSI_THREAD_STATE_LT_WAIT_WAVE_SOLD, "Lower trigger sold SO");
         put(BB_RSI_THREAD_STATE_UT_WAIT_WAVE_BOUGHT, "Lower trigger bought SO");
+        put(BB_RSI_THREAD_STATE_LT_WAIT_WAVE_REVENGE, "Lower trigger revenge trading");
+        put(BB_RSI_THREAD_STATE_UT_WAIT_WAVE_REVENGE, "Upper trigger revenge trading");
     }};
 
     @Override
@@ -101,6 +103,12 @@ public class BbRsiService extends StratTickerService<BbRsiThread, BbRsiThreadMod
                 case BB_RSI_THREAD_STATE_UT_WAIT_WAVE_ENDED2:
                     buyAction2(thread);
                     break;
+                case BB_RSI_THREAD_STATE_LT_WAIT_WAVE_REVENGE:
+                    sellActionRevenge(thread);
+                    break;
+                case BB_RSI_THREAD_STATE_UT_WAIT_WAVE_REVENGE:
+                    buyActionRevenge(thread);
+                    break;
                 case BB_RSI_THREAD_STATE_LT_WAIT_WAVE_SOLD:
                 case BB_RSI_THREAD_STATE_UT_WAIT_WAVE_BOUGHT:
                     resetThread(thread);
@@ -108,6 +116,26 @@ public class BbRsiService extends StratTickerService<BbRsiThread, BbRsiThreadMod
             }
         }
 
+    }
+
+    private void buyActionRevenge(BbRsiThread thread) {
+        try {
+            squareOff(thread);
+            thread.setCurrentState(BB_RSI_THREAD_STATE_UT_TRIGGER_START);
+            thread.setTradeStartTime(System.currentTimeMillis());
+        } catch (Exception e) {
+
+        }
+    }
+
+    private void sellActionRevenge(BbRsiThread thread) {
+        try {
+            squareOff(thread);
+            thread.setCurrentState(BB_RSI_THREAD_STATE_LT_TRIGGER_START);
+            thread.setTradeStartTime(System.currentTimeMillis());
+        } catch (Exception e) {
+
+        }
     }
 
     private void resetThread(BbRsiThread thread) {
@@ -140,7 +168,12 @@ public class BbRsiService extends StratTickerService<BbRsiThread, BbRsiThreadMod
             return;
         }
         if (isUpwardTrend(thread)) {
-            thread.setCurrentState(BB_RSI_THREAD_STATE_UT_WAIT_WAVE_ENDED2);
+            if (thread.getTargetThreshold() - thread.getCurrentValue() < thread.getTargetThreshold()) {
+                log.info(thread.getThreadName() + " : Revenge trading");
+                thread.setCurrentState(BB_RSI_THREAD_STATE_UT_WAIT_WAVE_REVENGE);
+            } else {
+                thread.setCurrentState(BB_RSI_THREAD_STATE_UT_WAIT_WAVE_ENDED2);
+            }
         } else {
             thread.setCurrentState(BB_RSI_THREAD_STATE_UT_WAIT_END_WAVE);
         }
@@ -152,7 +185,12 @@ public class BbRsiService extends StratTickerService<BbRsiThread, BbRsiThreadMod
             return;
         }
         if (isDownwardTrend(thread)) {
-            thread.setCurrentState(BB_RSI_THREAD_STATE_LT_WAIT_WAVE_ENDED2);
+            if (thread.getCurrentValue() - thread.getTriggerStartValue() < thread.getTargetThreshold()) {
+                log.info(thread.getThreadName() + " : Revenge trading");
+                thread.setCurrentState(BB_RSI_THREAD_STATE_LT_WAIT_WAVE_REVENGE);
+            } else {
+                thread.setCurrentState(BB_RSI_THREAD_STATE_LT_WAIT_WAVE_ENDED2);
+            }
         } else {
             thread.setCurrentState(BB_RSI_THREAD_STATE_LT_WAIT_END_WAVE);
         }

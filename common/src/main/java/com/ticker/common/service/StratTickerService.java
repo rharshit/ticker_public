@@ -21,8 +21,7 @@ import java.util.Map;
 
 import static com.ticker.common.contants.DateTimeConstants.*;
 import static com.ticker.common.contants.TickerConstants.*;
-import static com.ticker.common.util.Util.WAIT_LONG;
-import static com.ticker.common.util.Util.waitFor;
+import static com.ticker.common.util.Util.*;
 
 @Slf4j
 @Service
@@ -204,5 +203,52 @@ public abstract class StratTickerService<T extends StratThread, TM extends Strat
         }
     }
 
+    public String getFavourableTickerType(T thread) {
+        ExchangeSymbolEntity exchangeSymbolEntity = thread.getEntity();
+        String tickerTypes = exchangeSymbolEntity.getTickerType();
+        if (tickerTypes == null) {
+            throw new TickerException(thread.getThreadName() + " : Ticker type is empty");
+        }
+        if (tickerTypes.toUpperCase().contains("F")) {
+            return "F";
+        } else if (tickerTypes.toUpperCase().contains("I")) {
+            return "I";
+        } else if (tickerTypes.toUpperCase().contains("E")) {
+            return "E";
+        } else {
+            log.warn(thread.getThreadName() + " : No ticker type found");
+            return tickerTypes;
+        }
+    }
+
     public abstract Map<Integer, String> getStateValueMap();
+
+    public void setTargetThreshold(T thread) {
+        long start = System.currentTimeMillis();
+        while (thread.getTargetThreshold() == 0 && System.currentTimeMillis() - start < THRESHOLD_FETCH_TIMEOUT) {
+            if (thread.getCurrentValue() != 0) {
+                try {
+                    String url = Util.getApplicationUrl(APPLICATION_BROKERAGE) +
+                            "zerodha/" +
+                            getFavourableTickerType(thread) + "/" +
+                            thread.getExchange();
+                    Map<String, Object> params = new HashMap<>();
+                    params.put("buy", thread.getCurrentValue());
+                    params.put("sell", thread.getCurrentValue());
+                    params.put("quantity", thread.getEntity().getMinQty());
+                    Map<String, Double> response = restTemplate.getForObject(url, Map.class, params);
+                    thread.setTargetThreshold(3 * response.get("ptb").floatValue());
+                    return;
+                } catch (Exception e) {
+                    log.debug(thread.getThreadName() + " : Error while getting threshold value");
+                    log.debug(e.getMessage());
+                }
+            }
+            waitFor(WAIT_MEDIUM);
+        }
+        if (thread.getTargetThreshold() == 0) {
+            log.warn(thread.getThreadName() + " : Cannot fetch actual target threshold");
+            thread.setTargetThreshold(0.0006f * thread.getCurrentValue());
+        }
+    }
 }
