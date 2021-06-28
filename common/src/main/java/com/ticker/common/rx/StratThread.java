@@ -7,6 +7,8 @@ import lombok.NoArgsConstructor;
 import lombok.Setter;
 import lombok.extern.slf4j.Slf4j;
 
+import java.util.Map;
+
 import static com.ticker.common.util.Util.WAIT_LONG;
 import static com.ticker.common.util.Util.waitFor;
 
@@ -19,8 +21,23 @@ public abstract class StratThread<S extends StratTickerService> extends TickerTh
     private boolean fetching = false;
     private int currentState;
 
+    private float o;
+    private float h;
+    private float l;
+    private float c;
+    private float bbU;
+    private float bbA;
+    private float bbL;
+    private float rsi;
     private float currentValue;
     private long updatedAt;
+
+
+    private float triggerStartValue;
+    private long triggerStartTime;
+    private int positionQty = 0;
+
+    private float targetThreshold;
 
     public StratThread(ExchangeSymbolEntity entity) {
         super(entity);
@@ -34,6 +51,7 @@ public abstract class StratThread<S extends StratTickerService> extends TickerTh
             while (!isFetching() && isEnabled()) {
                 waitFor(WAIT_LONG);
             }
+            service.setTargetThreshold(this);
             while (isEnabled()) {
                 while (isEnabled() && isInitialized()) {
                     waitFor(WAIT_LONG);
@@ -60,5 +78,35 @@ public abstract class StratThread<S extends StratTickerService> extends TickerTh
 
     public String getThreadName() {
         return getExchange() + ":" + getSymbol();
+    }
+
+    public void setFetchMetrics(Map<String, Object> ticker) {
+        if ((Double) ticker.get("currentValue") != 0) {
+            setFetching(true);
+            setCurrentValue(((Double) ticker.get("currentValue")).floatValue());
+            setO(((Double) ticker.get("o")).floatValue());
+            setH(((Double) ticker.get("h")).floatValue());
+            setL(((Double) ticker.get("l")).floatValue());
+            setC(((Double) ticker.get("c")).floatValue());
+            setBbU(((Double) ticker.get("bbU")).floatValue());
+            setBbA(((Double) ticker.get("bbA")).floatValue());
+            setBbL(((Double) ticker.get("bbL")).floatValue());
+            setRsi(((Double) ticker.get("rsi")).floatValue());
+        } else {
+            setFetching(false);
+            setCurrentValue(0);
+        }
+    }
+
+    public void setCurrentState(int currentState) {
+        log.info(getThreadName() + " : change state");
+        log.info(getThreadName() + " : from " + getCurrentState() + " : " + service.getStateValueMap().get(getCurrentState()));
+        this.currentState = currentState;
+        log.info(getThreadName() + " : to   " + getCurrentState() + " : " + service.getStateValueMap().get(getCurrentState()));
+    }
+
+    public void resetTriggers() {
+        triggerStartValue = 0;
+        triggerStartTime = 0;
     }
 }

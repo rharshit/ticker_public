@@ -15,10 +15,13 @@ import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
 import org.springframework.web.client.RestTemplate;
 
+import java.util.Date;
 import java.util.HashMap;
 import java.util.Map;
 
-import static com.ticker.common.contants.TickerConstants.APPLICATION_FETCHER;
+import static com.ticker.common.contants.DateTimeConstants.*;
+import static com.ticker.common.contants.TickerConstants.*;
+import static com.ticker.common.util.Util.*;
 
 @Slf4j
 @Service
@@ -74,15 +77,14 @@ public abstract class StratTickerService<T extends StratThread, TM extends Strat
                 params.put("exchange", thread.getExchange());
                 params.put("symbol", thread.getSymbol());
                 Map<String, Object> ticker =
-                        restTemplate.getForObject(getCurrentTickerUrl + Util.generateQueryParameters(params),
-                                Map.class);
+                        restTemplate.getForObject(getCurrentTickerUrl,
+                                Map.class, params);
                 if (ticker == null) {
                     thread.setInitialized(false);
                     thread.setFetching(false);
                     thread.setCurrentValue(0);
                 } else {
-                    thread.setFetching((Double) ticker.get("currentValue") != 0);
-                    thread.setCurrentValue(((Double) ticker.get("currentValue")).floatValue());
+                    thread.setFetchMetrics(ticker);
                 }
             } catch (Exception e) {
                 thread.setFetching(false);
@@ -114,8 +116,7 @@ public abstract class StratTickerService<T extends StratThread, TM extends Strat
             params.put("exchange", t.getExchange());
             params.put("symbol", t.getSymbol());
             params.put("appName", appName);
-            String startFetchingUrl = baseUrl + Util.generateQueryParameters(params);
-            ResponseStatus response = restTemplate.postForObject(startFetchingUrl, null, ResponseStatus.class);
+            ResponseStatus response = restTemplate.postForObject(baseUrl, null, ResponseStatus.class, params);
             if (!response.isSuccess()) {
                 throw new TickerException(t.getThreadName() + " : Post request failed");
             }
@@ -134,8 +135,7 @@ public abstract class StratTickerService<T extends StratThread, TM extends Strat
             params.put("exchange", exchange);
             params.put("symbol", symbol);
             params.put("appName", appName);
-            String deleteFetchUrl = baseUrl + Util.generateQueryParameters(params);
-            restTemplate.delete(deleteFetchUrl);
+            restTemplate.delete(baseUrl, params);
         } catch (Exception e) {
             log.error(e.getMessage());
         }
@@ -152,5 +152,103 @@ public abstract class StratTickerService<T extends StratThread, TM extends Strat
         thread.initialize();
     }
 
+    protected boolean isUpwardTrend(T thread) {
+        return thread.getO() <= thread.getC();
+    }
+
+    protected boolean isDownwardTrend(T thread) {
+        return thread.getO() >= thread.getC();
+    }
+
+    protected boolean isEomTrigger() {
+        return isEomTrigger(50);
+    }
+
+    protected boolean isEomTrigger(int eom) {
+        return Integer.parseInt(DATE_TIME_FORMATTER_TIME_ONLY_SECONDS.format(System.currentTimeMillis())) >= eom;
+    }
+
+    protected boolean isSameMinTrigger(long triggerTime) {
+        return DATE_TIME_FORMATTER_TIME_MINUTES.format(new Date(triggerTime)).equals(
+                DATE_TIME_FORMATTER_TIME_MINUTES.format(new Date(System.currentTimeMillis())));
+    }
+
+    // TODO
+    protected void buy(T thread, int qty) {
+        waitFor(WAIT_LONG);
+        log.info("Bought " + qty +
+                " of " + thread.getExchange() + ":" + thread.getSymbol() +
+                " at " + DATE_TIME_FORMATTER_TIME_SECONDS.format(new Date(System.currentTimeMillis())) +
+                " for " + thread.getCurrentValue());
+        thread.setPositionQty(thread.getPositionQty() + qty);
+    }
+
+    // TODO
+    protected void sell(T thread, int qty) {
+        waitFor(WAIT_LONG);
+        log.info("Sold " + qty +
+                " of " + thread.getExchange() + ":" + thread.getSymbol() +
+                " at " + DATE_TIME_FORMATTER_TIME_SECONDS.format(new Date(System.currentTimeMillis())) +
+                " for " + thread.getCurrentValue());
+        thread.setPositionQty(thread.getPositionQty() - qty);
+    }
+
+    protected void squareOff(T thread) {
+        if (thread.getPositionQty() == 0) {
+            log.warn(thread.getThreadName() + " : No positions to square-off");
+        } else if (thread.getPositionQty() > 0) {
+            sell(thread, thread.getPositionQty());
+        } else if (thread.getPositionQty() < 0) {
+            buy(thread, -thread.getPositionQty());
+        }
+    }
+
+    public String getFavourableTickerType(T thread) {
+        ExchangeSymbolEntity exchangeSymbolEntity = thread.getEntity();
+        String tickerTypes = exchangeSymbolEntity.getTickerType();
+        if (tickerTypes == null) {
+            throw new TickerException(thread.getThreadName() + " : Ticker type is empty");
+        }
+        if (tickerTypes.toUpperCase().contains("F")) {
+            return "F";
+        } else if (tickerTypes.toUpperCase().contains("I")) {
+            return "I";
+        } else if (tickerTypes.toUpperCase().contains("E")) {
+            return "E";
+        } else {
+            log.warn(thread.getThreadName() + " : No ticker type found");
+            return tickerTypes;
+        }
+    }
+
     public abstract Map<Integer, String> getStateValueMap();
+
+    public void setTargetThreshold(T thread) {
+        long start = System.currentTimeMillis();
+        while (thread.getTargetThreshold() == 0 && System.currentTimeMillis() - start < THRESHOLD_FETCH_TIMEOUT) {
+            if (thread.getCurrentValue() != 0) {
+                try {
+                    String url = Util.getApplicationUrl(APPLICATION_BROKERAGE) +
+                            "zerodha/" +
+                            getFavourableTickerType(thread) + "/" +
+                            thread.getExchange();
+                    Map<String, Object> params = new HashMap<>();
+                    params.put("buy", thread.getCurrentValue());
+                    params.put("sell", thread.getCurrentValue());
+                    params.put("quantity", thread.getEntity().getMinQty());
+                    Map<String, Double> response = restTemplate.getForObject(url, Map.class, params);
+                    thread.setTargetThreshold(3 * response.get("ptb").floatValue());
+                    return;
+                } catch (Exception e) {
+                    log.debug(thread.getThreadName() + " : Error while getting threshold value");
+                    log.debug(e.getMessage());
+                }
+            }
+            waitFor(WAIT_MEDIUM);
+        }
+        if (thread.getTargetThreshold() == 0) {
+            log.warn(thread.getThreadName() + " : Cannot fetch actual target threshold");
+            thread.setTargetThreshold(0.0006f * thread.getCurrentValue());
+        }
+    }
 }
