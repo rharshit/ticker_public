@@ -20,7 +20,7 @@ import java.util.HashMap;
 import java.util.Map;
 
 import static com.ticker.common.contants.DateTimeConstants.*;
-import static com.ticker.common.contants.TickerConstants.APPLICATION_FETCHER;
+import static com.ticker.common.contants.TickerConstants.*;
 import static com.ticker.common.util.Util.WAIT_LONG;
 import static com.ticker.common.util.Util.waitFor;
 
@@ -78,8 +78,8 @@ public abstract class StratTickerService<T extends StratThread, TM extends Strat
                 params.put("exchange", thread.getExchange());
                 params.put("symbol", thread.getSymbol());
                 Map<String, Object> ticker =
-                        restTemplate.getForObject(getCurrentTickerUrl + Util.generateQueryParameters(params),
-                                Map.class);
+                        restTemplate.getForObject(getCurrentTickerUrl,
+                                Map.class, params);
                 if (ticker == null) {
                     thread.setInitialized(false);
                     thread.setFetching(false);
@@ -117,8 +117,7 @@ public abstract class StratTickerService<T extends StratThread, TM extends Strat
             params.put("exchange", t.getExchange());
             params.put("symbol", t.getSymbol());
             params.put("appName", appName);
-            String startFetchingUrl = baseUrl + Util.generateQueryParameters(params);
-            ResponseStatus response = restTemplate.postForObject(startFetchingUrl, null, ResponseStatus.class);
+            ResponseStatus response = restTemplate.postForObject(baseUrl, null, ResponseStatus.class, params);
             if (!response.isSuccess()) {
                 throw new TickerException(t.getThreadName() + " : Post request failed");
             }
@@ -137,8 +136,7 @@ public abstract class StratTickerService<T extends StratThread, TM extends Strat
             params.put("exchange", exchange);
             params.put("symbol", symbol);
             params.put("appName", appName);
-            String deleteFetchUrl = baseUrl + Util.generateQueryParameters(params);
-            restTemplate.delete(deleteFetchUrl);
+            restTemplate.delete(baseUrl, params);
         } catch (Exception e) {
             log.error(e.getMessage());
         }
