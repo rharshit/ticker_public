@@ -98,6 +98,13 @@ public abstract class StratThread<S extends StratTickerService> extends TickerTh
         }
     }
 
+    public void setCurrentState(int currentState) {
+        log.info(getThreadName() + " : change state");
+        log.info(getThreadName() + " : from " + getCurrentState() + " : " + service.getStateValueMap().get(getCurrentState()));
+        this.currentState = currentState;
+        log.info(getThreadName() + " : to   " + getCurrentState() + " : " + service.getStateValueMap().get(getCurrentState()));
+    }
+
     public void resetTriggers() {
         triggerStartValue = 0;
         triggerStartTime = 0;
