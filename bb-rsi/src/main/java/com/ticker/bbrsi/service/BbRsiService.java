@@ -270,6 +270,7 @@ public class BbRsiService extends StratTickerService<BbRsiThread, BbRsiThreadMod
             buy(thread, thread.getEntity().getMinQty());
             thread.setCurrentState(BB_RSI_THREAD_STATE_LT_BOUGHT);
             thread.setTradeStartTime(System.currentTimeMillis());
+            thread.setTradeValue(thread.getCurrentValue());
         } catch (Exception e) {
 
         }
@@ -280,6 +281,7 @@ public class BbRsiService extends StratTickerService<BbRsiThread, BbRsiThreadMod
             sell(thread, thread.getEntity().getMinQty());
             thread.setCurrentState(BB_RSI_THREAD_STATE_UT_SOLD);
             thread.setTradeStartTime(System.currentTimeMillis());
+            thread.setTradeValue(thread.getCurrentValue());
         } catch (Exception e) {
 
         }

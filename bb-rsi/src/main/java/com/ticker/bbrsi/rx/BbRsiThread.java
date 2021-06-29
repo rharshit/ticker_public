@@ -26,6 +26,7 @@ public class BbRsiThread extends StratThread<BbRsiService> {
 
     private long triggerWaveEndTime;
     private long tradeStartTime;
+    private float tradeValue;
 
     private float targetValue = 0;
 
