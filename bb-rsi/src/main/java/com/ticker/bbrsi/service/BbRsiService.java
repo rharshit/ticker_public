@@ -226,7 +226,8 @@ public class BbRsiService extends StratTickerService<BbRsiThread, BbRsiThreadMod
     private void panicBuy(BbRsiThread thread) {
         thread.setCurrentValue(BB_RSI_THREAD_STATE_UT_PANIC_BUY);
         try {
-            buy(thread, thread.getEntity().getMinQty());
+            log.info(thread.getThreadName() + " : panic square-off");
+            squareOff(thread);
             thread.setCurrentState(BB_RSI_THREAD_STATE_UT_WAIT_WAVE_BOUGHT);
             thread.setTradeStartTime(System.currentTimeMillis());
         } catch (Exception e) {
@@ -255,7 +256,8 @@ public class BbRsiService extends StratTickerService<BbRsiThread, BbRsiThreadMod
     private void panicSell(BbRsiThread thread) {
         thread.setCurrentValue(BB_RSI_THREAD_STATE_LT_PANIC_SELL);
         try {
-            sell(thread, thread.getEntity().getMinQty());
+            log.info(thread.getThreadName() + " : panic square-off");
+            squareOff(thread);
             thread.setCurrentState(BB_RSI_THREAD_STATE_LT_WAIT_WAVE_SOLD);
             thread.setTradeStartTime(System.currentTimeMillis());
         } catch (Exception e) {
