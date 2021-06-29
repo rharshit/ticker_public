@@ -47,6 +47,7 @@ public class BbRsiThread extends StratThread<BbRsiService> {
 
     @Override
     public void resetTriggers() {
+        log.info(getThreadName() + " : Resetting triggers");
         super.resetTriggers();
         triggerWaveEndTime = 0;
         tradeStartTime = 0;
