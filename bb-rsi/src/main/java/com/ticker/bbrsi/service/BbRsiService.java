@@ -28,7 +28,7 @@ public class BbRsiService extends StratTickerService<BbRsiThread, BbRsiThreadMod
         put(BB_RSI_THREAD_STATE_LT_BOUGHT, "Lower trigger bought");
         put(BB_RSI_THREAD_STATE_UT_SOLD, "Upper trigger sold");
         put(BB_RSI_THREAD_STATE_LT_WAIT_END_WAVE, "Waiting for lower wave to end");
-        put(BB_RSI_THREAD_STATE_UT_WAIT_END_WAVE, "Waiting for upper to end");
+        put(BB_RSI_THREAD_STATE_UT_WAIT_END_WAVE, "Waiting for upper wave to end");
         put(BB_RSI_THREAD_STATE_LT_WAIT_WAVE_ENDED1, "Lower trigger wave ended1");
         put(BB_RSI_THREAD_STATE_LT_WAIT_WAVE_ENDED2, "Lower trigger wave ended2");
         put(BB_RSI_THREAD_STATE_UT_WAIT_WAVE_ENDED1, "Upper trigger wave ended1");
