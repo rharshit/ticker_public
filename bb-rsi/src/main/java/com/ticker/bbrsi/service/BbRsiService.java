@@ -306,7 +306,7 @@ public class BbRsiService extends StratTickerService<BbRsiThread, BbRsiThreadMod
             thread.setTriggerWaveEndTime(System.currentTimeMillis());
         } else {
             if (thread.getRsi() <= RSI_LOWER_LIMIT_REBOUND) {
-                thread.setCurrentState(BB_RSI_THREAD_STATE_LT_TRIGGER_END1);
+                thread.setCurrentState(BB_RSI_THREAD_STATE_LT_TRIGGER_START);
             } else {
                 thread.resetTriggers();
                 thread.setCurrentState(BB_RSI_THREAD_STATE_WAITING_FOR_TRIGGER);
@@ -334,8 +334,8 @@ public class BbRsiService extends StratTickerService<BbRsiThread, BbRsiThreadMod
             thread.setCurrentState(BB_RSI_THREAD_STATE_UT_TRIGGER_END2);
             thread.setTriggerWaveEndTime(System.currentTimeMillis());
         } else {
-            if (thread.getRsi() <= RSI_UPPER_LIMIT_REBOUND) {
-                thread.setCurrentState(BB_RSI_THREAD_STATE_UT_TRIGGER_END1);
+            if (thread.getRsi() >= RSI_UPPER_LIMIT_REBOUND) {
+                thread.setCurrentState(BB_RSI_THREAD_STATE_UT_TRIGGER_START);
             } else {
                 thread.resetTriggers();
                 thread.setCurrentState(BB_RSI_THREAD_STATE_WAITING_FOR_TRIGGER);
