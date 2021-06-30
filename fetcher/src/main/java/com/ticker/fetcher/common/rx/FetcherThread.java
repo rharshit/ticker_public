@@ -1,11 +1,11 @@
-package com.ticker.mockfetcher.common.rx;
+package com.ticker.fetcher.common.rx;
 
 import com.ticker.common.exception.TickerException;
 import com.ticker.common.fetcher.repository.exchangesymbol.ExchangeSymbolEntity;
 import com.ticker.common.rx.TickerThread;
-import com.ticker.mockfetcher.repository.FetcherAppRepository;
-import com.ticker.mockfetcher.service.FetcherService;
-import com.ticker.mockfetcher.service.TickerService;
+import com.ticker.fetcher.repository.FetcherAppRepository;
+import com.ticker.fetcher.service.FetcherService;
+import com.ticker.fetcher.service.TickerService;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
@@ -32,7 +32,7 @@ import static com.ticker.common.contants.WebConstants.TRADING_VIEW_BASE;
 import static com.ticker.common.contants.WebConstants.TRADING_VIEW_CHART;
 import static com.ticker.common.util.Util.WAIT_LONG;
 import static com.ticker.common.util.Util.waitFor;
-import static com.ticker.mockfetcher.common.constants.FetcherConstants.FETCHER_THREAD_COMP_NAME;
+import static com.ticker.fetcher.common.constants.FetcherConstants.FETCHER_THREAD_COMP_NAME;
 import static org.openqa.selenium.UnexpectedAlertBehaviour.ACCEPT;
 
 @Getter

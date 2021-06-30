@@ -14,10 +14,8 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Scope;
 import org.springframework.stereotype.Component;
 
-import java.util.Arrays;
-import java.util.HashSet;
-import java.util.Set;
-import java.util.stream.Collectors;
+import java.sql.Timestamp;
+import java.text.SimpleDateFormat;
 
 import static com.ticker.common.contants.WebConstants.TRADING_VIEW_BASE;
 import static com.ticker.common.contants.WebConstants.TRADING_VIEW_CHART;
@@ -39,7 +37,6 @@ public class MockFetcherThread extends TickerThread<TickerService> {
     private FetcherAppRepository repository;
     @Autowired
     private FetcherService fetcherService;
-    private Set<String> fetcherApps = new HashSet<>();
     private float o;
     private float h;
     private float l;
@@ -51,9 +48,11 @@ public class MockFetcherThread extends TickerThread<TickerService> {
     private float currentValue;
     private long updatedAt;
 
-    public void setProperties(String... apps) {
+    private long startTime;
+
+    public void setProperties(Long startTime) {
         this.enabled = true;
-        this.fetcherApps = Arrays.stream(apps).collect(Collectors.toSet());
+        this.startTime = startTime;
 
         initialize();
     }
@@ -85,7 +84,12 @@ public class MockFetcherThread extends TickerThread<TickerService> {
     }
 
     public String getTableName() {
-        return this.entity.getFinalTableName();
+        if (entity.getTableName() != null && entity.getTableName().contains(":")) {
+            String[] split = entity.getTableName().split(":", 2);
+            return split[0] + "_" + new SimpleDateFormat(split[1]).format(new Timestamp(getStartTime()));
+        } else {
+            return entity.getTableName();
+        }
     }
 
     protected void initializeWebDriver() {
@@ -159,18 +163,6 @@ public class MockFetcherThread extends TickerThread<TickerService> {
         initialize(0, true);
     }
 
-    public void addApp(String appName) {
-        getFetcherApps().add(appName);
-    }
-
-    public void removeApp(String appName) {
-        getFetcherApps().remove(appName);
-        if (getFetcherApps().isEmpty()) {
-            log.info("No apps fetching data");
-            log.info("Terminating thread: " + getThreadName());
-            terminateThread();
-        }
-    }
 
     public String getThreadName() {
         return getTableName().replace(":", "_");

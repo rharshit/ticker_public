@@ -1,4 +1,4 @@
-package com.ticker.mockfetcher.common.config;
+package com.ticker.fetcher.common.config;
 
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.context.annotation.Bean;

@@ -1,4 +1,4 @@
-package com.ticker.mockfetcher.common.repository;
+package com.ticker.fetcher.common.repository;
 
 import com.ticker.common.repository.BaseRepository;
 import lombok.Getter;

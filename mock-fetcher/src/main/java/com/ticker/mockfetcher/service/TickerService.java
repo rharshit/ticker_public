@@ -38,7 +38,7 @@ public class TickerService extends TickerThreadService<MockFetcherThread, Fetche
     public void createThread(String exchange, String symbol, String... extras) {
         MockFetcherThread thread = getThread(exchange, symbol);
         if (thread != null && thread.isEnabled()) {
-            thread.addApp(extras[0]);
+            thread.setStartTime(Long.parseLong(extras[0]));
             log.info("Added thread: " + thread.getThreadName());
         } else {
             createThread(exchange, symbol, MOCK_FETCHER_THREAD_COMP_NAME);
@@ -46,7 +46,7 @@ public class TickerService extends TickerThreadService<MockFetcherThread, Fetche
             if (thread == null) {
                 throw new TickerException("Error while adding thread");
             }
-            thread.setProperties(extras[0]);
+            thread.setProperties(Long.parseLong(extras[0]));
             thread.start();
         }
     }
@@ -61,21 +61,6 @@ public class TickerService extends TickerThreadService<MockFetcherThread, Fetche
         destroyThread(exchange, symbol);
     }
 
-
-    /**
-     * Remove tracking for the ticker, given exchange and symbol for app
-     *
-     * @param exchange
-     * @param symbol
-     * @param appName
-     */
-    public void removeAppFromThread(String exchange, String symbol, String appName) {
-        MockFetcherThread thread = getThread(exchange, symbol);
-        if (thread == null) {
-            return;
-        }
-        thread.removeApp(appName);
-    }
 
     /**
      * Remove tracking for the ticker, given the thread

@@ -21,6 +21,16 @@ public class FetcherController {
     private TickerService service;
 
     /**
+     * Check if the instance is mock
+     *
+     * @return {@code true}
+     */
+    @GetMapping("mock")
+    public ResponseEntity<Boolean> isMock() {
+        return new ResponseEntity<>(true, HttpStatus.OK);
+    }
+
+    /**
      * Get all tickers saved in DB
      *
      * @return
@@ -76,13 +86,13 @@ public class FetcherController {
      *
      * @param exchange
      * @param symbol
-     * @param appName
+     * @param time
      * @return
      */
     @PostMapping
     public ResponseEntity<ResponseStatus> addTicker(@RequestParam String exchange, @RequestParam String symbol,
-                                                    @RequestParam String appName) {
-        service.createThread(exchange, symbol, new String[]{appName});
+                                                    @RequestParam String time) {
+        service.createThread(exchange, symbol, new String[]{time});
         return new ResponseEntity<>(new ResponseStatus(), HttpStatus.OK);
     }
 
@@ -103,8 +113,7 @@ public class FetcherController {
     @DeleteMapping
     public ResponseEntity<ResponseStatus> deleteTicker(@RequestParam String exchange, @RequestParam String symbol,
                                                        @RequestParam String appName) {
-        service.removeAppFromThread(exchange, symbol, appName);
-        return new ResponseEntity<>(new ResponseStatus(), HttpStatus.OK);
+        return new ResponseEntity<>(HttpStatus.OK);
     }
 
     /**

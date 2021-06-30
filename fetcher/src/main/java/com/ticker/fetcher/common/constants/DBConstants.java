@@ -1,4 +1,4 @@
-package com.ticker.mockfetcher.common.constants;
+package com.ticker.fetcher.common.constants;
 
 public abstract class DBConstants {
     private DBConstants() {

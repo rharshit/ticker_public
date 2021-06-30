@@ -1,11 +1,11 @@
-package com.ticker.mockfetcher.service;
+package com.ticker.fetcher.service;
 
 import com.ticker.common.exception.TickerException;
 import com.ticker.common.fetcher.repository.exchangesymbol.ExchangeSymbolEntity;
 import com.ticker.common.service.TickerThreadService;
-import com.ticker.mockfetcher.common.rx.FetcherThread;
-import com.ticker.mockfetcher.model.FetcherThreadModel;
-import com.ticker.mockfetcher.repository.FetcherAppRepository;
+import com.ticker.fetcher.common.rx.FetcherThread;
+import com.ticker.fetcher.model.FetcherThreadModel;
+import com.ticker.fetcher.repository.FetcherAppRepository;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.scheduling.annotation.Scheduled;
@@ -13,7 +13,7 @@ import org.springframework.stereotype.Service;
 
 import java.util.Set;
 
-import static com.ticker.mockfetcher.common.constants.FetcherConstants.FETCHER_THREAD_COMP_NAME;
+import static com.ticker.fetcher.common.constants.FetcherConstants.FETCHER_THREAD_COMP_NAME;
 
 @Service
 @Slf4j

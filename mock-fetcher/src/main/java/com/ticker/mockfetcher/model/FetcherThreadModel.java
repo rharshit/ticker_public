@@ -4,7 +4,10 @@ import com.ticker.common.model.TickerThreadModel;
 import com.ticker.mockfetcher.common.rx.MockFetcherThread;
 import lombok.NoArgsConstructor;
 
-import java.util.Set;
+import java.sql.Timestamp;
+import java.text.SimpleDateFormat;
+import java.util.Collections;
+import java.util.List;
 
 import static com.ticker.common.contants.WebConstants.TRADING_VIEW_BASE;
 import static com.ticker.common.contants.WebConstants.TRADING_VIEW_CHART;
@@ -16,8 +19,9 @@ public class FetcherThreadModel extends TickerThreadModel<MockFetcherThread> {
         super(thread);
     }
 
-    public Set<String> getFetcherApps() {
-        return this.thread.getFetcherApps();
+    public List<String> getFetcherApps() {
+        return Collections.singletonList(
+                new SimpleDateFormat("yyyy-MM-dd HH:mm:ss").format(new Timestamp(thread.getStartTime())));
     }
 
     public float getCurrentValue() {

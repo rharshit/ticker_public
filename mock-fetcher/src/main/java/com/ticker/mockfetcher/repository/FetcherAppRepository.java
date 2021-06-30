@@ -24,6 +24,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
+import static com.ticker.fetcher.common.constants.FetcherConstants.FETCHER_DATE_FORMAT_LOGGING;
 import static com.ticker.mockfetcher.common.constants.DBConstants.*;
 import static com.ticker.mockfetcher.common.constants.ProcedureConstants.ADD_TABLE;
 import static com.ticker.mockfetcher.common.constants.ProcedureConstants.GET_EXCHANGE_SYMBOL_ID_PR;
@@ -83,7 +84,7 @@ public class FetcherAppRepository {
     @Async("repoExecutor")
     @Scheduled(fixedRate = 1000)
     public void pushData() {
-        DateTimeFormatter dtf = DateTimeFormatter.ofPattern("yyyy/MM/dd HH:mm:ss.n.A");
+        DateTimeFormatter dtf = DateTimeFormatter.ofPattern(FETCHER_DATE_FORMAT_LOGGING);
         String now = dtf.format(LocalDateTime.now());
         log.debug("pushData task started: " + now);
         if (!CollectionUtils.isEmpty(sqlQueue)) {

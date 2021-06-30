@@ -1,9 +1,9 @@
-package com.ticker.mockfetcher.service;
+package com.ticker.fetcher.service;
 
 import com.ticker.common.exception.TickerException;
-import com.ticker.mockfetcher.common.rx.FetcherThread;
-import com.ticker.mockfetcher.model.FetcherRepoModel;
-import com.ticker.mockfetcher.repository.FetcherAppRepository;
+import com.ticker.fetcher.common.rx.FetcherThread;
+import com.ticker.fetcher.model.FetcherRepoModel;
+import com.ticker.fetcher.repository.FetcherAppRepository;
 import lombok.extern.slf4j.Slf4j;
 import org.openqa.selenium.*;
 import org.openqa.selenium.interactions.Actions;
