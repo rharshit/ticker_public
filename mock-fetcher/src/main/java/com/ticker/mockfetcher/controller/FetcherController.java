@@ -21,6 +21,16 @@ public class FetcherController {
     private TickerService service;
 
     /**
+     * Check if the instance is mock
+     *
+     * @return {@code true}
+     */
+    @GetMapping("mock")
+    public ResponseEntity<Boolean> isMock() {
+        return new ResponseEntity<>(true, HttpStatus.OK);
+    }
+
+    /**
      * Get all tickers saved in DB
      *
      * @return
