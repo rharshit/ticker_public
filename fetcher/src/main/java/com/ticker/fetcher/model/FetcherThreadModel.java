@@ -1,7 +1,7 @@
-package com.ticker.mockfetcher.model;
+package com.ticker.fetcher.model;
 
 import com.ticker.common.model.TickerThreadModel;
-import com.ticker.mockfetcher.common.rx.FetcherThread;
+import com.ticker.fetcher.common.rx.FetcherThread;
 import lombok.NoArgsConstructor;
 
 import java.util.Set;

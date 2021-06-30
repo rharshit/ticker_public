@@ -1,9 +1,9 @@
-package com.ticker.mockfetcher.repository;
+package com.ticker.fetcher.repository;
 
 import com.ticker.common.exception.TickerException;
-import com.ticker.mockfetcher.common.repository.FetcherRepository;
-import com.ticker.mockfetcher.common.repository.TickerRepository;
-import com.ticker.mockfetcher.model.FetcherRepoModel;
+import com.ticker.fetcher.common.repository.FetcherRepository;
+import com.ticker.fetcher.common.repository.TickerRepository;
+import com.ticker.fetcher.model.FetcherRepoModel;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.jdbc.core.SqlOutParameter;
@@ -24,9 +24,9 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-import static com.ticker.mockfetcher.common.constants.DBConstants.*;
-import static com.ticker.mockfetcher.common.constants.ProcedureConstants.ADD_TABLE;
-import static com.ticker.mockfetcher.common.constants.ProcedureConstants.GET_EXCHANGE_SYMBOL_ID_PR;
+import static com.ticker.fetcher.common.constants.DBConstants.*;
+import static com.ticker.fetcher.common.constants.ProcedureConstants.ADD_TABLE;
+import static com.ticker.fetcher.common.constants.ProcedureConstants.GET_EXCHANGE_SYMBOL_ID_PR;
 
 @Repository
 @Slf4j

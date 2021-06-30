@@ -1,4 +1,4 @@
-package com.ticker.mockfetcher.common.exception;
+package com.ticker.fetcher.common.exception;
 
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.aop.interceptor.AsyncUncaughtExceptionHandler;

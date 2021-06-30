@@ -1,4 +1,4 @@
-package com.ticker.mockfetcher.common.config;
+package com.ticker.fetcher.common.config;
 
 import com.zaxxer.hikari.HikariConfig;
 import com.zaxxer.hikari.HikariDataSource;

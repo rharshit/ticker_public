@@ -1,9 +1,9 @@
-package com.ticker.mockfetcher.controller;
+package com.ticker.fetcher.controller;
 
 import com.ticker.common.fetcher.repository.exchangesymbol.ExchangeSymbolEntity;
 import com.ticker.common.model.ResponseStatus;
-import com.ticker.mockfetcher.model.FetcherThreadModel;
-import com.ticker.mockfetcher.service.TickerService;
+import com.ticker.fetcher.model.FetcherThreadModel;
+import com.ticker.fetcher.service.TickerService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;

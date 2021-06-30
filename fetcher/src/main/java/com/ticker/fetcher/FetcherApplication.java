@@ -1,4 +1,4 @@
-package com.ticker.mockfetcher;
+package com.ticker.fetcher;
 
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;

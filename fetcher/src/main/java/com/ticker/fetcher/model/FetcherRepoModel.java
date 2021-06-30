@@ -1,4 +1,4 @@
-package com.ticker.mockfetcher.model;
+package com.ticker.fetcher.model;
 
 import lombok.Data;
 

@@ -1,4 +1,4 @@
-package com.ticker.mockfetcher.common.config;
+package com.ticker.fetcher.common.config;
 
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
