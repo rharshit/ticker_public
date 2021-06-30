@@ -7,6 +7,7 @@ import lombok.NoArgsConstructor;
 import lombok.Setter;
 import lombok.extern.slf4j.Slf4j;
 
+import java.util.HashMap;
 import java.util.Map;
 
 import static com.ticker.common.util.Util.WAIT_LONG;
@@ -32,6 +33,7 @@ public abstract class StratThread<S extends StratTickerService> extends TickerTh
     private float currentValue;
     private long updatedAt;
 
+    Map<Long, Integer> stateTrace = new HashMap<>();
 
     private float triggerStartValue;
     private long triggerStartTime;
@@ -103,6 +105,7 @@ public abstract class StratThread<S extends StratTickerService> extends TickerTh
         log.info(getThreadName() + " : from " + getCurrentState() + " : " + service.getStateValueMap().get(getCurrentState()));
         this.currentState = currentState;
         log.info(getThreadName() + " : to   " + getCurrentState() + " : " + service.getStateValueMap().get(getCurrentState()));
+        stateTrace.put(System.currentTimeMillis(), getCurrentState());
     }
 
     public void resetTriggers() {

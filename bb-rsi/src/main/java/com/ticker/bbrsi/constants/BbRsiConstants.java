@@ -27,5 +27,7 @@ public abstract class BbRsiConstants {
     public static final int BB_RSI_THREAD_STATE_UT_PANIC_BUY = 21;
 
     public static final float RSI_LOWER_LIMIT = 25;
+    public static final float RSI_LOWER_LIMIT_REBOUND = 32;
     public static final float RSI_UPPER_LIMIT = 75;
+    public static final float RSI_UPPER_LIMIT_REBOUND = 68;
 }

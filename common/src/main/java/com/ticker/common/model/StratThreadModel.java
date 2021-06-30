@@ -2,6 +2,8 @@ package com.ticker.common.model;
 
 import com.ticker.common.rx.StratThread;
 
+import java.util.Map;
+
 import static com.ticker.common.contants.WebConstants.TRADING_VIEW_BASE;
 import static com.ticker.common.contants.WebConstants.TRADING_VIEW_CHART;
 
@@ -64,6 +66,10 @@ public class StratThreadModel<T extends StratThread> extends TickerThreadModel<T
 
     public float getTargetThreshold() {
         return this.thread.getTargetThreshold();
+    }
+
+    public Map<Long, Integer> getStateTrace() {
+        return this.thread.getStateTrace();
     }
 
 }
