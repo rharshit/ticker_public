@@ -288,6 +288,10 @@ public class BbRsiService extends StratTickerService<BbRsiThread, BbRsiThreadMod
     }
 
     private void checkForLtEnd(BbRsiThread thread) {
+        checkPreMatureLtEnd(thread);
+        if (thread.getCurrentState() == BB_RSI_THREAD_STATE_LT_TRIGGER_END2) {
+            return;
+        }
         if (isSameMinTrigger(thread.getTriggerStartTime()) || !isEomTrigger()) {
             return;
         }
@@ -297,7 +301,20 @@ public class BbRsiService extends StratTickerService<BbRsiThread, BbRsiThreadMod
         }
     }
 
+    private void checkPreMatureLtEnd(BbRsiThread thread) {
+        thread.setDip(thread.getCurrentValue());
+        if (!isSameMinTrigger(thread.getTriggerStartTime()) && isEomTrigger(35)) {
+            if (isUpwardTrend(thread) && thread.getCurrentValue() - thread.getDip() > thread.getTargetThreshold()) {
+                thread.setCurrentValue(BB_RSI_THREAD_STATE_LT_TRIGGER_END2);
+            }
+        }
+    }
+
     private void checkForLtEnd1(BbRsiThread thread) {
+        checkPreMatureLtEnd(thread);
+        if (thread.getCurrentState() == BB_RSI_THREAD_STATE_LT_TRIGGER_END2) {
+            return;
+        }
         if (isSameMinTrigger(thread.getTriggerWaveEndTime()) || !isEomTrigger()) {
             return;
         }
@@ -317,6 +334,10 @@ public class BbRsiService extends StratTickerService<BbRsiThread, BbRsiThreadMod
     }
 
     private void checkForUtEnd(BbRsiThread thread) {
+        checkPreMatureUtEnd(thread);
+        if (thread.getCurrentState() == BB_RSI_THREAD_STATE_UT_TRIGGER_END2) {
+            return;
+        }
         if (isSameMinTrigger(thread.getTriggerStartTime()) || !isEomTrigger()) {
             return;
         }
@@ -326,7 +347,20 @@ public class BbRsiService extends StratTickerService<BbRsiThread, BbRsiThreadMod
         }
     }
 
+    private void checkPreMatureUtEnd(BbRsiThread thread) {
+        thread.setPeak(thread.getCurrentValue());
+        if (!isSameMinTrigger(thread.getTriggerStartTime()) && isEomTrigger(35)) {
+            if (isDownwardTrend(thread) && thread.getPeak() - thread.getCurrentValue() > thread.getTargetThreshold()) {
+                thread.setCurrentValue(BB_RSI_THREAD_STATE_UT_TRIGGER_END2);
+            }
+        }
+    }
+
     private void checkForUtEnd1(BbRsiThread thread) {
+        checkPreMatureUtEnd(thread);
+        if (thread.getCurrentState() == BB_RSI_THREAD_STATE_UT_TRIGGER_END2) {
+            return;
+        }
         if (isSameMinTrigger(thread.getTriggerWaveEndTime()) || !isEomTrigger()) {
             return;
         }
