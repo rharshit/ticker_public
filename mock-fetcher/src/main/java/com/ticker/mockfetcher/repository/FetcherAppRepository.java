@@ -32,13 +32,11 @@ import static com.ticker.mockfetcher.common.constants.ProcedureConstants.GET_EXC
 @Slf4j
 public class FetcherAppRepository {
 
+    private static final List<String> sqlQueue = new ArrayList<>();
     @Autowired
     FetcherRepository fetcherRepository;
-
     @Autowired
     TickerRepository tickerRepository;
-
-    private static final List<String> sqlQueue = new ArrayList<>();
     private Connection fetcherConnection = null;
 
     public int getExchangeSymbolId(String exchange, String symbol) {

@@ -27,13 +27,11 @@ import static com.ticker.common.util.Util.*;
 @Slf4j
 public class FetcherService {
 
-    @Autowired
-    private TickerService appService;
-
+    private static final List<FetcherRepoModel> dataQueue = new ArrayList<>();
     @Autowired
     FetcherAppRepository repository;
-
-    private static final List<FetcherRepoModel> dataQueue = new ArrayList<>();
+    @Autowired
+    private TickerService appService;
 
     /**
      * Set setting for the charts that are loaded
@@ -68,13 +66,14 @@ public class FetcherService {
 
     /**
      * This method uses a lot extra processing and extra time
+     *
      * @param webDriver
      * @param time
      * @param threshold
      */
     private void waitTillLoad(WebDriver webDriver, long time, int threshold) {
         waitFor(WAIT_SHORT);
-        while (webDriver.findElements(By.cssSelector("div[role='progressbar']")).size() > threshold);
+        while (webDriver.findElements(By.cssSelector("div[role='progressbar']")).size() > threshold) ;
         waitFor(time);
     }
 

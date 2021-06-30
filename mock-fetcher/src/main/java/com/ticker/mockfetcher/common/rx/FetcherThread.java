@@ -43,16 +43,14 @@ import static org.openqa.selenium.UnexpectedAlertBehaviour.ACCEPT;
 @NoArgsConstructor
 public class FetcherThread extends TickerThread<TickerService> {
 
+    public static final int RETRY_LIMIT = 10;
+    private final Object postInitLock = new Object();
     @Autowired
     private FetcherAppRepository repository;
-
     @Autowired
     private FetcherService fetcherService;
-
     private WebDriver webDriver;
-    private final Object postInitLock = new Object();
     private Set<String> fetcherApps = new HashSet<>();
-
     private float o;
     private float h;
     private float l;
@@ -63,8 +61,6 @@ public class FetcherThread extends TickerThread<TickerService> {
     private float rsi;
     private float currentValue;
     private long updatedAt;
-
-    public static final int RETRY_LIMIT = 10;
 
     public void setProperties(String... apps) {
         this.enabled = true;
