@@ -1,7 +1,7 @@
 package com.ticker.mockfetcher.model;
 
 import com.ticker.common.model.TickerThreadModel;
-import com.ticker.mockfetcher.common.rx.FetcherThread;
+import com.ticker.mockfetcher.common.rx.MockFetcherThread;
 import lombok.NoArgsConstructor;
 
 import java.util.Set;
@@ -10,9 +10,9 @@ import static com.ticker.common.contants.WebConstants.TRADING_VIEW_BASE;
 import static com.ticker.common.contants.WebConstants.TRADING_VIEW_CHART;
 
 @NoArgsConstructor
-public class FetcherThreadModel extends TickerThreadModel<FetcherThread> {
+public class FetcherThreadModel extends TickerThreadModel<MockFetcherThread> {
 
-    public FetcherThreadModel(FetcherThread thread) {
+    public FetcherThreadModel(MockFetcherThread thread) {
         super(thread);
     }
 
