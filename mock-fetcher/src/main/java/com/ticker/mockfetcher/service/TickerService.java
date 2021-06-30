@@ -3,7 +3,7 @@ package com.ticker.mockfetcher.service;
 import com.ticker.common.exception.TickerException;
 import com.ticker.common.fetcher.repository.exchangesymbol.ExchangeSymbolEntity;
 import com.ticker.common.service.TickerThreadService;
-import com.ticker.mockfetcher.common.rx.FetcherThread;
+import com.ticker.mockfetcher.common.rx.MockFetcherThread;
 import com.ticker.mockfetcher.model.FetcherThreadModel;
 import com.ticker.mockfetcher.repository.FetcherAppRepository;
 import lombok.extern.slf4j.Slf4j;
@@ -13,17 +13,17 @@ import org.springframework.stereotype.Service;
 
 import java.util.Set;
 
-import static com.ticker.mockfetcher.common.constants.FetcherConstants.FETCHER_THREAD_COMP_NAME;
+import static com.ticker.mockfetcher.common.constants.FetcherConstants.MOCK_FETCHER_THREAD_COMP_NAME;
 
 @Service
 @Slf4j
-public class TickerService extends TickerThreadService<FetcherThread, FetcherThreadModel> {
+public class TickerService extends TickerThreadService<MockFetcherThread, FetcherThreadModel> {
 
     @Autowired
     FetcherAppRepository repository;
 
     @Override
-    public FetcherThreadModel createTickerThreadModel(FetcherThread thread) {
+    public FetcherThreadModel createTickerThreadModel(MockFetcherThread thread) {
         return new FetcherThreadModel(thread);
     }
 
@@ -36,12 +36,12 @@ public class TickerService extends TickerThreadService<FetcherThread, FetcherThr
      */
     @Override
     public void createThread(String exchange, String symbol, String... extras) {
-        FetcherThread thread = getThread(exchange, symbol);
+        MockFetcherThread thread = getThread(exchange, symbol);
         if (thread != null && thread.isEnabled()) {
             thread.addApp(extras[0]);
             log.info("Added thread: " + thread.getThreadName());
         } else {
-            createThread(exchange, symbol, FETCHER_THREAD_COMP_NAME);
+            createThread(exchange, symbol, MOCK_FETCHER_THREAD_COMP_NAME);
             thread = getThread(exchange, symbol);
             if (thread == null) {
                 throw new TickerException("Error while adding thread");
@@ -70,7 +70,7 @@ public class TickerService extends TickerThreadService<FetcherThread, FetcherThr
      * @param appName
      */
     public void removeAppFromThread(String exchange, String symbol, String appName) {
-        FetcherThread thread = getThread(exchange, symbol);
+        MockFetcherThread thread = getThread(exchange, symbol);
         if (thread == null) {
             return;
         }
@@ -82,21 +82,21 @@ public class TickerService extends TickerThreadService<FetcherThread, FetcherThr
      *
      * @param thread
      */
-    public void deleteTicker(FetcherThread thread) {
+    public void deleteTicker(MockFetcherThread thread) {
         destroyThread(thread);
     }
 
     public void deleteAllTickers() {
-        Set<FetcherThread> threadMap = getThreadPool();
-        for (FetcherThread threadName : threadMap) {
+        Set<MockFetcherThread> threadMap = getThreadPool();
+        for (MockFetcherThread threadName : threadMap) {
             destroyThread(threadName);
         }
     }
 
     @Scheduled(fixedRate = 1000)
     public void processTickers() {
-        Set<FetcherThread> pool = getThreadPool();
-        for (FetcherThread thread : pool) {
+        Set<MockFetcherThread> pool = getThreadPool();
+        for (MockFetcherThread thread : pool) {
             if (thread.isEnabled()) {
                 thread.removeUnwantedScreens();
             }
@@ -104,7 +104,7 @@ public class TickerService extends TickerThreadService<FetcherThread, FetcherThr
     }
 
     public void refreshBrowser(String exchange, String symbol) {
-        FetcherThread thread = getThread(exchange, symbol);
+        MockFetcherThread thread = getThread(exchange, symbol);
         if (thread == null) {
             return;
         }
@@ -112,7 +112,7 @@ public class TickerService extends TickerThreadService<FetcherThread, FetcherThr
     }
 
     public FetcherThreadModel getCurrent(String exchange, String symbol) {
-        FetcherThread thread = getThread(exchange, symbol);
+        MockFetcherThread thread = getThread(exchange, symbol);
         if (thread == null) {
             return null;
         }

@@ -10,21 +10,12 @@ import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
 import lombok.extern.slf4j.Slf4j;
-import org.openqa.selenium.By;
-import org.openqa.selenium.WebDriver;
-import org.openqa.selenium.WebElement;
-import org.openqa.selenium.chrome.ChromeDriver;
-import org.openqa.selenium.chrome.ChromeOptions;
-import org.openqa.selenium.remote.CapabilityType;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Scope;
 import org.springframework.stereotype.Component;
-import org.springframework.util.CollectionUtils;
-import org.springframework.util.StringUtils;
 
 import java.util.Arrays;
 import java.util.HashSet;
-import java.util.List;
 import java.util.Set;
 import java.util.stream.Collectors;
 
@@ -32,16 +23,15 @@ import static com.ticker.common.contants.WebConstants.TRADING_VIEW_BASE;
 import static com.ticker.common.contants.WebConstants.TRADING_VIEW_CHART;
 import static com.ticker.common.util.Util.WAIT_LONG;
 import static com.ticker.common.util.Util.waitFor;
-import static com.ticker.mockfetcher.common.constants.FetcherConstants.FETCHER_THREAD_COMP_NAME;
-import static org.openqa.selenium.UnexpectedAlertBehaviour.ACCEPT;
+import static com.ticker.mockfetcher.common.constants.FetcherConstants.MOCK_FETCHER_THREAD_COMP_NAME;
 
 @Getter
 @Setter
 @Slf4j
-@Component(FETCHER_THREAD_COMP_NAME)
+@Component(MOCK_FETCHER_THREAD_COMP_NAME)
 @Scope("prototype")
 @NoArgsConstructor
-public class FetcherThread extends TickerThread<TickerService> {
+public class MockFetcherThread extends TickerThread<TickerService> {
 
     public static final int RETRY_LIMIT = 10;
     private final Object postInitLock = new Object();
@@ -49,7 +39,6 @@ public class FetcherThread extends TickerThread<TickerService> {
     private FetcherAppRepository repository;
     @Autowired
     private FetcherService fetcherService;
-    private WebDriver webDriver;
     private Set<String> fetcherApps = new HashSet<>();
     private float o;
     private float h;
@@ -100,22 +89,7 @@ public class FetcherThread extends TickerThread<TickerService> {
     }
 
     protected void initializeWebDriver() {
-        if (this.webDriver != null) {
-            try {
-                this.webDriver.quit();
-            } catch (Exception e) {
-                log.error("Error while closing webdriver");
-            }
 
-        }
-        ChromeOptions options = new ChromeOptions();
-        options.setHeadless(true);
-        options.addArguments("--window-size=1920,1080");
-        options.addArguments("--disable-gpu");
-        options.addArguments("incognito");
-        options.setCapability(CapabilityType.UNEXPECTED_ALERT_BEHAVIOUR, ACCEPT);
-        options.setUnhandledPromptBehaviour(ACCEPT);
-        this.webDriver = new ChromeDriver(options);
     }
 
     @Override
@@ -124,14 +98,6 @@ public class FetcherThread extends TickerThread<TickerService> {
         while (isEnabled()) {
             while (isEnabled() && isInitialized()) {
                 waitFor(WAIT_LONG);
-            }
-        }
-
-        if (this.webDriver != null) {
-            try {
-                this.webDriver.quit();
-            } catch (Exception e) {
-                log.error("Error while closing webdriver");
             }
         }
         log.info("Terminated thread : " + getThreadName());
@@ -147,11 +113,6 @@ public class FetcherThread extends TickerThread<TickerService> {
 
         try {
             String url = TRADING_VIEW_BASE + TRADING_VIEW_CHART + getExchange() + ":" + getSymbol();
-            if (refresh) {
-                getWebDriver().navigate().refresh();
-            } else {
-                getWebDriver().get(url);
-            }
             fetcherService.setChartSettings(this, iteration, refresh);
         } catch (Exception e) {
             if (refresh) {
@@ -178,73 +139,7 @@ public class FetcherThread extends TickerThread<TickerService> {
      * Remove ads and pop-ups
      */
     public void removeUnwantedScreens() {
-        try {
-            log.debug("Removing unwanted screens for " + getThreadName());
-            if (isEnabled() && isInitialized()) {
-                synchronized (postInitLock) {
-                    try {
-                        while (!CollectionUtils.isEmpty(
-                                getWebDriver().findElements(By.cssSelector("div[data-role='toast-container']"))
-                        )) {
-                            getWebDriver()
-                                    .findElement(By.cssSelector("div[data-role='toast-container']"))
-                                    .findElement(By.tagName("article"))
-                                    .findElement(By.tagName("button"))
-                                    .click();
-                        }
-                    } catch (Exception ignored) {
-                    }
-                    try {
-                        while (!CollectionUtils.isEmpty(
-                                getWebDriver().findElements(By.cssSelector("div[data-dialog-name='gopro']"))
-                        )) {
-                            List<WebElement> buttons = getWebDriver()
-                                    .findElement(By.cssSelector("div[data-dialog-name='gopro']"))
-                                    .findElements(By.tagName("button"));
-                            for (WebElement button : buttons) {
-                                String classes = button.getAttribute("class");
-                                if (!StringUtils.isEmpty(classes)) {
-                                    if (classes.contains("close")) {
-                                        button.click();
-                                        break;
-                                    }
-                                }
-                            }
-                        }
-                    } catch (Exception ignored) {
-                    }
-                    try {
-                        //indicator-properties-dialog
-                        List<WebElement> buttons = getWebDriver()
-                                .findElement(By.cssSelector("div[data-name='indicator-properties-dialog']"))
-                                .findElements(By.cssSelector("span[data-name='close']"));
-                        for (WebElement button : buttons) {
-                            button.click();
-                            break;
-                        }
-                    } catch (Exception ignore) {
 
-                    }
-                    try {
-                        //style="z-index: 150;"
-                        WebElement overlapManagerRoot = getWebDriver().findElement(By.id("overlap-manager-root"));
-                        List<WebElement> overlaps = overlapManagerRoot.findElements(By.tagName("div"));
-                        if (!CollectionUtils.isEmpty(overlaps)) {
-                            for (WebElement overlap : overlaps) {
-                                String text = overlap.getText();
-                                if (!StringUtils.isEmpty(text) && text.contains("Take your trading to the next level")) {
-                                    initialize(0, true);
-                                    break;
-                                }
-                            }
-                        }
-                    } catch (Exception ignored) {
-                    }
-                }
-            }
-        } catch (Exception e) {
-
-        }
     }
 
     @Override
