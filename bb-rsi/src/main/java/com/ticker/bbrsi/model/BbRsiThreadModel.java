@@ -8,4 +8,11 @@ public class BbRsiThreadModel extends StratThreadModel<BbRsiThread> {
         super(thread);
     }
 
+    public float getDip() {
+        return thread.getDip();
+    }
+
+    public float getPeak() {
+        return thread.getPeak();
+    }
 }
