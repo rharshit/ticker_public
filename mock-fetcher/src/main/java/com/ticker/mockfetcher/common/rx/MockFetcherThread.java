@@ -3,8 +3,8 @@ package com.ticker.mockfetcher.common.rx;
 import com.ticker.common.exception.TickerException;
 import com.ticker.common.fetcher.repository.exchangesymbol.ExchangeSymbolEntity;
 import com.ticker.common.rx.TickerThread;
-import com.ticker.mockfetcher.repository.FetcherAppRepository;
-import com.ticker.mockfetcher.service.FetcherService;
+import com.ticker.mockfetcher.repository.MockFetcherAppRepository;
+import com.ticker.mockfetcher.service.MockFetcherService;
 import com.ticker.mockfetcher.service.TickerService;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
@@ -32,9 +32,9 @@ public class MockFetcherThread extends TickerThread<TickerService> {
     public static final int RETRY_LIMIT = 10;
     private final Object postInitLock = new Object();
     @Autowired
-    private FetcherAppRepository repository;
+    private MockFetcherAppRepository repository;
     @Autowired
-    private FetcherService fetcherService;
+    private MockFetcherService fetcherService;
     private float o;
     private float h;
     private float l;
@@ -176,6 +176,6 @@ public class MockFetcherThread extends TickerThread<TickerService> {
 
     public void setCurrentValue(float currentValue) {
         this.currentValue = currentValue;
-        this.updatedAt = System.currentTimeMillis();
+        this.updatedAt = System.currentTimeMillis() + getDelta();
     }
 }

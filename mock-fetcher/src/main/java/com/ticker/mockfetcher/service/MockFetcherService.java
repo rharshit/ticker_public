@@ -2,8 +2,8 @@ package com.ticker.mockfetcher.service;
 
 import com.ticker.common.exception.TickerException;
 import com.ticker.mockfetcher.common.rx.MockFetcherThread;
-import com.ticker.mockfetcher.model.FetcherRepoModel;
-import com.ticker.mockfetcher.repository.FetcherAppRepository;
+import com.ticker.mockfetcher.model.MockFetcherRepoModel;
+import com.ticker.mockfetcher.repository.MockFetcherAppRepository;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.scheduling.annotation.Async;
@@ -11,18 +11,14 @@ import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
 
 import java.sql.Timestamp;
-import java.time.LocalDateTime;
-import java.time.format.DateTimeFormatter;
-import java.util.ArrayList;
 import java.util.List;
 
 @Service
 @Slf4j
-public class FetcherService {
+public class MockFetcherService {
 
-    private static final List<FetcherRepoModel> dataQueue = new ArrayList<>();
     @Autowired
-    FetcherAppRepository repository;
+    MockFetcherAppRepository repository;
     @Autowired
     private TickerService appService;
 
@@ -40,7 +36,7 @@ public class FetcherService {
     }
 
     @Async("fetcherTaskExecutor")
-    @Scheduled(fixedRate = 750)
+    @Scheduled(fixedDelay = 500)
     public void doThreadTasks() {
         List<MockFetcherThread> pool = appService.getCurrentTickerList();
         for (MockFetcherThread thread : pool) {
@@ -53,38 +49,41 @@ public class FetcherService {
         }
     }
 
-    @Async("fetcherTaskExecutor")
-    public void doTask(MockFetcherThread fetcherThread) {
-        if (fetcherThread.isInitialized() && fetcherThread.isEnabled()) {
-            try { // Get current value
-
-            } catch (Exception ignored) {
-            }
+    public void doTask(MockFetcherThread mockFetcherThread) {
+        if (mockFetcherThread.isInitialized() && mockFetcherThread.isEnabled()) {
             try { // Get OHLC Value
-                float o = 0;
-                float h = 0;
-                float l = 0;
-                float c = 0;
-                float bbA = 0;
-                float bbU = 0;
-                float bbL = 0;
-                float rsi = 0;
+                MockFetcherRepoModel mockFetcherRepoModel = new MockFetcherRepoModel();
+                mockFetcherRepoModel.setTableName(mockFetcherThread.getTableName());
+                repository.populateFetcherThreadModel(mockFetcherRepoModel, System.currentTimeMillis() + mockFetcherThread.getDelta());
+                float o = mockFetcherRepoModel.getO();
+                float h = mockFetcherRepoModel.getH();
+                float l = mockFetcherRepoModel.getL();
+                float c = mockFetcherRepoModel.getC();
+                float bbA = mockFetcherRepoModel.getBbA();
+                float bbU = mockFetcherRepoModel.getBbU();
+                float bbL = mockFetcherRepoModel.getBbL();
+                float rsi = mockFetcherRepoModel.getExtra();
                 float valCheck = o * h * l * c * bbL * bbA * bbU * rsi;
                 if (valCheck == 0) {
-                    log.error(fetcherThread.getThreadName() + " :\n" +
+                    log.error(mockFetcherThread.getThreadName() + " :\n" +
                             o + "," + h + "," + l + "," + c + "\n"
                             + bbL + "," + bbA + "," + bbU + "\n"
                             + rsi);
                 } else {
-                    log.trace(fetcherThread.getThreadName() + " :\n" +
+                    log.trace(mockFetcherThread.getThreadName() + " :\n" +
                             o + "," + h + "," + l + "," + c + "\n"
                             + bbL + "," + bbA + "," + bbU + "\n"
                             + rsi);
-                    synchronized (dataQueue) {
-                        dataQueue.add(new FetcherRepoModel(fetcherThread.getTableName(), System.currentTimeMillis(),
-                                o, h, l, c, bbU, bbA, bbL, rsi));
-                    }
-                    log.debug("doTask() added data: " + fetcherThread.getThreadName() + ", size: " + dataQueue.size());
+                    mockFetcherThread.setO(o);
+                    mockFetcherThread.setH(h);
+                    mockFetcherThread.setL(l);
+                    mockFetcherThread.setC(c);
+                    mockFetcherThread.setBbA(bbA);
+                    mockFetcherThread.setBbL(bbL);
+                    mockFetcherThread.setBbU(bbU);
+                    mockFetcherThread.setRsi(rsi);
+
+                    mockFetcherThread.setCurrentValue(c);
                 }
 
             } catch (IndexOutOfBoundsException | NumberFormatException e) {
@@ -93,15 +92,15 @@ public class FetcherService {
                 for (StackTraceElement stackTraceElement : stackTraceElements) {
                     log.debug("\t" + stackTraceElement.toString());
                 }
-                log.info(fetcherThread.getThreadName() + " : " + e.getMessage());
+                log.info(mockFetcherThread.getThreadName() + " : " + e.getMessage());
             } catch (Exception e) {
                 String errorMessage = e.getMessage();
                 if (errorMessage.contains("element click intercepted")) {
-                    log.info("Element click intercepted: " + fetcherThread.getThreadName());
+                    log.info("Element click intercepted: " + mockFetcherThread.getThreadName());
                 } else if (errorMessage.contains("move target out of bounds")) {
-                    log.info("Move target out of bounds: " + fetcherThread.getThreadName());
+                    log.info("Move target out of bounds: " + mockFetcherThread.getThreadName());
                 } else {
-                    log.error("Exception in doTask(): " + fetcherThread.getThreadName());
+                    log.error("Exception in doTask(): " + mockFetcherThread.getThreadName());
                     log.error(e.getMessage());
                     throw e;
                 }
@@ -109,23 +108,6 @@ public class FetcherService {
         } else {
             log.debug("Skipping doTask()");
         }
-    }
-
-    @Async("scheduledExecutor")
-    @Scheduled(fixedRate = 850)
-    public void scheduledJob() {
-        DateTimeFormatter dtf = DateTimeFormatter.ofPattern("yyyy/MM/dd HH:mm:ss");
-        LocalDateTime now = LocalDateTime.now();
-        String sNow = dtf.format(now);
-        log.debug("Scheduled task started: " + sNow);
-        List<FetcherRepoModel> tempDataQueue;
-        synchronized (dataQueue) {
-            tempDataQueue = new ArrayList<>(dataQueue);
-            dataQueue.clear();
-        }
-        log.debug("Scheduled task populated: " + sNow);
-        repository.addToQueue(tempDataQueue, sNow);
-        log.debug("Scheduled task ended: " + sNow);
     }
 
     public void createTable(String tableName) {
