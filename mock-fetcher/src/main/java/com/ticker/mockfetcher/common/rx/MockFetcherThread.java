@@ -3,8 +3,8 @@ package com.ticker.mockfetcher.common.rx;
 import com.ticker.common.exception.TickerException;
 import com.ticker.common.fetcher.repository.exchangesymbol.ExchangeSymbolEntity;
 import com.ticker.common.rx.TickerThread;
-import com.ticker.mockfetcher.repository.FetcherAppRepository;
-import com.ticker.mockfetcher.service.FetcherService;
+import com.ticker.mockfetcher.repository.MockFetcherAppRepository;
+import com.ticker.mockfetcher.service.MockFetcherService;
 import com.ticker.mockfetcher.service.TickerService;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
@@ -17,8 +17,6 @@ import org.springframework.stereotype.Component;
 import java.sql.Timestamp;
 import java.text.SimpleDateFormat;
 
-import static com.ticker.common.contants.WebConstants.TRADING_VIEW_BASE;
-import static com.ticker.common.contants.WebConstants.TRADING_VIEW_CHART;
 import static com.ticker.common.util.Util.WAIT_LONG;
 import static com.ticker.common.util.Util.waitFor;
 import static com.ticker.mockfetcher.common.constants.FetcherConstants.MOCK_FETCHER_THREAD_COMP_NAME;
@@ -34,9 +32,9 @@ public class MockFetcherThread extends TickerThread<TickerService> {
     public static final int RETRY_LIMIT = 10;
     private final Object postInitLock = new Object();
     @Autowired
-    private FetcherAppRepository repository;
+    private MockFetcherAppRepository repository;
     @Autowired
-    private FetcherService fetcherService;
+    private MockFetcherService fetcherService;
     private float o;
     private float h;
     private float l;
@@ -49,10 +47,11 @@ public class MockFetcherThread extends TickerThread<TickerService> {
     private long updatedAt;
 
     private long startTime;
+    private long delta;
 
     public void setProperties(Long startTime) {
         this.enabled = true;
-        this.startTime = startTime;
+        setStartTime(startTime);
 
         initialize();
     }
@@ -103,6 +102,9 @@ public class MockFetcherThread extends TickerThread<TickerService> {
             while (isEnabled() && isInitialized()) {
                 waitFor(WAIT_LONG);
             }
+            if (!isInitialized()) {
+                initialize(0, false);
+            }
         }
         log.info("Terminated thread : " + getThreadName());
     }
@@ -116,8 +118,7 @@ public class MockFetcherThread extends TickerThread<TickerService> {
         }
 
         try {
-            String url = TRADING_VIEW_BASE + TRADING_VIEW_CHART + getExchange() + ":" + getSymbol();
-            fetcherService.setChartSettings(this, iteration, refresh);
+            fetcherService.setDelta(this);
         } catch (Exception e) {
             if (refresh) {
                 log.warn("Error while refreshing " + getThreadName());
@@ -168,8 +169,13 @@ public class MockFetcherThread extends TickerThread<TickerService> {
         return getTableName().replace(":", "_");
     }
 
+    public void setStartTime(long startTime) {
+        setInitialized(false);
+        this.startTime = startTime;
+    }
+
     public void setCurrentValue(float currentValue) {
         this.currentValue = currentValue;
-        this.updatedAt = System.currentTimeMillis();
+        this.updatedAt = System.currentTimeMillis() + getDelta();
     }
 }

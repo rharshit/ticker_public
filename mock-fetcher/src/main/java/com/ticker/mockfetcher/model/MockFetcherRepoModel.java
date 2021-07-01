@@ -1,24 +1,26 @@
 package com.ticker.mockfetcher.model;
 
 import lombok.Data;
+import lombok.NoArgsConstructor;
 
 import java.sql.Timestamp;
 import java.text.SimpleDateFormat;
 
 @Data
-public class FetcherRepoModel {
-    private final String tableName;
-    private final String timestamp;
-    private final float o;
-    private final float h;
-    private final float l;
-    private final float c;
-    private final float bbU;
-    private final float bbA;
-    private final float bbL;
-    private final float extra;
+@NoArgsConstructor
+public class MockFetcherRepoModel {
+    private String tableName;
+    private String timestamp;
+    private float o;
+    private float h;
+    private float l;
+    private float c;
+    private float bbU;
+    private float bbA;
+    private float bbL;
+    private float extra;
 
-    public FetcherRepoModel(String tableName, long timestamp, float o, float h, float l, float c, float bbU, float bbA, float bbL, float extra) {
+    public MockFetcherRepoModel(String tableName, long timestamp, float o, float h, float l, float c, float bbU, float bbA, float bbL, float extra) {
         this.tableName = tableName;
         this.timestamp = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss").format(new Timestamp(timestamp));
         this.o = o;
