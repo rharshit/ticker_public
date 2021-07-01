@@ -102,6 +102,9 @@ public class MockFetcherThread extends TickerThread<TickerService> {
             while (isEnabled() && isInitialized()) {
                 waitFor(WAIT_LONG);
             }
+            if (!isInitialized()) {
+                initialize(0, false);
+            }
         }
         log.info("Terminated thread : " + getThreadName());
     }
