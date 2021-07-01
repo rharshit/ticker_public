@@ -17,8 +17,6 @@ import org.springframework.stereotype.Component;
 import java.sql.Timestamp;
 import java.text.SimpleDateFormat;
 
-import static com.ticker.common.contants.WebConstants.TRADING_VIEW_BASE;
-import static com.ticker.common.contants.WebConstants.TRADING_VIEW_CHART;
 import static com.ticker.common.util.Util.WAIT_LONG;
 import static com.ticker.common.util.Util.waitFor;
 import static com.ticker.mockfetcher.common.constants.FetcherConstants.MOCK_FETCHER_THREAD_COMP_NAME;
@@ -49,10 +47,11 @@ public class MockFetcherThread extends TickerThread<TickerService> {
     private long updatedAt;
 
     private long startTime;
+    private long delta;
 
     public void setProperties(Long startTime) {
         this.enabled = true;
-        this.startTime = startTime;
+        setStartTime(startTime);
 
         initialize();
     }
@@ -116,8 +115,7 @@ public class MockFetcherThread extends TickerThread<TickerService> {
         }
 
         try {
-            String url = TRADING_VIEW_BASE + TRADING_VIEW_CHART + getExchange() + ":" + getSymbol();
-            fetcherService.setChartSettings(this, iteration, refresh);
+            fetcherService.setDelta(this);
         } catch (Exception e) {
             if (refresh) {
                 log.warn("Error while refreshing " + getThreadName());
@@ -166,6 +164,11 @@ public class MockFetcherThread extends TickerThread<TickerService> {
 
     public String getThreadName() {
         return getTableName().replace(":", "_");
+    }
+
+    public void setStartTime(long startTime) {
+        setInitialized(false);
+        this.startTime = startTime;
     }
 
     public void setCurrentValue(float currentValue) {

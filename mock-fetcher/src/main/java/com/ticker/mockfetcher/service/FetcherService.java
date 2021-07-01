@@ -10,6 +10,7 @@ import org.springframework.scheduling.annotation.Async;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
 
+import java.sql.Timestamp;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
@@ -29,17 +30,12 @@ public class FetcherService {
      * Set setting for the charts that are loaded
      *
      * @param fetcherThread
-     * @param iteration
-     * @param refresh
      */
-    public void setChartSettings(MockFetcherThread fetcherThread, int iteration, boolean refresh) {
-        int iterationMultiplier = 200;
-        if (refresh) {
-            log.info(fetcherThread.getExchange() + ":" + fetcherThread.getSymbol() + " - Refreshed");
-        } else {
-            log.info(fetcherThread.getExchange() + ":" + fetcherThread.getSymbol() + " - Initialized");
-        }
-
+    public void setDelta(MockFetcherThread fetcherThread) {
+        Timestamp curr = new Timestamp(System.currentTimeMillis());
+        curr.setSeconds(0);
+        long delta = fetcherThread.getStartTime() - curr.getTime();
+        fetcherThread.setDelta(delta);
         fetcherThread.setInitialized(true);
     }
 
