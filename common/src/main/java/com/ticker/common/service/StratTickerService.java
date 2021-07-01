@@ -69,29 +69,33 @@ public abstract class StratTickerService<T extends StratThread, TM extends Strat
     @Async("scheduledExecutor")
     @Scheduled(fixedDelay = 2000)
     public void checkFetchingForApps() {
+        for (T thread : getCurrentTickerList()) {
+            checkFetchingForApp(thread);
+        }
+    }
+
+    private void checkFetchingForApp(T thread) {
         String baseUrl = Util.getApplicationUrl(APPLICATION_FETCHER);
         String getCurrentTickerUrl = baseUrl + "current/";
-        for (T thread : getCurrentTickerList()) {
-            try {
-                Map<String, Object> params = new HashMap<>();
-                params.put("exchange", thread.getExchange());
-                params.put("symbol", thread.getSymbol());
-                Map<String, Object> ticker =
-                        restTemplate.getForObject(getCurrentTickerUrl,
-                                Map.class, params);
-                if (ticker == null) {
-                    thread.setInitialized(false);
-                    thread.setFetching(false);
-                    thread.setCurrentValue(0);
-                } else {
-                    thread.setFetchMetrics(ticker);
-                }
-            } catch (Exception e) {
+        try {
+            Map<String, Object> params = new HashMap<>();
+            params.put("exchange", thread.getExchange());
+            params.put("symbol", thread.getSymbol());
+            Map<String, Object> ticker =
+                    restTemplate.getForObject(getCurrentTickerUrl,
+                            Map.class, params);
+            if (ticker == null) {
+                thread.setInitialized(false);
                 thread.setFetching(false);
                 thread.setCurrentValue(0);
+            } else {
+                thread.setFetchMetrics(ticker);
             }
-            thread.setUpdatedAt(System.currentTimeMillis());
+        } catch (Exception e) {
+            thread.setFetching(false);
+            thread.setCurrentValue(0);
         }
+        thread.setUpdatedAt(System.currentTimeMillis());
     }
 
     @Scheduled(fixedDelay = 750)
@@ -109,20 +113,25 @@ public abstract class StratTickerService<T extends StratThread, TM extends Strat
     public abstract void doAction(T thread);
 
     @Async
-    private void startFetching(T t) {
+    private void startFetching(T thread) {
         try {
             String baseUrl = Util.getApplicationUrl(APPLICATION_FETCHER);
             Map<String, Object> params = new HashMap<>();
-            params.put("exchange", t.getExchange());
-            params.put("symbol", t.getSymbol());
+            params.put("exchange", thread.getExchange());
+            params.put("symbol", thread.getSymbol());
             params.put("appName", appName);
             ResponseStatus response = restTemplate.postForObject(baseUrl, null, ResponseStatus.class, params);
             if (!response.isSuccess()) {
-                throw new TickerException(t.getThreadName() + " : Post request failed");
+                throw new TickerException(thread.getThreadName() + " : Post request failed");
             }
+            return;
         } catch (Exception e) {
-            log.error(t.getThreadName() + " : Error while starting to fetch");
-            t.destroy();
+            log.error(thread.getThreadName() + " : Error while starting to fetch");
+            log.error(thread.getThreadName(), e);
+        }
+        checkFetchingForApp(thread);
+        if (!thread.isFetching()) {
+            thread.destroy();
         }
     }
 
