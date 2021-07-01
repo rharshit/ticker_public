@@ -9,7 +9,6 @@ import org.springframework.jdbc.core.SqlParameter;
 import org.springframework.stereotype.Repository;
 
 import java.sql.Connection;
-import java.sql.SQLException;
 import java.sql.Timestamp;
 import java.sql.Types;
 import java.text.SimpleDateFormat;
@@ -27,7 +26,7 @@ public class MockFetcherAppRepository {
     @Autowired
     FetcherRepository fetcherRepository;
 
-    private Connection fetcherConnection = null;
+    private final Connection fetcherConnection = null;
 
     public void addTable(String tableName) {
         try {
@@ -44,21 +43,10 @@ public class MockFetcherAppRepository {
 
     }
 
-    private Connection getFetcherConnection() {
-        try {
-            if (this.fetcherConnection == null || this.fetcherConnection.isClosed()) {
-                this.fetcherConnection = this.fetcherRepository.getDataSource().getConnection();
-            }
-            return this.fetcherConnection;
-        } catch (SQLException throwables) {
-            return null;
-        }
-    }
-
     public void populateFetcherThreadModel(MockFetcherRepoModel fetcherRepoModel, long timestamp) {
+        String time = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss").format(new Timestamp(timestamp));
+        String query = "SELECT * FROM " + fetcherRepoModel.getTableName() + " WHERE `timestamp`='" + time + "'";
         try {
-            String time = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss").format(new Timestamp(timestamp));
-            String query = "SELECT * FROM " + fetcherRepoModel.getTableName() + " WHERE `timestamp`='" + time + "'";
             log.trace(query);
             List<Map<String, Object>> result = fetcherRepository.queryForList(query);
             fetcherRepoModel.setTimestamp(new SimpleDateFormat("yyyy-MM-dd HH:mm:ss")
@@ -72,6 +60,7 @@ public class MockFetcherAppRepository {
             fetcherRepoModel.setBbL((Float) result.get(0).get("BB_L"));
             fetcherRepoModel.setExtra((Float) result.get(0).get("EXTRA"));
         } catch (Exception e) {
+            log.error(query);
             log.debug(e.getMessage(), e);
         }
     }
