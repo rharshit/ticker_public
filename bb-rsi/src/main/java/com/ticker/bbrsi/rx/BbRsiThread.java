@@ -33,6 +33,25 @@ public class BbRsiThread extends StratThread<BbRsiService> {
     private float peak;
     private float dip;
 
+    private float rsiPrev;
+    private long rsiSetTime;
+
+    private int panicSell = 0;
+    private int panicBuy = 0;
+
+    @Override
+    public void setRsi(float rsi) {
+        if (!service.isSameMinTrigger(rsiSetTime)) {
+            rsiPrev = rsi;
+            rsiSetTime = System.currentTimeMillis();
+        }
+        super.setRsi(rsi);
+    }
+
+    public float getRsiDiff() {
+        return getRsi() - getRsiPrev();
+    }
+
     public void setPeak(float peak) {
         if (this.peak == 0 || this.peak < peak) {
             log.debug(getThreadName() + " : peak changed from " + this.peak);

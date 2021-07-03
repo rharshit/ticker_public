@@ -177,7 +177,7 @@ public abstract class StratTickerService<T extends StratThread, TM extends Strat
         return Integer.parseInt(DATE_TIME_FORMATTER_TIME_ONLY_SECONDS.format(System.currentTimeMillis())) >= eom;
     }
 
-    protected boolean isSameMinTrigger(long triggerTime) {
+    public boolean isSameMinTrigger(long triggerTime) {
         return DATE_TIME_FORMATTER_TIME_MINUTES.format(new Date(triggerTime)).equals(
                 DATE_TIME_FORMATTER_TIME_MINUTES.format(new Date(System.currentTimeMillis())));
     }
