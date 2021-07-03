@@ -35,13 +35,17 @@ public class BbRsiThread extends StratThread<BbRsiService> {
 
     public void setPeak(float peak) {
         if (this.peak == 0 || this.peak < peak) {
+            log.debug(getThreadName() + " : peak changed from " + this.peak);
             this.peak = peak;
+            log.debug(getThreadName() + " : peak changed to   " + this.peak);
         }
     }
 
     public void setDip(float dip) {
         if (this.dip == 0 || this.dip > dip) {
+            log.debug(getThreadName() + " : dip changed from " + this.dip);
             this.dip = dip;
+            log.debug(getThreadName() + " : dip changed to   " + this.dip);
         }
     }
 

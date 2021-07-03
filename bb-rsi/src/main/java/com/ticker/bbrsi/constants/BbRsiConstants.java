@@ -25,6 +25,8 @@ public abstract class BbRsiConstants {
     public static final int BB_RSI_THREAD_STATE_UT_WAIT_WAVE_REVENGE = 19;
     public static final int BB_RSI_THREAD_STATE_LT_PANIC_SELL = 20;
     public static final int BB_RSI_THREAD_STATE_UT_PANIC_BUY = 21;
+    public static final int BB_RSI_THREAD_STATE_LT_WAIT_WAVE_ENDED3 = 22;
+    public static final int BB_RSI_THREAD_STATE_UT_WAIT_WAVE_ENDED3 = 23;
 
     public static final float RSI_LOWER_LIMIT = 25;
     public static final float RSI_LOWER_LIMIT_REBOUND = 32;
