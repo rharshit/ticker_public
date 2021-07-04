@@ -34,4 +34,5 @@ public abstract class BbRsiConstants {
     public static final float RSI_UPPER_LIMIT_REBOUND = 68;
 
     public static final int PANIC_TIME_OFF = 40;
+    public static final int PANIC_TIME_OFF_EMERGENCY_RETRIES = 5;
 }
