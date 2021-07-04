@@ -33,6 +33,8 @@ public abstract class StratThread<S extends StratTickerService> extends TickerTh
     private float currentValue;
     private long updatedAt;
 
+    private boolean locked = false;
+
     Map<Long, Integer> stateTrace = new HashMap<>();
 
     private float triggerStartValue;
@@ -98,6 +100,17 @@ public abstract class StratThread<S extends StratTickerService> extends TickerTh
             setFetching(false);
             setCurrentValue(0);
         }
+        log.debug("");
+        log.debug(String.valueOf(getCurrentValue()));
+        log.debug("");
+        log.debug(String.valueOf(getO()));
+        log.debug(String.valueOf(getH()));
+        log.debug(String.valueOf(getL()));
+        log.debug(String.valueOf(getC()));
+        log.debug(String.valueOf(getBbL()));
+        log.debug(String.valueOf(getBbA()));
+        log.debug(String.valueOf(getBbU()));
+        log.debug(String.valueOf(getRsi()));
     }
 
     public void setCurrentState(int currentState) {

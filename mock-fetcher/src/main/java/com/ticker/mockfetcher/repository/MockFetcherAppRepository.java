@@ -59,6 +59,8 @@ public class MockFetcherAppRepository {
             fetcherRepoModel.setBbA((Float) result.get(0).get("BB_A"));
             fetcherRepoModel.setBbL((Float) result.get(0).get("BB_L"));
             fetcherRepoModel.setExtra((Float) result.get(0).get("EXTRA"));
+        } catch (IndexOutOfBoundsException e) {
+            log.error("Cannot fetch from " + fetcherRepoModel.getTableName() + " for " + time);
         } catch (Exception e) {
             log.error(query);
             log.debug(e.getMessage(), e);

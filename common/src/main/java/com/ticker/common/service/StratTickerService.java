@@ -177,7 +177,7 @@ public abstract class StratTickerService<T extends StratThread, TM extends Strat
         return Integer.parseInt(DATE_TIME_FORMATTER_TIME_ONLY_SECONDS.format(System.currentTimeMillis())) >= eom;
     }
 
-    protected boolean isSameMinTrigger(long triggerTime) {
+    public boolean isSameMinTrigger(long triggerTime) {
         return DATE_TIME_FORMATTER_TIME_MINUTES.format(new Date(triggerTime)).equals(
                 DATE_TIME_FORMATTER_TIME_MINUTES.format(new Date(System.currentTimeMillis())));
     }
@@ -234,6 +234,7 @@ public abstract class StratTickerService<T extends StratThread, TM extends Strat
 
     public void setTargetThreshold(T thread) {
         long start = System.currentTimeMillis();
+        thread.setTargetThreshold(0.0006f * thread.getCurrentValue());
         while (thread.getTargetThreshold() == 0 && System.currentTimeMillis() - start < THRESHOLD_FETCH_TIMEOUT) {
             if (thread.getCurrentValue() != 0) {
                 try {
@@ -247,6 +248,7 @@ public abstract class StratTickerService<T extends StratThread, TM extends Strat
                     params.put("quantity", thread.getEntity().getMinQty());
                     Map<String, Double> response = restTemplate.getForObject(url, Map.class, params);
                     thread.setTargetThreshold(3 * response.get("ptb").floatValue());
+                    log.warn(thread.getThreadName() + " : Target threshold set");
                     return;
                 } catch (Exception e) {
                     log.debug(thread.getThreadName() + " : Error while getting threshold value");
@@ -255,9 +257,6 @@ public abstract class StratTickerService<T extends StratThread, TM extends Strat
             }
             waitFor(WAIT_MEDIUM);
         }
-        if (thread.getTargetThreshold() == 0) {
-            log.warn(thread.getThreadName() + " : Cannot fetch actual target threshold");
-            thread.setTargetThreshold(0.0006f * thread.getCurrentValue());
-        }
+        log.warn(thread.getThreadName() + " : Cannot fetch actual target threshold");
     }
 }
