@@ -14,6 +14,7 @@
         <module>fetcher</module>
         <module>mock-fetcher</module>
         <module>brokerage</module>
+        <module>booker</module>
         <module>common</module>
         <module>template</module>
         <module>bb-rsi</module>
@@ -27,20 +28,28 @@
         <ticker.fetcher.version>0.0.1-SNAPSHOT</ticker.fetcher.version>
         <ticker.mock-fetcher.version>0.0.1-SNAPSHOT</ticker.mock-fetcher.version>
         <ticker.brokerage.version>0.0.1-SNAPSHOT</ticker.brokerage.version>
+        <ticker.booker.version>0.0.1-SNAPSHOT</ticker.booker.version>
         <ticker.common.version>0.0.1-SNAPSHOT</ticker.common.version>
         <ticker.template.version>0.0.1-SNAPSHOT</ticker.template.version>
         <ticker.bb-rsi.version>0.0.1-SNAPSHOT</ticker.bb-rsi.version>
         <ticker.mwave.version>0.0.1-SNAPSHOT</ticker.mwave.version>
 
-        <spring.version>2.4.4</spring.version>
+        <spring.boot.version>2.5.2</spring.boot.version>
+        <spring.version>5.3.8</spring.version>
         <lombok.version>1.18.20</lombok.version>
     </properties>
 
     <dependencies>
+        <!-- https://mvnrepository.com/artifact/org.springframework/spring-context -->
+        <dependency>
+            <groupId>org.springframework</groupId>
+            <artifactId>spring-context</artifactId>
+            <version>${spring.version}</version>
+        </dependency>
         <dependency>
             <groupId>org.springframework.boot</groupId>
             <artifactId>spring-boot-starter-web</artifactId>
-            <version>${spring.version}</version>
+            <version>${spring.boot.version}</version>
         </dependency>
         <dependency>
             <groupId>org.projectlombok</groupId>
@@ -54,7 +63,7 @@
             <plugin>
                 <groupId>org.springframework.boot</groupId>
                 <artifactId>spring-boot-maven-plugin</artifactId>
-                <version>${spring.version}</version>
+                <version>${spring.boot.version}</version>
                 <configuration>
                     <excludes>
                         <exclude>
