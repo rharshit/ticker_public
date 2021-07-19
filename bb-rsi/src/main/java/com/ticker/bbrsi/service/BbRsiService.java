@@ -209,6 +209,9 @@ public class BbRsiService extends StratTickerService<BbRsiThread, BbRsiThreadMod
             thread.setCurrentState(BB_RSI_THREAD_STATE_UT_WAIT_END_WAVE);
         }
         thread.setTriggerWaveEndTime(System.currentTimeMillis());
+        if (thread.getCurrentState() == BB_RSI_THREAD_STATE_UT_WAIT_WAVE_ENDED2) {
+            buyAction2(thread);
+        }
     }
 
     private void checkForLtWaveEnd1(BbRsiThread thread) {
@@ -232,6 +235,9 @@ public class BbRsiService extends StratTickerService<BbRsiThread, BbRsiThreadMod
             thread.setCurrentState(BB_RSI_THREAD_STATE_LT_WAIT_END_WAVE);
         }
         thread.setTriggerWaveEndTime(System.currentTimeMillis());
+        if (thread.getCurrentState() == BB_RSI_THREAD_STATE_LT_WAIT_WAVE_ENDED2) {
+            sellAction2(thread);
+        }
     }
 
     private void checkForUtWaveEnd(BbRsiThread thread) {
