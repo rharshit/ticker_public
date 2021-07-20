@@ -209,6 +209,9 @@ public class BbRsiService extends StratTickerService<BbRsiThread, BbRsiThreadMod
             thread.setCurrentState(BB_RSI_THREAD_STATE_UT_WAIT_END_WAVE);
         }
         thread.setTriggerWaveEndTime(System.currentTimeMillis());
+        if (thread.getCurrentState() == BB_RSI_THREAD_STATE_UT_WAIT_WAVE_ENDED2) {
+            buyAction2(thread);
+        }
     }
 
     private void checkForLtWaveEnd1(BbRsiThread thread) {
@@ -232,6 +235,9 @@ public class BbRsiService extends StratTickerService<BbRsiThread, BbRsiThreadMod
             thread.setCurrentState(BB_RSI_THREAD_STATE_LT_WAIT_END_WAVE);
         }
         thread.setTriggerWaveEndTime(System.currentTimeMillis());
+        if (thread.getCurrentState() == BB_RSI_THREAD_STATE_LT_WAIT_WAVE_ENDED2) {
+            sellAction2(thread);
+        }
     }
 
     private void checkForUtWaveEnd(BbRsiThread thread) {
@@ -285,12 +291,17 @@ public class BbRsiService extends StratTickerService<BbRsiThread, BbRsiThreadMod
         if (thread.getPanicBuy() > PANIC_TIME_OFF) {
             thread.setCurrentState(BB_RSI_THREAD_STATE_UT_PANIC_BUY);
             try {
+                float tradeStart = thread.getTradeValue();
                 log.info(thread.getThreadName() + " : panic square-off");
-                squareOff(thread);
-                thread.setCurrentState(BB_RSI_THREAD_STATE_UT_WAIT_WAVE_BOUGHT);
+                float tradeEnd = squareOff(thread);
+                if (tradeStart - tradeEnd > thread.getTargetThreshold()) {
+                    thread.setCurrentState(BB_RSI_THREAD_STATE_UT_WAIT_WAVE_BOUGHT);
+                } else {
+                    thread.setCurrentState(BB_RSI_THREAD_STATE_UT_TRIGGER_START);
+                }
                 thread.setTradeStartTime(System.currentTimeMillis());
             } catch (Exception e) {
-
+                log.info("Error while buying back", e);
             }
         }
     }
@@ -346,12 +357,17 @@ public class BbRsiService extends StratTickerService<BbRsiThread, BbRsiThreadMod
         if (thread.getPanicSell() > PANIC_TIME_OFF) {
             thread.setCurrentState(BB_RSI_THREAD_STATE_LT_PANIC_SELL);
             try {
+                float tradeStart = thread.getTradeValue();
                 log.info(thread.getThreadName() + " : panic square-off");
-                squareOff(thread);
-                thread.setCurrentState(BB_RSI_THREAD_STATE_LT_WAIT_WAVE_SOLD);
+                float tradeEnd = squareOff(thread);
+                if (tradeEnd - tradeStart > thread.getTargetThreshold()) {
+                    thread.setCurrentState(BB_RSI_THREAD_STATE_LT_WAIT_WAVE_SOLD);
+                } else {
+                    thread.setCurrentState(BB_RSI_THREAD_STATE_LT_TRIGGER_START);
+                }
                 thread.setTradeStartTime(System.currentTimeMillis());
             } catch (Exception e) {
-
+                log.info("Error while selling back", e);
             }
         }
     }
