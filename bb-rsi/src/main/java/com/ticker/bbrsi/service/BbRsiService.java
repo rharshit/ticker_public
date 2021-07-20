@@ -51,7 +51,7 @@ public class BbRsiService extends StratTickerService<BbRsiThread, BbRsiThreadMod
     @Override
     @Async("stratTaskExecutor")
     public void doAction(BbRsiThread thread) {
-        if (!thread.isFetching() || thread.isLocked()) {
+        if (!thread.isFetching() || thread.isLocked() || thread.getTargetThreshold() == 0) {
             return;
         }
         synchronized (thread) {
