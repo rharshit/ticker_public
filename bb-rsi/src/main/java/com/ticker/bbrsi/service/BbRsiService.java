@@ -297,6 +297,7 @@ public class BbRsiService extends StratTickerService<BbRsiThread, BbRsiThreadMod
                 if (tradeStart - tradeEnd > thread.getTargetThreshold()) {
                     thread.setCurrentState(BB_RSI_THREAD_STATE_UT_WAIT_WAVE_BOUGHT);
                 } else {
+                    thread.resetTriggers();
                     thread.setCurrentState(BB_RSI_THREAD_STATE_UT_TRIGGER_START);
                 }
                 thread.setTradeStartTime(System.currentTimeMillis());
@@ -363,6 +364,7 @@ public class BbRsiService extends StratTickerService<BbRsiThread, BbRsiThreadMod
                 if (tradeEnd - tradeStart > thread.getTargetThreshold()) {
                     thread.setCurrentState(BB_RSI_THREAD_STATE_LT_WAIT_WAVE_SOLD);
                 } else {
+                    thread.resetTriggers();
                     thread.setCurrentState(BB_RSI_THREAD_STATE_LT_TRIGGER_START);
                 }
                 thread.setTradeStartTime(System.currentTimeMillis());
