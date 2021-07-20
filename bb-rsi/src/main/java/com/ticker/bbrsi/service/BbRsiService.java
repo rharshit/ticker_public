@@ -51,7 +51,7 @@ public class BbRsiService extends StratTickerService<BbRsiThread, BbRsiThreadMod
     @Override
     @Async("stratTaskExecutor")
     public void doAction(BbRsiThread thread) {
-        if (!thread.isFetching() || thread.isLocked()) {
+        if (!thread.isFetching() || thread.isLocked() || thread.getTargetThreshold() == 0) {
             return;
         }
         synchronized (thread) {
@@ -266,15 +266,15 @@ public class BbRsiService extends StratTickerService<BbRsiThread, BbRsiThreadMod
             log.debug(thread.getThreadName() + " : Dip " + thread.getDip());
             log.debug(thread.getThreadName() + " : RsiDiff " + thread.getRsiDiff());
             log.debug(thread.getThreadName() + " : TargetThreshold " + thread.getTargetThreshold());
-            log.info(thread.getThreadName() + " : UtPanicExit");
+            log.debug(thread.getThreadName() + " : UtPanicExit");
             if (thread.getRsiDiff() > 10 || thread.getCurrentValue() - thread.getDip() > 1.2 * thread.getTargetThreshold()) {
-                log.info("Panic buy faster");
+                log.debug("Panic buy faster");
                 thread.setPanicBuy(thread.getPanicBuy() + PANIC_TIME_OFF / PANIC_TIME_OFF_EMERGENCY_RETRIES);
             }
             panicBuy(thread);
         } else {
             if (thread.getPanicBuy() > 0) {
-                log.info(thread.getThreadName() + " : Reset panic buy");
+                log.debug(thread.getThreadName() + " : Reset panic buy");
                 thread.setPanicBuy(0);
             }
         }
@@ -286,7 +286,7 @@ public class BbRsiService extends StratTickerService<BbRsiThread, BbRsiThreadMod
     }
 
     private void panicBuy(BbRsiThread thread) {
-        log.info(thread.getThreadName() + " : Panic buy " + thread.getPanicBuy());
+        log.debug(thread.getThreadName() + " : Panic buy " + thread.getPanicBuy());
         thread.setPanicBuy(thread.getPanicBuy() + 1);
         if (thread.getPanicBuy() > PANIC_TIME_OFF) {
             thread.setCurrentState(BB_RSI_THREAD_STATE_UT_PANIC_BUY);
@@ -297,6 +297,7 @@ public class BbRsiService extends StratTickerService<BbRsiThread, BbRsiThreadMod
                 if (tradeStart - tradeEnd > thread.getTargetThreshold()) {
                     thread.setCurrentState(BB_RSI_THREAD_STATE_UT_WAIT_WAVE_BOUGHT);
                 } else {
+                    thread.resetTriggers();
                     thread.setCurrentState(BB_RSI_THREAD_STATE_UT_TRIGGER_START);
                 }
                 thread.setTradeStartTime(System.currentTimeMillis());
@@ -332,15 +333,15 @@ public class BbRsiService extends StratTickerService<BbRsiThread, BbRsiThreadMod
             log.debug(thread.getThreadName() + " : Peak " + thread.getPeak());
             log.debug(thread.getThreadName() + " : RsiDiff " + thread.getRsiDiff());
             log.debug(thread.getThreadName() + " : TargetThreshold " + thread.getTargetThreshold());
-            log.info(thread.getThreadName() + " : LtPanicExit");
+            log.debug(thread.getThreadName() + " : LtPanicExit");
             if (thread.getRsiDiff() < -10 || thread.getPeak() - thread.getCurrentValue() > 1.2 * thread.getTargetThreshold()) {
-                log.info("Panic sell faster");
+                log.debug("Panic sell faster");
                 thread.setPanicSell(thread.getPanicSell() + PANIC_TIME_OFF / PANIC_TIME_OFF_EMERGENCY_RETRIES);
             }
             panicSell(thread);
         } else {
             if (thread.getPanicSell() > 0) {
-                log.info(thread.getThreadName() + " : Reset panic sell");
+                log.debug(thread.getThreadName() + " : Reset panic sell");
                 thread.setPanicSell(0);
             }
         }
@@ -352,7 +353,7 @@ public class BbRsiService extends StratTickerService<BbRsiThread, BbRsiThreadMod
     }
 
     private void panicSell(BbRsiThread thread) {
-        log.info(thread.getThreadName() + " : Panic sell " + thread.getPanicSell());
+        log.debug(thread.getThreadName() + " : Panic sell " + thread.getPanicSell());
         thread.setPanicSell(thread.getPanicSell() + 1);
         if (thread.getPanicSell() > PANIC_TIME_OFF) {
             thread.setCurrentState(BB_RSI_THREAD_STATE_LT_PANIC_SELL);
@@ -363,6 +364,7 @@ public class BbRsiService extends StratTickerService<BbRsiThread, BbRsiThreadMod
                 if (tradeEnd - tradeStart > thread.getTargetThreshold()) {
                     thread.setCurrentState(BB_RSI_THREAD_STATE_LT_WAIT_WAVE_SOLD);
                 } else {
+                    thread.resetTriggers();
                     thread.setCurrentState(BB_RSI_THREAD_STATE_LT_TRIGGER_START);
                 }
                 thread.setTradeStartTime(System.currentTimeMillis());
@@ -457,7 +459,7 @@ public class BbRsiService extends StratTickerService<BbRsiThread, BbRsiThreadMod
         log.trace(thread.getThreadName() + " : checkForUtEnd");
         checkPreMatureUtEnd(thread);
         if (thread.getCurrentState() == BB_RSI_THREAD_STATE_UT_TRIGGER_END2) {
-            log.info(thread.getThreadName() + " : PreMatureLtEnd");
+            log.info(thread.getThreadName() + " : PreMatureUtEnd");
             return;
         }
         if (isSameMinTrigger(thread.getTriggerStartTime()) || !isEomTrigger()) {
