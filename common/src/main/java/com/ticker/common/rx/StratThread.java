@@ -125,4 +125,8 @@ public abstract class StratThread<S extends StratTickerService> extends TickerTh
         triggerStartValue = 0;
         triggerStartTime = 0;
     }
+
+    public void setTargetThreshold(float targetThreshold) {
+        this.targetThreshold = Math.max(targetThreshold, 0.1501f);
+    }
 }

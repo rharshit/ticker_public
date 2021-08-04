@@ -249,7 +249,11 @@ public abstract class StratTickerService<T extends StratThread, TM extends Strat
                     params.put("sell", thread.getCurrentValue());
                     params.put("quantity", thread.getEntity().getMinQty());
                     Map<String, Double> response = restTemplate.getForObject(url, Map.class, params);
-                    thread.setTargetThreshold(3 * response.get("ptb").floatValue());
+                    if (response.get("ptb").floatValue() == 0) {
+                        thread.setTargetThreshold(0.03f);
+                    } else {
+                        thread.setTargetThreshold(3 * response.get("ptb").floatValue());
+                    }
                     log.warn(thread.getThreadName() + " : Target threshold set");
                     return;
                 } catch (Exception e) {
