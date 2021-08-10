@@ -267,9 +267,14 @@ public class BbRsiService extends StratTickerService<BbRsiThread, BbRsiThreadMod
             log.debug(thread.getThreadName() + " : RsiDiff " + thread.getRsiDiff());
             log.debug(thread.getThreadName() + " : TargetThreshold " + thread.getTargetThreshold());
             log.debug(thread.getThreadName() + " : UtPanicExit");
-            if (thread.getRsiDiff() > RSI_UPPER_LIMIT_PANIC_DIFF || thread.getCurrentValue() - thread.getDip() > 1.2 * thread.getTargetThreshold()) {
-                log.debug("Panic buy faster");
+            if (thread.getRsiDiff() > RSI_UPPER_LIMIT_PANIC_DIFF) {
+                log.debug("Panic buy faster rsi diff");
                 thread.setPanicBuy(thread.getPanicBuy() + PANIC_TIME_OFF / PANIC_TIME_OFF_EMERGENCY_RETRIES);
+            } else if (thread.getCurrentValue() - thread.getDip() > 1.2 * thread.getTargetThreshold()) {
+                float factor = (((thread.getCurrentValue() - thread.getDip()) / thread.getTargetThreshold() - 1)
+                        * (thread.getCurrentValue() < thread.getTradeValue() ? 1 : 2) * PANIC_TIME_OFF) / PANIC_TIME_OFF_EMERGENCY_RETRIES;
+                log.debug("Panic buy faster " + factor);
+                thread.setPanicSell(thread.getPanicSell() + (int) Math.max(factor, 1));
             }
             panicBuy(thread);
         } else {
@@ -334,9 +339,14 @@ public class BbRsiService extends StratTickerService<BbRsiThread, BbRsiThreadMod
             log.debug(thread.getThreadName() + " : RsiDiff " + thread.getRsiDiff());
             log.debug(thread.getThreadName() + " : TargetThreshold " + thread.getTargetThreshold());
             log.debug(thread.getThreadName() + " : LtPanicExit");
-            if (thread.getRsiDiff() < RSI_LOWER_LIMIT_PANIC_DIFF || thread.getPeak() - thread.getCurrentValue() > 1.2 * thread.getTargetThreshold()) {
-                log.debug("Panic sell faster");
+            if (thread.getRsiDiff() < RSI_LOWER_LIMIT_PANIC_DIFF) {
+                log.debug("Panic sell faster rsi diff");
                 thread.setPanicSell(thread.getPanicSell() + PANIC_TIME_OFF / PANIC_TIME_OFF_EMERGENCY_RETRIES);
+            } else if (thread.getPeak() - thread.getCurrentValue() > 1.2 * thread.getTargetThreshold()) {
+                float factor = (((thread.getPeak() - thread.getCurrentValue()) / thread.getTargetThreshold() - 1)
+                        * (thread.getCurrentValue() > thread.getTradeValue() ? 1 : 2) * PANIC_TIME_OFF) / PANIC_TIME_OFF_EMERGENCY_RETRIES;
+                log.debug("Panic sell faster " + factor);
+                thread.setPanicSell(thread.getPanicSell() + (int) Math.max(factor, 1));
             }
             panicSell(thread);
         } else {
