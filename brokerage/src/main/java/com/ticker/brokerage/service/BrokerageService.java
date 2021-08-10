@@ -2,10 +2,7 @@ package com.ticker.brokerage.service;
 
 import com.ticker.common.exception.TickerException;
 import lombok.extern.slf4j.Slf4j;
-import org.openqa.selenium.By;
-import org.openqa.selenium.Keys;
-import org.openqa.selenium.WebDriver;
-import org.openqa.selenium.WebElement;
+import org.openqa.selenium.*;
 import org.openqa.selenium.chrome.ChromeDriver;
 import org.openqa.selenium.chrome.ChromeOptions;
 import org.springframework.stereotype.Service;
@@ -44,6 +41,10 @@ public class BrokerageService {
         options.setHeadless(true);
         options.addArguments("--window-size=1920,1080");
         options.addArguments("incognito");
+        if (Platform.getCurrent().is(Platform.LINUX)) {
+            System.setProperty("webdriver.chrome.driver", "/usr/bin/chromedriver");
+            options.setBinary("/usr/bin/chromium-browser");
+        }
         webDriver = new ChromeDriver(options);
         webDriver.get(ZERODHA_BROKERAGE_URL);
         log.info("Webdriver initialized");
@@ -61,7 +62,7 @@ public class BrokerageService {
                 mapping.append(thisType).append(", ");
             }
         }
-        throw new TickerException("Cannot find type for '" + type + "'. Valid options are -" + mapping.toString());
+        throw new TickerException("Cannot find type for '" + type + "'. Valid options are -" + mapping);
     }
 
     public Map<String, Double> getZerodhaBrokerage(String type, String exchange,
@@ -103,7 +104,7 @@ public class BrokerageService {
                     exchanges.add(exchangeValue);
                 }
                 if (!isExchangeSelected) {
-                    throw new TickerException("Exchange value '" + exchange + "' is invalid. Valid options are: " + exchanges.toString());
+                    throw new TickerException("Exchange value '" + exchange + "' is invalid. Valid options are: " + exchanges);
                 }
                 List<WebElement> divs = tabDiv.findElements(By.className("valuation-block"));
                 divs.add(tabDiv.findElement(By.className("net-profit")));
@@ -151,7 +152,11 @@ public class BrokerageService {
             }
             WebElement tb = input.findElement(By.tagName("input"));
             tb.click();
-            tb.sendKeys(Keys.COMMAND + "a");
+            if (Platform.getCurrent().is(Platform.MAC)) {
+                tb.sendKeys(Keys.COMMAND + "a");
+            } else {
+                tb.sendKeys(Keys.CONTROL + "a");
+            }
             tb.sendKeys(String.valueOf(val));
         }
     }

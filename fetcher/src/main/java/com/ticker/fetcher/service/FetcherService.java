@@ -105,7 +105,11 @@ public class FetcherService {
             WebElement searchBox = menuBox.findElement(By.cssSelector("input[data-role='search']"));
             waitFor(WAIT_SHORT);
             searchBox.click();
-            searchBox.sendKeys(Keys.COMMAND + "a");
+            if (Platform.getCurrent().is(Platform.MAC)) {
+                searchBox.sendKeys(Keys.COMMAND + "a");
+            } else {
+                searchBox.sendKeys(Keys.CONTROL + "a");
+            }
             searchBox.sendKeys(searchText);
             while (menuBox.findElement(By.cssSelector("div[data-role='dialog-content']")).findElements(By.cssSelector("div[data-role='list-item']")).size() <= 3)
                 ;
@@ -203,6 +207,7 @@ public class FetcherService {
                 Actions actions = new Actions(fetcherThread.getWebDriver());
                 actions.moveToElement(table).perform();
                 actions.moveByOffset(hoverBox.width / 2 - 1, 1 - (hoverBox.height / 2)).perform();
+                waitFor(WAIT_SHORT);
                 List<WebElement> rows = table.findElements(By.tagName("tr"));
                 texts = rows.stream().map(WebElement::getText).collect(Collectors.toList());
                 float o = 0;

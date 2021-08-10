@@ -11,6 +11,7 @@ import lombok.NoArgsConstructor;
 import lombok.Setter;
 import lombok.extern.slf4j.Slf4j;
 import org.openqa.selenium.By;
+import org.openqa.selenium.Platform;
 import org.openqa.selenium.WebDriver;
 import org.openqa.selenium.WebElement;
 import org.openqa.selenium.chrome.ChromeDriver;
@@ -119,6 +120,10 @@ public class FetcherThread extends TickerThread<TickerService> {
         options.addArguments("incognito");
         options.setCapability(CapabilityType.UNEXPECTED_ALERT_BEHAVIOUR, ACCEPT);
         options.setUnhandledPromptBehaviour(ACCEPT);
+        if (Platform.getCurrent().is(Platform.LINUX)) {
+            System.setProperty("webdriver.chrome.driver", "/usr/bin/chromedriver");
+            options.setBinary("/usr/bin/chromium-browser");
+        }
         this.webDriver = new ChromeDriver(options);
     }
 
