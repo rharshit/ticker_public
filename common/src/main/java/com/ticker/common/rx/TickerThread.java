@@ -18,6 +18,7 @@ public abstract class TickerThread<S extends TickerThreadService> extends Thread
 
     protected boolean enabled = false;
     protected boolean initialized = false;
+    protected boolean locked = false;
 
     protected S service;
     protected ExchangeSymbolEntity entity;
