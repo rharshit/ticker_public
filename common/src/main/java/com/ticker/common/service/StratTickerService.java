@@ -9,6 +9,7 @@ import com.ticker.common.rx.StratThread;
 import com.ticker.common.util.Util;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.scheduling.annotation.Async;
 import org.springframework.scheduling.annotation.Scheduled;
@@ -18,6 +19,7 @@ import org.springframework.web.client.RestTemplate;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.concurrent.Executor;
 
 import static com.ticker.common.contants.DateTimeConstants.*;
 import static com.ticker.common.contants.TickerConstants.*;
@@ -32,6 +34,10 @@ public abstract class StratTickerService<T extends StratThread, TM extends Strat
 
     @Value("${ticker.app.name}")
     private String appName;
+
+    @Autowired
+    @Qualifier("stratTaskExecutor")
+    private Executor stratTaskExecutor;
 
     /**
      * @param exchange
@@ -95,21 +101,19 @@ public abstract class StratTickerService<T extends StratThread, TM extends Strat
             thread.setFetching(false);
             thread.setCurrentValue(0);
         }
-        thread.setUpdatedAt(System.currentTimeMillis());
     }
 
     @Scheduled(fixedDelay = 750)
     public void runStrategy() {
         for (T thread : getCurrentTickerList()) {
             try {
-                doAction(thread);
+                stratTaskExecutor.execute(() -> doAction(thread));
             } catch (Exception e) {
                 log.debug(thread.getThreadName() + " : " + e.getMessage());
             }
         }
     }
 
-    @Async("stratTaskExecutor")
     public abstract void doAction(T thread);
 
     @Async

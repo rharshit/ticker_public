@@ -4,7 +4,6 @@ import com.ticker.common.service.StratTickerService;
 import com.ticker.mwave.model.MWaveThreadModel;
 import com.ticker.mwave.rx.MWaveThread;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Service;
 
 import java.util.HashMap;
@@ -28,7 +27,6 @@ public class MWaveService extends StratTickerService<MWaveThread, MWaveThreadMod
     }};
 
     @Override
-    @Async("stratTaskExecutor")
     public void doAction(MWaveThread thread) {
         if (!thread.isFetching()) {
             return;

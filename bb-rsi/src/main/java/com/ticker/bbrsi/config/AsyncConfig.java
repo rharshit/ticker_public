@@ -29,9 +29,9 @@ public class AsyncConfig implements AsyncConfigurer {
     @Bean(name = "stratTaskExecutor")
     public Executor getFetcherAsyncExecutor() {
         ThreadPoolTaskExecutor executor = new ThreadPoolTaskExecutor();
-        executor.setCorePoolSize(32);
-        executor.setMaxPoolSize(64);
-        executor.setQueueCapacity(8);
+        executor.setCorePoolSize(64);
+        executor.setMaxPoolSize(128);
+        executor.setQueueCapacity(32);
         executor.setThreadNamePrefix("stratExec-");
         executor.initialize();
         return executor;
