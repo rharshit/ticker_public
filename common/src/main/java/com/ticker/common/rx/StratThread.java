@@ -94,6 +94,7 @@ public abstract class StratThread<S extends StratTickerService> extends TickerTh
             setBbA(((Double) ticker.get("bbA")).floatValue());
             setBbL(((Double) ticker.get("bbL")).floatValue());
             setRsi(((Double) ticker.get("rsi")).floatValue());
+            setUpdatedAt((Long) ticker.get("updatedAt"));
         } else {
             setFetching(false);
             setCurrentValue(0);
