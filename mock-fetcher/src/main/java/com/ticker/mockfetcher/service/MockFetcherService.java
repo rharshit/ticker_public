@@ -6,21 +6,28 @@ import com.ticker.mockfetcher.model.MockFetcherRepoModel;
 import com.ticker.mockfetcher.repository.MockFetcherAppRepository;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.scheduling.annotation.Async;
+import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
 
 import java.sql.Timestamp;
 import java.util.List;
+import java.util.concurrent.Executor;
 
 @Service
 @Slf4j
 public class MockFetcherService {
 
     @Autowired
-    MockFetcherAppRepository repository;
+    private MockFetcherAppRepository repository;
+
     @Autowired
     private TickerService appService;
+
+
+    @Autowired
+    @Qualifier("fetcherTaskExecutor")
+    private Executor fetcherTaskExecutor;
 
     /**
      * Set setting for the charts that are loaded
@@ -35,13 +42,12 @@ public class MockFetcherService {
         fetcherThread.setInitialized(true);
     }
 
-    @Async("fetcherTaskExecutor")
     @Scheduled(fixedDelay = 500)
     public void doThreadTasks() {
         List<MockFetcherThread> pool = appService.getCurrentTickerList();
         for (MockFetcherThread thread : pool) {
             try {
-                doTask(thread);
+                fetcherTaskExecutor.execute(() -> doTask(thread));
             } catch (Exception e) {
                 log.error(thread == null ? "" : (thread.getThreadName() + " : ") + e.getMessage());
             }
