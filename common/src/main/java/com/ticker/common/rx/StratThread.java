@@ -33,8 +33,6 @@ public abstract class StratThread<S extends StratTickerService> extends TickerTh
     private float currentValue;
     private long updatedAt;
 
-    private boolean locked = false;
-
     Map<Long, Integer> stateTrace = new HashMap<>();
 
     private float triggerStartValue;
