@@ -4,7 +4,6 @@ import com.ticker.bbrsi.model.BbRsiThreadModel;
 import com.ticker.bbrsi.rx.BbRsiThread;
 import com.ticker.common.service.StratTickerService;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Service;
 
 import java.util.HashMap;
@@ -49,7 +48,6 @@ public class BbRsiService extends StratTickerService<BbRsiThread, BbRsiThreadMod
     }
 
     @Override
-    @Async("stratTaskExecutor")
     public void doAction(BbRsiThread thread) {
         if (!thread.isFetching() || thread.isLocked() || thread.getTargetThreshold() == 0) {
             return;

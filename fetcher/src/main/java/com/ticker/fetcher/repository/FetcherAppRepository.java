@@ -5,8 +5,8 @@ import com.ticker.fetcher.common.repository.FetcherRepository;
 import com.ticker.fetcher.model.FetcherRepoModel;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.jdbc.core.SqlParameter;
-import org.springframework.scheduling.annotation.Async;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Repository;
 import org.springframework.util.CollectionUtils;
@@ -21,6 +21,7 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.concurrent.Executor;
 
 import static com.ticker.fetcher.common.constants.DBConstants.TABLE_NAME;
 import static com.ticker.fetcher.common.constants.FetcherConstants.FETCHER_DATE_FORMAT_LOGGING;
@@ -31,7 +32,11 @@ import static com.ticker.fetcher.common.constants.ProcedureConstants.ADD_TABLE;
 public class FetcherAppRepository {
 
     @Autowired
-    FetcherRepository fetcherRepository;
+    private FetcherRepository fetcherRepository;
+
+    @Autowired
+    @Qualifier("repoExecutor")
+    private Executor repoExecutor;
 
     private static final List<String> sqlQueue = new ArrayList<>();
     private Connection fetcherConnection = null;
@@ -62,33 +67,34 @@ public class FetcherAppRepository {
         }
     }
 
-    @Async("repoExecutor")
     @Scheduled(fixedRate = 1000)
     public void pushData() {
-        DateTimeFormatter dtf = DateTimeFormatter.ofPattern(FETCHER_DATE_FORMAT_LOGGING);
-        String now = dtf.format(LocalDateTime.now());
-        log.debug("pushData task started: " + now);
-        if (!CollectionUtils.isEmpty(sqlQueue)) {
-            try (Connection connection = getFetcherConnection()) {
-                Statement statement = connection.createStatement();
-                synchronized (sqlQueue) {
-                    log.debug("Pushing data, size: " + sqlQueue.size());
-                    log.debug(sqlQueue.get(0));
-                    for (String sql : sqlQueue) {
-                        log.trace(sql);
-                        statement.addBatch(sql);
+        repoExecutor.execute(() -> {
+            DateTimeFormatter dtf = DateTimeFormatter.ofPattern(FETCHER_DATE_FORMAT_LOGGING);
+            String now = dtf.format(LocalDateTime.now());
+            log.debug("pushData task started: " + now);
+            if (!CollectionUtils.isEmpty(sqlQueue)) {
+                try (Connection connection = getFetcherConnection()) {
+                    Statement statement = connection.createStatement();
+                    synchronized (sqlQueue) {
+                        log.debug("Pushing data, size: " + sqlQueue.size());
+                        log.debug(sqlQueue.get(0));
+                        for (String sql : sqlQueue) {
+                            log.trace(sql);
+                            statement.addBatch(sql);
+                        }
+                        sqlQueue.clear();
                     }
-                    sqlQueue.clear();
+                    statement.executeBatch();
+                    log.debug("Executed queries");
+                    log.debug("Data pushed");
+                } catch (SQLException e) {
+                    e.printStackTrace();
+                    log.error("Data not pushed");
                 }
-                statement.executeBatch();
-                log.debug("Executed queries");
-                log.debug("Data pushed");
-            } catch (SQLException e) {
-                e.printStackTrace();
-                log.error("Data not pushed");
             }
-        }
-        log.debug("pushData task ended: " + now);
+            log.debug("pushData task ended: " + now);
+        });
     }
 
     public void addToQueue(List<FetcherRepoModel> datas, String sNow) {

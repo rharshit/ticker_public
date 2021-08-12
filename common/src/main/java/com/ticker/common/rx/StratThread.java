@@ -34,8 +34,6 @@ public abstract class StratThread<S extends StratTickerService> extends TickerTh
     private long updatedAt;
     private String tickerType = "";
 
-    private boolean locked = false;
-
     Map<Long, Integer> stateTrace = new HashMap<>();
 
     private float triggerStartValue;
@@ -97,6 +95,12 @@ public abstract class StratThread<S extends StratTickerService> extends TickerTh
             setBbA(((Double) ticker.get("bbA")).floatValue());
             setBbL(((Double) ticker.get("bbL")).floatValue());
             setRsi(((Double) ticker.get("rsi")).floatValue());
+            if (getO() * getH() * getL() * getC() * getBbL() * getBbA() * getBbU() * getRsi() == 0) {
+                setFetching(false);
+                setCurrentValue(0);
+            } else {
+                setUpdatedAt((Long) ticker.get("updatedAt"));
+            }
         } else {
             setFetching(false);
             setCurrentValue(0);
