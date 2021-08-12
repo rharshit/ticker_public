@@ -64,6 +64,7 @@ public abstract class StratTickerService<T extends StratThread, TM extends Strat
 
     public void initializeThread(T t) {
         startFetching(t);
+        t.setTickerType(getFavourableTickerType(t));
     }
 
     @Async("scheduledExecutor")
@@ -197,6 +198,7 @@ public abstract class StratTickerService<T extends StratThread, TM extends Strat
     protected float sell(T thread, int qty) {
         waitFor(WAIT_LONG);
         log.info("Sold " + qty +
+                " " + thread.getTickerType() +
                 " of " + thread.getExchange() + ":" + thread.getSymbol() +
                 " at " + DATE_TIME_FORMATTER_TIME_SECONDS.format(new Date(System.currentTimeMillis())) +
                 " for " + thread.getCurrentValue());
@@ -242,7 +244,7 @@ public abstract class StratTickerService<T extends StratThread, TM extends Strat
                 try {
                     String url = Util.getApplicationUrl(APPLICATION_BROKERAGE) +
                             "zerodha/" +
-                            getFavourableTickerType(thread) + "/" +
+                            thread.getTickerType() + "/" +
                             thread.getExchange();
                     Map<String, Object> params = new HashMap<>();
                     params.put("buy", thread.getCurrentValue());

@@ -32,6 +32,7 @@ public abstract class StratThread<S extends StratTickerService> extends TickerTh
     private float rsi;
     private float currentValue;
     private long updatedAt;
+    private String tickerType = "";
 
     private boolean locked = false;
 

@@ -16,6 +16,10 @@ public class StratThreadModel<T extends StratThread> extends TickerThreadModel<T
         return this.thread.isFetching();
     }
 
+    public String getTickerType() {
+        return this.thread.getTickerType();
+    }
+
     public float getCurrentValue() {
         return this.thread.getCurrentValue();
     }
