@@ -5,6 +5,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.openqa.selenium.*;
 import org.openqa.selenium.chrome.ChromeDriver;
 import org.openqa.selenium.chrome.ChromeOptions;
+import org.springframework.cache.annotation.Cacheable;
 import org.springframework.stereotype.Service;
 
 import java.util.*;
@@ -65,11 +66,14 @@ public class BrokerageService {
         throw new TickerException("Cannot find type for '" + type + "'. Valid options are -" + mapping);
     }
 
+    @Cacheable("brokerage")
     public Map<String, Double> getZerodhaBrokerage(String type, String exchange,
                                                    float buy, float sell, float quantity,
                                                    int numTry) {
+        log.debug("start: " + exchange + " : " + buy + ", " + sell + ", " + quantity);
+        long start = System.currentTimeMillis();
         String tabType = getTabType(type);
-        log.info(tabType);
+        log.debug(tabType);
         String divId = null;
         switch (tabType) {
             case INTRADAY:
@@ -119,6 +123,7 @@ public class BrokerageService {
         } catch (Exception e) {
             initWebdriver();
             if (numTry < numTries) {
+                log.info("Error while getting brokerage, retrying " + numTry);
                 return getZerodhaBrokerage(type, exchange, buy, sell, quantity, numTry + 1);
             } else {
                 throw new TickerException("Error while getting values. Please try again");
@@ -127,6 +132,7 @@ public class BrokerageService {
         data.put("pnl", data.get("netPnl"));
         data.put("ptb", data.get("pointsToBreakeven"));
         data.put("totalBrokerage", data.get("totalTaxAndCharges"));
+        log.debug("end: " + exchange + " : " + buy + ", " + sell + ", " + quantity + " at " + (System.currentTimeMillis() - start));
         return data;
     }
 
