@@ -191,6 +191,7 @@ public abstract class StratTickerService<T extends StratThread, TM extends Strat
     protected float buy(T thread, int qty) {
         waitFor(WAIT_LONG);
         log.info("Bought " + qty +
+                " " + thread.getTickerType() +
                 " of " + thread.getExchange() + ":" + thread.getSymbol() +
                 " at " + DATE_TIME_FORMATTER_TIME_SECONDS.format(new Date(System.currentTimeMillis())) +
                 " for " + thread.getCurrentValue());
@@ -260,11 +261,11 @@ public abstract class StratTickerService<T extends StratThread, TM extends Strat
                     } else {
                         thread.setTargetThreshold(3 * response.get("ptb").floatValue());
                     }
-                    log.warn(thread.getThreadName() + " : Target threshold set");
+                    log.info(thread.getThreadName() + " : Target threshold set");
                     return;
                 } catch (Exception e) {
-                    log.debug(thread.getThreadName() + " : Error while getting threshold value");
-                    log.debug(e.getMessage());
+                    log.info(thread.getThreadName() + " : Error while getting threshold value");
+                    log.info(e.getMessage());
                 }
             }
             waitFor(WAIT_MEDIUM);
