@@ -191,6 +191,7 @@ public abstract class StratTickerService<T extends StratThread, TM extends Strat
     protected float buy(T thread, int qty) {
         waitFor(WAIT_LONG);
         log.info("Bought " + qty +
+                " " + thread.getTickerType() +
                 " of " + thread.getExchange() + ":" + thread.getSymbol() +
                 " at " + DATE_TIME_FORMATTER_TIME_SECONDS.format(new Date(System.currentTimeMillis())) +
                 " for " + thread.getCurrentValue());
