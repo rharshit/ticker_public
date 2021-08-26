@@ -1,6 +1,6 @@
 package com.ticker.booker.controller;
 
-import com.ticker.booker.model.TotalTrade;
+import com.ticker.booker.model.TradeMap;
 import com.ticker.booker.service.BookerService;
 import com.ticker.common.model.ResponseStatus;
 import com.ticker.common.model.TickerTrade;
@@ -61,7 +61,7 @@ public class BookerController {
     }
 
     @GetMapping("/totalTrade")
-    public ResponseEntity<TotalTrade> getTotalTrade() {
+    public ResponseEntity<TradeMap> getTotalTrade() {
         return new ResponseEntity<>(service.getTotalTrade(), HttpStatus.OK);
     }
 

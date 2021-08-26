@@ -1,9 +1,10 @@
 package com.ticker.booker.service;
 
 import com.ticker.booker.model.CompleteTrade;
-import com.ticker.booker.model.TotalTrade;
+import com.ticker.booker.model.TradeMap;
 import com.ticker.common.exception.TickerException;
 import com.ticker.common.model.TickerTrade;
+import com.ticker.common.util.Util;
 import com.zerodhatech.kiteconnect.KiteConnect;
 import com.zerodhatech.kiteconnect.kitehttp.SessionExpiryHook;
 import com.zerodhatech.kiteconnect.kitehttp.exceptions.KiteException;
@@ -14,6 +15,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
+import org.springframework.web.client.RestTemplate;
 
 import java.io.IOException;
 import java.text.SimpleDateFormat;
@@ -21,9 +23,14 @@ import java.util.*;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
+import static com.ticker.common.contants.TickerConstants.APPLICATION_BROKERAGE;
+
 @Slf4j
 @Service
 public class BookerService {
+
+    @Autowired
+    private RestTemplate restTemplate;
 
     private static KiteConnect kiteSdk;
     private static User user;
@@ -140,7 +147,8 @@ public class BookerService {
                         trade.exchange = !"NFO".equalsIgnoreCase(trade.exchange) ? exchangeSymbol.split(":")[0] : "NFO";
                         trade.tradingSymbol = exchangeSymbol.split(":")[1];
 
-                        trade.fillTimestamp = sdf.parse(matcher.group(5));
+                        String sDate = matcher.group(5);
+                        trade.fillTimestamp = new SimpleDateFormat("yyyy/MM/dd HH:mm:ss").parse(sDate);
                         trade.exchangeTimestamp = trade.fillTimestamp;
 
                         trade.averagePrice = String.valueOf(Float.parseFloat(matcher.group(6)));
@@ -156,12 +164,12 @@ public class BookerService {
         log.info("Added trades from log");
     }
 
-    public TotalTrade getTotalTrade() {
-        TotalTrade totalTrade = new TotalTrade();
+    public TradeMap getTotalTrade() {
+        log.info("Getting total trade");
         Map<String, Map<String, Map<String, List<TickerTrade>>>> tradeMap = getTradeMap();
         Map<String, Map<String, Map<String, List<CompleteTrade>>>> completeTradeMap = processTradeMap(tradeMap);
-        totalTrade.setCompleteTradeMap(completeTradeMap);
-
+        TradeMap totalTrade = new TradeMap(completeTradeMap);
+        log.info("Got total trade");
         return totalTrade;
     }
 
@@ -208,7 +216,7 @@ public class BookerService {
                     }
 
                     int balanceQty = 0;
-                    for (int i = 0; i < Math.min(buyTradeList.size(), sellTradeList.size()); i++) {
+                    for (; !buyTradeList.isEmpty() && !sellTradeList.isEmpty(); ) {
                         TickerTrade buyTrade = buyTradeList.pop();
                         TickerTrade sellTrade = sellTradeList.pop();
 
@@ -236,6 +244,8 @@ public class BookerService {
                         completeTrade.setSell(sellTickerTrade);
 
                         completeTrade.setCompleted(true);
+
+                        processTrade(completeTrade, symbol, exchange, product);
 
                         completeTradeList.add(completeTrade);
                     }
@@ -266,4 +276,35 @@ public class BookerService {
         return tradeMap;
     }
 
+    private void processTrade(CompleteTrade trade, String symbol, String exchange, String product) {
+        trade.setSymbol(symbol);
+        trade.setProduct(product);
+        if ("NFO".equalsIgnoreCase(exchange)) {
+            trade.setExchange("NSE");
+            trade.setTickerType("F");
+        } else {
+            if ("MIS".equalsIgnoreCase(product)) {
+                trade.setTickerType("I");
+            } else {
+                trade.setTickerType("E");
+            }
+        }
+        log.debug("Fetching brokerage");
+        Map<String, Double> brokerage = getBrokerage(trade);
+        log.debug("Fetched brokerage");
+        trade.setPnl(brokerage.get("pnl").floatValue());
+        trade.setTaxes(brokerage.get("totalBrokerage").floatValue());
+    }
+
+    public Map<String, Double> getBrokerage(CompleteTrade trade) {
+        String url = Util.getApplicationUrl(APPLICATION_BROKERAGE) +
+                "zerodha/" +
+                trade.getTickerType() + "/" +
+                trade.getExchange();
+        Map<String, Object> params = new HashMap<>();
+        params.put("buy", trade.getBuy().averagePrice);
+        params.put("sell", trade.getSell().averagePrice);
+        params.put("quantity", trade.getQuantity());
+        return restTemplate.getForObject(url, Map.class, params);
+    }
 }

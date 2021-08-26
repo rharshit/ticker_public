@@ -5,7 +5,7 @@ import org.springframework.boot.autoconfigure.SpringBootApplication;
 import org.springframework.boot.autoconfigure.jdbc.DataSourceAutoConfiguration;
 import org.springframework.context.annotation.ComponentScan;
 
-@ComponentScan({"com.ticker.common.exception", "com.ticker.booker"})
+@ComponentScan({"com.ticker.common.exception", "com.ticker.common.config", "com.ticker.booker"})
 @SpringBootApplication(exclude = DataSourceAutoConfiguration.class)
 public class BookerApplication {
 
