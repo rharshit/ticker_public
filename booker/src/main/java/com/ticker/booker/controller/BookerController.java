@@ -1,5 +1,6 @@
 package com.ticker.booker.controller;
 
+import com.ticker.booker.model.TotalTrade;
 import com.ticker.booker.service.BookerService;
 import com.ticker.common.model.ResponseStatus;
 import com.ticker.common.model.TickerTrade;
@@ -57,6 +58,11 @@ public class BookerController {
     @GetMapping("/trades")
     public ResponseEntity<List<TickerTrade>> getTrades() {
         return new ResponseEntity<>(BookerService.getTrades(), HttpStatus.OK);
+    }
+
+    @GetMapping("/totalTrade")
+    public ResponseEntity<TotalTrade> getTotalTrade() {
+        return new ResponseEntity<>(service.getTotalTrade(), HttpStatus.OK);
     }
 
 }
