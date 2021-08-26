@@ -2,12 +2,14 @@ package com.ticker.booker.controller;
 
 import com.ticker.booker.service.BookerService;
 import com.ticker.common.model.ResponseStatus;
+import com.ticker.common.model.TickerTrade;
 import com.zerodhatech.models.Margin;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
+import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 
@@ -50,6 +52,11 @@ public class BookerController {
     public ResponseEntity<ResponseStatus> populateLogs(@RequestBody String logs) {
         service.populateLogs(logs);
         return new ResponseEntity<>(new ResponseStatus(), HttpStatus.OK);
+    }
+
+    @GetMapping("/trades")
+    public ResponseEntity<List<TickerTrade>> getTrades() {
+        return new ResponseEntity<>(BookerService.getTrades(), HttpStatus.OK);
     }
 
 }

@@ -1,6 +1,7 @@
 package com.ticker.booker.service;
 
 import com.ticker.common.exception.TickerException;
+import com.ticker.common.model.TickerTrade;
 import com.zerodhatech.kiteconnect.KiteConnect;
 import com.zerodhatech.kiteconnect.kitehttp.SessionExpiryHook;
 import com.zerodhatech.kiteconnect.kitehttp.exceptions.KiteException;
@@ -13,7 +14,13 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 
 import java.io.IOException;
+import java.text.SimpleDateFormat;
+import java.util.ArrayList;
+import java.util.Comparator;
+import java.util.List;
 import java.util.Map;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 @Slf4j
 @Service
@@ -26,6 +33,12 @@ public class BookerService {
     private static String apiKey;
     private static String apiSecret;
     private static String userId;
+
+    private static final List<TickerTrade> trades = new ArrayList<>();
+
+    private static final Pattern pattern = Pattern.compile("^(Sold|Bought) (\\d*) (F|I|E) of (.*:.*) at (\\d\\d\\d\\d\\/\\d\\d\\/\\d\\d \\d\\d:\\d\\d:\\d\\d) for (\\d*\\.\\d*$)");
+    private static final SimpleDateFormat sdf = new SimpleDateFormat("yyyy/MM/dd HH:mm:dd");
+
 
     private static KiteConnect getKiteSdk() {
         if (kiteSdk == null) {
@@ -88,8 +101,61 @@ public class BookerService {
         return null;
     }
 
+    public static List<TickerTrade> getTrades() {
+        return trades;
+    }
+
     public void populateLogs(String logs) {
-        log.info(logs);
+        String[] lines = logs.split("\n");
+        for (String line : lines) {
+            try {
+                if (line.contains("StratTickerService")) {
+                    String val = line.split("StratTickerService", 2)[1].split(":", 2)[1].trim();
+                    Matcher matcher = pattern.matcher(val);
+                    if (matcher.find()) {
+                        TickerTrade trade = new TickerTrade();
+                        trade.setAppName("Booker");
+
+                        String transactionType = matcher.group(1);
+                        if ("Bought".equalsIgnoreCase(transactionType)) {
+                            trade.transactionType = "BUY";
+                        } else if ("Sold".equalsIgnoreCase(transactionType)) {
+                            trade.transactionType = "SELL";
+                        } else {
+                            new TickerException("Wrong transaction type: " + transactionType);
+                        }
+
+                        trade.quantity = String.valueOf(Integer.parseInt(matcher.group(2)));
+
+                        String product = matcher.group(3);
+                        if ("F".equalsIgnoreCase(product)) {
+                            trade.exchange = "NFO";
+                            trade.product = "MIS";
+                        } else if ("I".equalsIgnoreCase(product)) {
+                            trade.product = "MIS";
+                        } else if ("E".equalsIgnoreCase(product)) {
+                            trade.product = "CNC";
+                        }
+
+                        String exchangeSymbol = matcher.group(4);
+                        trade.exchange = !"NFO".equalsIgnoreCase(trade.exchange) ? exchangeSymbol.split(":")[0] : "NFO";
+                        trade.tradingSymbol = exchangeSymbol.split(":")[1];
+
+                        trade.fillTimestamp = sdf.parse(matcher.group(5));
+                        trade.exchangeTimestamp = trade.fillTimestamp;
+
+                        trade.averagePrice = String.valueOf(Float.parseFloat(matcher.group(6)));
+
+                        trades.add(trade);
+                    }
+                }
+            } catch (Exception e) {
+                log.error(line);
+                log.error("Error in line", e);
+            }
+        }
+        trades.sort(Comparator.comparing(o -> o.fillTimestamp));
+        log.info("Added trades from log");
     }
 
 }
