@@ -1,0 +1,75 @@
+package com.ticker.booker.model;
+
+import com.fasterxml.jackson.annotation.JsonIgnore;
+import com.ticker.booker.service.BookerService;
+import lombok.Data;
+import org.springframework.beans.factory.annotation.Autowired;
+
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+
+@Data
+public class TradeMap extends HashMap<String, Object> {
+
+    @JsonIgnore
+    @Autowired
+    private BookerService bookerService;
+
+    private Float pnl;
+    private Float taxes;
+
+    public TradeMap(Map<String, ?> values) {
+        super(values);
+        for (Entry<String, Object> entry : entrySet()) {
+            if ((entry.getValue() instanceof Map) && !(entry.getValue() instanceof TradeMap)) {
+                put(entry.getKey(), new TradeMap((Map) entry.getValue()));
+            }
+        }
+
+        put("pnl", getPnl());
+        put("taxes", getTaxes());
+    }
+
+    public Float getPnl() {
+        if (pnl == null) {
+            float pnlTmp = 0;
+            for (Entry<String, Object> entry : entrySet()) {
+                if (entry.getValue() instanceof TradeMap) {
+                    pnlTmp += ((TradeMap) entry.getValue()).getPnl();
+                } else if (entry.getValue() instanceof List) {
+                    for (Object obj : (List) entry.getValue()) {
+                        if (obj instanceof CompleteTrade) {
+                            pnlTmp += ((CompleteTrade) obj).getPnl();
+                        } else {
+                            int x = 1;
+                        }
+                    }
+                }
+            }
+            pnl = pnlTmp;
+        }
+        return pnl;
+    }
+
+    public Float getTaxes() {
+        if (taxes == null) {
+            float taxTmp = 0;
+            for (Entry<String, Object> entry : entrySet()) {
+                if (entry.getValue() instanceof TradeMap) {
+                    taxTmp += ((TradeMap) entry.getValue()).getTaxes();
+                } else if (entry.getValue() instanceof List) {
+                    for (Object obj : (List) entry.getValue()) {
+                        if (obj instanceof CompleteTrade) {
+                            taxTmp += ((CompleteTrade) obj).getTaxes();
+                        } else {
+                            int x = 1;
+                        }
+                    }
+                }
+            }
+            taxes = taxTmp;
+        }
+        return taxes;
+    }
+}

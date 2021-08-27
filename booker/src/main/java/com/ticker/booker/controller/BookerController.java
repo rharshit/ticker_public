@@ -1,12 +1,17 @@
 package com.ticker.booker.controller;
 
+import com.ticker.booker.model.TradeMap;
 import com.ticker.booker.service.BookerService;
+import com.ticker.common.model.ResponseStatus;
+import com.ticker.common.model.TickerTrade;
+import com.zerodhatech.models.Margin;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RequestParam;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.*;
 
+import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 
 @RestController
@@ -15,6 +20,22 @@ public class BookerController {
 
     @Autowired
     private BookerService service;
+
+    @GetMapping("/zerodha/login")
+    public ResponseEntity<ResponseStatus> getZerodhaLoginURL() {
+        return new ResponseEntity<>(new ResponseStatus(true, service.getZerodhaLoginURL()), HttpStatus.OK);
+    }
+
+    @PostMapping("/zerodha/requestToken")
+    public ResponseEntity<ResponseStatus> setRequestToken(@RequestParam String requestToken) {
+        service.setRequestToken(requestToken);
+        return new ResponseEntity<>(new ResponseStatus(), HttpStatus.OK);
+    }
+
+    @GetMapping("/zerodha/margins")
+    public ResponseEntity<Map<String, Margin>> getZerodhaMargins() {
+        return new ResponseEntity<>(service.getZerodhaMargins(), HttpStatus.OK);
+    }
 
     @PostMapping("/zerodha/regular")
     public Integer bookRegularOrder(@RequestParam String tradingSymbol, @RequestParam String exchange,
@@ -26,6 +47,22 @@ public class BookerController {
         return service.bookRegularOrder(tradingSymbol, exchange, transactionType, orderType, quantity, product,
                 price.orElse(null), triggerPrice.orElse(null), disclosedQuantity.orElse(null),
                 validity, tag.orElse("Ticker"));
+    }
+
+    @PostMapping("/logs")
+    public ResponseEntity<ResponseStatus> populateLogs(@RequestBody String logs) {
+        service.populateLogs(logs);
+        return new ResponseEntity<>(new ResponseStatus(), HttpStatus.OK);
+    }
+
+    @GetMapping("/trades")
+    public ResponseEntity<List<TickerTrade>> getTrades() {
+        return new ResponseEntity<>(BookerService.getTrades(), HttpStatus.OK);
+    }
+
+    @GetMapping("/totalTrade")
+    public ResponseEntity<TradeMap> getTotalTrade() {
+        return new ResponseEntity<>(service.getTotalTrade(), HttpStatus.OK);
     }
 
 }
