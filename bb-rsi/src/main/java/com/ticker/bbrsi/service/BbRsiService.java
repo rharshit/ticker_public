@@ -186,6 +186,7 @@ public class BbRsiService extends StratTickerService<BbRsiThread, BbRsiThreadMod
     }
 
     private void checkForUtWaveEnd1(BbRsiThread thread) {
+        log.trace("");
         log.trace(thread.getThreadName() + " : checkForUtWaveEnd1");
         checkUtPanicExit(thread);
         if (isSameMinTrigger(thread.getTriggerStartTime()) || !isEomTrigger()) {
@@ -213,6 +214,8 @@ public class BbRsiService extends StratTickerService<BbRsiThread, BbRsiThreadMod
     }
 
     private void checkForLtWaveEnd1(BbRsiThread thread) {
+        log.trace("");
+
         log.trace(thread.getThreadName() + " : checkForLtWaveEnd1");
         checkLtPanicExit(thread);
         if (isSameMinTrigger(thread.getTriggerStartTime()) || !isEomTrigger()) {
@@ -239,6 +242,7 @@ public class BbRsiService extends StratTickerService<BbRsiThread, BbRsiThreadMod
     }
 
     private void checkForUtWaveEnd(BbRsiThread thread) {
+        log.trace("");
         log.trace(thread.getThreadName() + " : checkForUtWaveEnd");
         checkUtPanicExit(thread);
         if (isSameMinTrigger(thread.getTradeStartTime()) || !isEomTrigger()) {
@@ -270,7 +274,7 @@ public class BbRsiService extends StratTickerService<BbRsiThread, BbRsiThreadMod
                 thread.setPanicBuy(thread.getPanicBuy() + PANIC_TIME_OFF / PANIC_TIME_OFF_EMERGENCY_RETRIES);
             } else if (thread.getCurrentValue() - thread.getDip() > 1.2 * thread.getTargetThreshold()) {
                 float factor = (((thread.getCurrentValue() - thread.getDip()) / thread.getTargetThreshold() - 1)
-                        * (thread.getCurrentValue() < thread.getTradeValue() ? 1 : 2) * PANIC_TIME_OFF) / PANIC_TIME_OFF_EMERGENCY_RETRIES;
+                        * (thread.getCurrentValue() < thread.getTradeValue() - 0.3 * thread.getTargetThreshold() ? 1 : 2) * PANIC_TIME_OFF) / PANIC_TIME_OFF_EMERGENCY_RETRIES;
                 log.debug("Panic buy faster " + factor);
                 thread.setPanicSell(thread.getPanicSell() + (int) Math.max(factor, 1));
             }
@@ -311,6 +315,7 @@ public class BbRsiService extends StratTickerService<BbRsiThread, BbRsiThreadMod
     }
 
     private void checkForLtWaveEnd(BbRsiThread thread) {
+        log.trace("");
         log.trace(thread.getThreadName() + " : checkForLtWaveEnd");
         checkLtPanicExit(thread);
         if (isSameMinTrigger(thread.getTradeStartTime()) || !isEomTrigger()) {
@@ -342,7 +347,7 @@ public class BbRsiService extends StratTickerService<BbRsiThread, BbRsiThreadMod
                 thread.setPanicSell(thread.getPanicSell() + PANIC_TIME_OFF / PANIC_TIME_OFF_EMERGENCY_RETRIES);
             } else if (thread.getPeak() - thread.getCurrentValue() > 1.2 * thread.getTargetThreshold()) {
                 float factor = (((thread.getPeak() - thread.getCurrentValue()) / thread.getTargetThreshold() - 1)
-                        * (thread.getCurrentValue() > thread.getTradeValue() ? 1 : 2) * PANIC_TIME_OFF) / PANIC_TIME_OFF_EMERGENCY_RETRIES;
+                        * (thread.getCurrentValue() > thread.getTradeValue() + 0.3 * thread.getTargetThreshold() ? 1 : 2) * PANIC_TIME_OFF) / PANIC_TIME_OFF_EMERGENCY_RETRIES;
                 log.debug("Panic sell faster " + factor);
                 thread.setPanicSell(thread.getPanicSell() + (int) Math.max(factor, 1));
             }
@@ -413,7 +418,7 @@ public class BbRsiService extends StratTickerService<BbRsiThread, BbRsiThreadMod
             log.info(thread.getThreadName() + " : PreMatureLtEnd");
             return;
         }
-        if (isSameMinTrigger(thread.getTriggerStartTime()) || !isEomTrigger()) {
+        if (isSameMinTrigger(thread.getTriggerStartTime()) || !isEomTrigger(20)) {
             log.trace(thread.getThreadName() + " : no check");
             return;
         }
@@ -426,14 +431,14 @@ public class BbRsiService extends StratTickerService<BbRsiThread, BbRsiThreadMod
 
     private void checkPreMatureLtEnd(BbRsiThread thread) {
         thread.setDip(thread.getCurrentValue());
-        if (!isSameMinTrigger(thread.getTriggerStartTime()) && isEomTrigger(35)) {
+        if (!isSameMinTrigger(thread.getTriggerStartTime()) && isEomTrigger(10)) {
             log.debug("");
             log.debug(thread.getThreadName() + " : checkPreMatureLtEnd");
             log.debug(thread.getThreadName() + " : thread.getCurrentValue() - thread.getDip() = " + (thread.getCurrentValue() - thread.getDip()));
             log.debug(thread.getThreadName() + " : " + thread.getCurrentValue() + " - " + thread.getDip() + " = " + (thread.getCurrentValue() - thread.getDip()));
             log.debug(thread.getThreadName() + " : isUpwardTrend(thread) = " + isUpwardTrend(thread));
             log.debug(thread.getThreadName() + " : RsiDiff " + thread.getRsiDiff());
-            if ((((isEomTrigger(30) && isUpwardTrend(thread)) && thread.getCurrentValue() - thread.getDip() > 1.2 * thread.getTargetThreshold()) ||
+            if (((isUpwardTrend(thread) && thread.getCurrentValue() - thread.getDip() > 0.75 * thread.getTargetThreshold()) ||
                     (thread.getCurrentValue() - thread.getDip() > thread.getTargetThreshold())) &&
                     thread.getRsiDiff() > RSI_LOWER_LIMIT_PREMATURE_DIFF) {
                 log.debug(thread.getThreadName() + " : PreMatureLtEnd");
@@ -450,7 +455,7 @@ public class BbRsiService extends StratTickerService<BbRsiThread, BbRsiThreadMod
             log.info(thread.getThreadName() + " : PreMatureLtEnd");
             return;
         }
-        if (isSameMinTrigger(thread.getTriggerWaveEndTime()) || !isEomTrigger()) {
+        if (isSameMinTrigger(thread.getTriggerWaveEndTime()) || !isEomTrigger(20)) {
             log.trace(thread.getThreadName() + " : no check");
             return;
         }
@@ -473,7 +478,7 @@ public class BbRsiService extends StratTickerService<BbRsiThread, BbRsiThreadMod
             log.info(thread.getThreadName() + " : PreMatureUtEnd");
             return;
         }
-        if (isSameMinTrigger(thread.getTriggerStartTime()) || !isEomTrigger()) {
+        if (isSameMinTrigger(thread.getTriggerStartTime()) || !isEomTrigger(20)) {
             log.trace(thread.getThreadName() + " : no check");
             return;
         }
@@ -486,14 +491,14 @@ public class BbRsiService extends StratTickerService<BbRsiThread, BbRsiThreadMod
 
     private void checkPreMatureUtEnd(BbRsiThread thread) {
         thread.setPeak(thread.getCurrentValue());
-        if (!isSameMinTrigger(thread.getTriggerStartTime()) && isEomTrigger(35)) {
+        if (!isSameMinTrigger(thread.getTriggerStartTime()) && isEomTrigger(10)) {
             log.debug("");
             log.debug(thread.getThreadName() + " : checkPreMatureUtEnd");
             log.debug(thread.getThreadName() + " : thread.getPeak() - thread.getCurrentValue() = " + (thread.getPeak() - thread.getCurrentValue()));
             log.debug(thread.getThreadName() + " : " + thread.getPeak() + " - " + thread.getCurrentValue() + " = " + (thread.getPeak() - thread.getCurrentValue()));
             log.debug(thread.getThreadName() + " : isDownwardTrend(thread) = " + isDownwardTrend(thread));
             log.debug(thread.getThreadName() + " : RsiDiff " + thread.getRsiDiff());
-            if ((((isEomTrigger(30) && isDownwardTrend(thread)) && thread.getPeak() - thread.getCurrentValue() > 1.2 * thread.getTargetThreshold()) ||
+            if (((isDownwardTrend(thread) && thread.getPeak() - thread.getCurrentValue() > 0.75f * thread.getTargetThreshold()) ||
                     (thread.getPeak() - thread.getCurrentValue() > thread.getTargetThreshold())) &&
                     thread.getRsiDiff() < RSI_UPPER_LIMIT_PREMATURE_DIFF) {
                 log.debug(thread.getThreadName() + " : PreMatureUtEnd");
@@ -510,7 +515,7 @@ public class BbRsiService extends StratTickerService<BbRsiThread, BbRsiThreadMod
             log.info(thread.getThreadName() + " : PreMatureUtEnd");
             return;
         }
-        if (isSameMinTrigger(thread.getTriggerWaveEndTime()) || !isEomTrigger()) {
+        if (isSameMinTrigger(thread.getTriggerWaveEndTime()) || !isEomTrigger(20)) {
             log.trace(thread.getThreadName() + " : no check");
             return;
         }
@@ -533,7 +538,7 @@ public class BbRsiService extends StratTickerService<BbRsiThread, BbRsiThreadMod
 
     private void checkTrigger(BbRsiThread thread) {
         log.trace(thread.getThreadName() + " : checkTrigger");
-        if (!isEomTrigger()) {
+        if (!isEomTrigger(15)) {
             return;
         }
         if (thread.getRsi() <= RSI_LOWER_LIMIT && thread.getO() > thread.getC()) {
