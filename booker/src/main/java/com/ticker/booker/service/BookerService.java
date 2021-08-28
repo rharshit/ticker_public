@@ -165,12 +165,18 @@ public class BookerService {
     }
 
     public TradeMap getTotalTrade() {
-        log.info("Getting total trade");
-        Map<String, Map<String, Map<String, List<TickerTrade>>>> tradeMap = getTradeMap();
-        Map<String, Map<String, Map<String, List<CompleteTrade>>>> completeTradeMap = processTradeMap(tradeMap);
-        TradeMap totalTrade = new TradeMap(completeTradeMap);
-        log.info("Got total trade");
-        return totalTrade;
+        try {
+            log.info("Getting total trade");
+            Map<String, Map<String, Map<String, List<TickerTrade>>>> tradeMap = getTradeMap();
+            Map<String, Map<String, Map<String, List<CompleteTrade>>>> completeTradeMap = processTradeMap(tradeMap);
+            TradeMap totalTrade = new TradeMap(completeTradeMap);
+            log.info("Got total trade");
+            return totalTrade;
+        } catch (Exception e) {
+            log.error("Error while getting trades", e);
+            throw new TickerException(e.getMessage());
+        }
+
     }
 
     private Map<String, Map<String, Map<String, List<CompleteTrade>>>> processTradeMap(Map<String, Map<String, Map<String, List<TickerTrade>>>> tradeMap) {
@@ -210,39 +216,70 @@ public class BookerService {
                         }
                     }
 
-                    if (Math.abs(buyTradeList.size() - sellTradeList.size()) > 1) {
-                        //TODO: Change it based on number of applications accessing
-                        throw new TickerException("Mismatched buy and sell queue");
-                    }
-
                     int balanceQty = 0;
-                    for (; !buyTradeList.isEmpty() && !sellTradeList.isEmpty(); ) {
-                        TickerTrade buyTrade = buyTradeList.pop();
-                        TickerTrade sellTrade = sellTradeList.pop();
-
-                        int buyQty = Integer.parseInt(buyTrade.quantity);
-                        int sellQty = Integer.parseInt(sellTrade.quantity);
-
-                        if (balanceQty < 0) {
-                            sellQty = sellQty - balanceQty;
-                            balanceQty = 0;
-                        } else if (balanceQty > 0) {
-                            buyQty = buyQty + balanceQty;
-                            balanceQty = 0;
-                        }
-                        int tradeQty = Math.min(buyQty, sellQty);
-                        balanceQty = balanceQty + buyQty - sellQty;
+                    TickerTrade balance = new TickerTrade();
+                    balance.quantity = String.valueOf(0);
+                    balance.averagePrice = String.valueOf(0);
+                    for (; (!buyTradeList.isEmpty() && !sellTradeList.isEmpty()) ||
+                            (buyTradeList.isEmpty() && !sellTradeList.isEmpty() && Integer.parseInt(balance.quantity) < 0) ||
+                            (!buyTradeList.isEmpty() && sellTradeList.isEmpty() && Integer.parseInt(balance.quantity) > 0); ) {
                         CompleteTrade completeTrade = new CompleteTrade();
-                        completeTrade.setQuantity(tradeQty);
+                        TickerTrade buy = null;
+                        TickerTrade sell = null;
 
-                        TickerTrade buyTickerTrade = new TickerTrade(buyTrade);
-                        buyTickerTrade.quantity = String.valueOf(tradeQty);
-                        completeTrade.setBuy(buyTickerTrade);
+                        if (Integer.parseInt(balance.quantity) == 0) {
+                            buy = buyTradeList.pop();
+                            sell = sellTradeList.pop();
+                        } else if (Integer.parseInt(balance.quantity) > 0) {
+                            sell = sellTradeList.pop();
+                            buy = new TickerTrade(balance);
+                            if (Integer.parseInt(balance.quantity) == Integer.parseInt(sell.quantity)) {
+                                balance.quantity = String.valueOf(0);
+                                balance.averagePrice = String.valueOf(0);
+                            } else if (Integer.parseInt(balance.quantity) > Integer.parseInt(sell.quantity)) {
+                                buy.quantity = sell.quantity;
+                                balance.quantity = String.valueOf((Integer.parseInt(balance.quantity) - Integer.parseInt(sell.quantity)));
+                            } else {
+                                balance = new TickerTrade(sell);
+                                balance.quantity = String.valueOf(-Integer.parseInt(balance.quantity));
+                                sell.quantity = buy.quantity;
+                            }
+                        } else if (Integer.parseInt(balance.quantity) < 0) {
+                            buy = buyTradeList.pop();
+                            sell = new TickerTrade(balance);
+                            sell.quantity = String.valueOf(-Integer.parseInt(sell.quantity));
+                            if (-Integer.parseInt(balance.quantity) == Integer.parseInt(buy.quantity)) {
+                                balance.quantity = String.valueOf(0);
+                                balance.averagePrice = String.valueOf(0);
+                            } else if (-Integer.parseInt(balance.quantity) > Integer.parseInt(buy.quantity)) {
+                                sell.quantity = buy.quantity;
+                                balance.quantity = String.valueOf((Integer.parseInt(balance.quantity) + Integer.parseInt(buy.quantity)));
+                            } else {
+                                balance = new TickerTrade(buy);
+                                buy.quantity = sell.quantity;
+                            }
+                        }
 
-                        TickerTrade sellTickerTrade = new TickerTrade(sellTrade);
-                        sellTickerTrade.quantity = String.valueOf(tradeQty);
-                        completeTrade.setSell(sellTickerTrade);
+                        if (buy == null || sell == null) {
+                            throw new TickerException("Internal error: Buy or sell trade nto set");
+                        }
 
+                        int tradeQuantity = Math.min(Integer.parseInt(buy.quantity), Integer.parseInt(sell.quantity));
+                        if (Integer.parseInt(buy.quantity) != Integer.parseInt(sell.quantity)) {
+                            if (Integer.parseInt(balance.quantity) != 0) {
+                                throw new TickerException("Internal error: Error in trades");
+                            }
+                            if (Integer.parseInt(buy.quantity) > Integer.parseInt(sell.quantity)) {
+                                balance = new TickerTrade(buy);
+                            } else {
+                                balance = new TickerTrade(sell);
+                            }
+                            balance.quantity = String.valueOf(Integer.parseInt(buy.quantity) - Integer.parseInt(sell.quantity));
+                        }
+
+                        completeTrade.setBuy(buy);
+                        completeTrade.setSell(sell);
+                        completeTrade.setQuantity(tradeQuantity);
                         completeTrade.setCompleted(true);
 
                         processTrade(completeTrade, symbol, exchange, product);
