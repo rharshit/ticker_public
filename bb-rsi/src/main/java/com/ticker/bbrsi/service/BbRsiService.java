@@ -290,6 +290,22 @@ public class BbRsiService extends StratTickerService<BbRsiThread, BbRsiThreadMod
         log.trace(thread.getThreadName() + " : Peak " + thread.getPeak());
         log.trace(thread.getThreadName() + " : RsiDiff " + thread.getRsiDiff());
         log.trace(thread.getThreadName() + " : TargetThreshold " + thread.getTargetThreshold());
+
+        if (!thread.isSafeState()) {
+            if (thread.getTradeValue() - thread.getCurrentValue() >= thread.getTargetThreshold() + 0.005) {
+                safeBuy(thread);
+            }
+        }
+    }
+
+    private void safeBuy(BbRsiThread thread) {
+        log.debug(thread.getThreadName() + " : Safe buy");
+        try {
+            buy(thread, thread.getEntity().getMinQty());
+            thread.setSafeState(true);
+        } catch (Exception e) {
+
+        }
     }
 
     private void panicBuy(BbRsiThread thread) {
@@ -363,7 +379,24 @@ public class BbRsiService extends StratTickerService<BbRsiThread, BbRsiThreadMod
         log.trace(thread.getThreadName() + " : Peak " + thread.getPeak());
         log.trace(thread.getThreadName() + " : RsiDiff " + thread.getRsiDiff());
         log.trace(thread.getThreadName() + " : TargetThreshold " + thread.getTargetThreshold());
+
+        if (!thread.isSafeState()) {
+            if (thread.getCurrentValue() - thread.getTradeValue() >= thread.getTargetThreshold() + 0.005) {
+                safeSell(thread);
+            }
+        }
     }
+
+    private void safeSell(BbRsiThread thread) {
+        log.debug(thread.getThreadName() + " : Safe sell");
+        try {
+            sell(thread, thread.getEntity().getMinQty());
+            thread.setSafeState(true);
+        } catch (Exception e) {
+
+        }
+    }
+
 
     private void panicSell(BbRsiThread thread) {
         log.debug(thread.getThreadName() + " : Panic sell " + thread.getPanicSell());
@@ -390,7 +423,12 @@ public class BbRsiService extends StratTickerService<BbRsiThread, BbRsiThreadMod
     private void buyAction1(BbRsiThread thread) {
         log.debug(thread.getThreadName() + " : Panic buy");
         try {
-            buy(thread, thread.getEntity().getMinQty());
+            if (thread.isSafeState()) {
+                buy(thread, 2 * thread.getEntity().getMinQty());
+                thread.setSafeState(false);
+            } else {
+                buy(thread, thread.getEntity().getMinQty());
+            }
             thread.setCurrentState(BB_RSI_THREAD_STATE_LT_BOUGHT);
             thread.setTradeStartTime(System.currentTimeMillis());
             thread.setTradeValue(thread.getCurrentValue());
@@ -402,7 +440,12 @@ public class BbRsiService extends StratTickerService<BbRsiThread, BbRsiThreadMod
     private void sellAction1(BbRsiThread thread) {
         log.debug(thread.getThreadName() + " : Sell action 1");
         try {
-            sell(thread, thread.getEntity().getMinQty());
+            if (thread.isSafeState()) {
+                sell(thread, 2 * thread.getEntity().getMinQty());
+                thread.setSafeState(false);
+            } else {
+                sell(thread, thread.getEntity().getMinQty());
+            }
             thread.setCurrentState(BB_RSI_THREAD_STATE_UT_SOLD);
             thread.setTradeStartTime(System.currentTimeMillis());
             thread.setTradeValue(thread.getCurrentValue());

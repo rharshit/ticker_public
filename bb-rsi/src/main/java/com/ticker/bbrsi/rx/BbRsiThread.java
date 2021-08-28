@@ -39,6 +39,8 @@ public class BbRsiThread extends StratThread<BbRsiService> {
     private int panicSell = 0;
     private int panicBuy = 0;
 
+    private boolean safeState = true;
+
     @Override
     public void setRsi(float rsi) {
         if (!service.isSameMinTrigger(rsiSetTime)) {
@@ -69,12 +71,24 @@ public class BbRsiThread extends StratThread<BbRsiService> {
     }
 
     @Override
+    public void setPositionQty(int positionQty) {
+        super.setPositionQty(positionQty);
+        if (getPositionQty() == 0) {
+            setSafeState(true);
+        }
+    }
+
+    @Override
     public void resetTriggers() {
         log.info(getThreadName() + " : Resetting triggers");
         super.resetTriggers();
         triggerWaveEndTime = 0;
         tradeStartTime = 0;
+        tradeValue = 0;
         dip = 0;
         peak = 0;
+        panicSell = 0;
+        panicBuy = 0;
+        setSafeState(true);
     }
 }
