@@ -287,7 +287,7 @@ public class BbRsiService extends StratTickerService<BbRsiThread, BbRsiThreadMod
         }
         log.trace(thread.getThreadName() + " : CurrentValue " + thread.getCurrentValue());
         log.trace(thread.getThreadName() + " : TradeValue " + thread.getTradeValue());
-        log.trace(thread.getThreadName() + " : Peak " + thread.getPeak());
+        log.trace(thread.getThreadName() + " : Dip " + thread.getDip());
         log.trace(thread.getThreadName() + " : RsiDiff " + thread.getRsiDiff());
         log.trace(thread.getThreadName() + " : TargetThreshold " + thread.getTargetThreshold());
 
@@ -481,8 +481,8 @@ public class BbRsiService extends StratTickerService<BbRsiThread, BbRsiThreadMod
             log.debug(thread.getThreadName() + " : " + thread.getCurrentValue() + " - " + thread.getDip() + " = " + (thread.getCurrentValue() - thread.getDip()));
             log.debug(thread.getThreadName() + " : isUpwardTrend(thread) = " + isUpwardTrend(thread));
             log.debug(thread.getThreadName() + " : RsiDiff " + thread.getRsiDiff());
-            if (((isUpwardTrend(thread) && thread.getCurrentValue() - thread.getDip() > 0.75 * thread.getTargetThreshold()) ||
-                    (thread.getCurrentValue() - thread.getDip() > thread.getTargetThreshold())) &&
+            if (((isUpwardTrend(thread) && thread.getCurrentValue() - thread.getDip() > 0.5 * thread.getTargetThreshold()) ||
+                    (thread.getCurrentValue() - thread.getDip() > 0.75f * thread.getTargetThreshold())) &&
                     thread.getRsiDiff() > RSI_LOWER_LIMIT_PREMATURE_DIFF) {
                 log.debug(thread.getThreadName() + " : PreMatureLtEnd");
                 thread.setCurrentState(BB_RSI_THREAD_STATE_LT_TRIGGER_END2);
@@ -541,8 +541,8 @@ public class BbRsiService extends StratTickerService<BbRsiThread, BbRsiThreadMod
             log.debug(thread.getThreadName() + " : " + thread.getPeak() + " - " + thread.getCurrentValue() + " = " + (thread.getPeak() - thread.getCurrentValue()));
             log.debug(thread.getThreadName() + " : isDownwardTrend(thread) = " + isDownwardTrend(thread));
             log.debug(thread.getThreadName() + " : RsiDiff " + thread.getRsiDiff());
-            if (((isDownwardTrend(thread) && thread.getPeak() - thread.getCurrentValue() > 0.75f * thread.getTargetThreshold()) ||
-                    (thread.getPeak() - thread.getCurrentValue() > thread.getTargetThreshold())) &&
+            if (((isDownwardTrend(thread) && thread.getPeak() - thread.getCurrentValue() > 0.5f * thread.getTargetThreshold()) ||
+                    (thread.getPeak() - thread.getCurrentValue() > 0.75f * thread.getTargetThreshold())) &&
                     thread.getRsiDiff() < RSI_UPPER_LIMIT_PREMATURE_DIFF) {
                 log.debug(thread.getThreadName() + " : PreMatureUtEnd");
                 thread.setCurrentState(BB_RSI_THREAD_STATE_UT_TRIGGER_END2);

@@ -30,13 +30,13 @@ public abstract class BbRsiConstants {
 
     public static final float RSI_LOWER_LIMIT = 25;
     public static final float RSI_LOWER_LIMIT_REBOUND = 32;
-    public static final float RSI_LOWER_LIMIT_PREMATURE_DIFF = 8;
+    public static final float RSI_LOWER_LIMIT_PREMATURE_DIFF = 5;
     public static final float RSI_LOWER_LIMIT_PANIC_DIFF = -10;
 
     public static final float RSI_UPPER_LIMIT = 75;
     public static final float RSI_UPPER_LIMIT_REBOUND = 68;
-    public static final float RSI_UPPER_LIMIT_PREMATURE_DIFF = -8;
-    public static final float RSI_UPPER_LIMIT_PANIC_DIFF = -10;
+    public static final float RSI_UPPER_LIMIT_PREMATURE_DIFF = -5;
+    public static final float RSI_UPPER_LIMIT_PANIC_DIFF = 10;
 
     public static final int PANIC_TIME_OFF = 40;
     public static final int PANIC_TIME_OFF_EMERGENCY_RETRIES = 5;
