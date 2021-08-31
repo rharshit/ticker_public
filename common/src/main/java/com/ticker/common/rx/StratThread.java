@@ -41,6 +41,7 @@ public abstract class StratThread<S extends StratTickerService> extends TickerTh
     private int positionQty = 0;
 
     private float targetThreshold;
+    private boolean lowValue = false;
 
     public StratThread(ExchangeSymbolEntity entity) {
         super(entity);
@@ -132,6 +133,14 @@ public abstract class StratThread<S extends StratTickerService> extends TickerTh
     }
 
     public void setTargetThreshold(float targetThreshold) {
-        this.targetThreshold = Math.max(targetThreshold, 0.1501f);
+        if (targetThreshold < 0.055f) {
+            this.targetThreshold = 0.045f;
+            this.lowValue = true;
+        } else if (targetThreshold < 0.105f) {
+            this.targetThreshold = 0.095f;
+            this.lowValue = true;
+        } else {
+            this.targetThreshold = targetThreshold;
+        }
     }
 }

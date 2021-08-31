@@ -19,4 +19,8 @@ public class BbRsiThreadModel extends StratThreadModel<BbRsiThread> {
     public boolean isSafeState() {
         return thread.isSafeState();
     }
+
+    public boolean isLowTarget() {
+        return thread.isLowValue();
+    }
 }
