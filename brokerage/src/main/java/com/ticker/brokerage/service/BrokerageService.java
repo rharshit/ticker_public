@@ -132,7 +132,7 @@ public class BrokerageService {
         data.put("pnl", data.get("netPnl"));
         data.put("ptb", data.get("pointsToBreakeven"));
         data.put("totalBrokerage", data.get("totalTaxAndCharges"));
-        log.debug("end: " + exchange + " : " + buy + ", " + sell + ", " + quantity + " at " + (System.currentTimeMillis() - start));
+        log.info("end: " + exchange + " : " + buy + ", " + sell + ", " + quantity + " in " + (System.currentTimeMillis() - start) + "ms");
         return data;
     }
 

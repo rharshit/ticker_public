@@ -15,4 +15,12 @@ public class BbRsiThreadModel extends StratThreadModel<BbRsiThread> {
     public float getPeak() {
         return thread.getPeak();
     }
+
+    public boolean isSafeState() {
+        return thread.isSafeState();
+    }
+
+    public boolean isLowTarget() {
+        return thread.isLowValue();
+    }
 }
