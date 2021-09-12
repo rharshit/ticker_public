@@ -595,6 +595,7 @@ public class BbRsiService extends StratTickerService<BbRsiThread, BbRsiThreadMod
 
     private void checkTrigger(BbRsiThread thread) {
         log.trace(thread.getThreadName() + " : checkTrigger");
+        thread.resetTriggers();
         if (!isEomTrigger(15)) {
             return;
         }
