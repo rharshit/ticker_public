@@ -41,6 +41,8 @@ public class BbRsiThread extends StratThread<BbRsiService> {
 
     private boolean safeState = true;
 
+    private boolean goodToTrigger = false;
+
     @Override
     public void setRsi(float rsi) {
         if (!service.isSameMinTrigger(rsiSetTime)) {
@@ -90,5 +92,6 @@ public class BbRsiThread extends StratThread<BbRsiService> {
         panicSell = 0;
         panicBuy = 0;
         setSafeState(true);
+        setGoodToTrigger(false);
     }
 }

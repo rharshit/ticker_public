@@ -40,6 +40,8 @@ public class BbRsiService extends StratTickerService<BbRsiThread, BbRsiThreadMod
         put(BB_RSI_THREAD_STATE_UT_WAIT_WAVE_REVENGE, "Upper trigger revenge trading");
         put(BB_RSI_THREAD_STATE_LT_PANIC_SELL, "Lower trigger panic sell");
         put(BB_RSI_THREAD_STATE_UT_PANIC_BUY, "Upper trigger panic buy");
+        put(BB_RSI_THREAD_STATE_LT_GTT_FAILED, "Lower trigger GTT fail");
+        put(BB_RSI_THREAD_STATE_UT_GTT_FAILED, "Upper trigger GTT fail");
     }};
 
     @Override
@@ -470,6 +472,7 @@ public class BbRsiService extends StratTickerService<BbRsiThread, BbRsiThreadMod
 
     private void checkForLtEnd(BbRsiThread thread) {
         log.trace(thread.getThreadName() + " : checkForLtEnd");
+        checkLtGTT(thread);
         checkPreMatureLtEnd(thread);
         if (thread.getCurrentState() == BB_RSI_THREAD_STATE_LT_TRIGGER_END2) {
             log.info(thread.getThreadName() + " : PreMatureLtEnd");
@@ -479,16 +482,26 @@ public class BbRsiService extends StratTickerService<BbRsiThread, BbRsiThreadMod
             log.trace(thread.getThreadName() + " : no check");
             return;
         }
-        if (thread.getRsi() > RSI_LOWER_LIMIT && isUpwardTrend(thread)) {
+        if (thread.getRsi() > RSI_LOWER_LIMIT && isUpwardTrend(thread) && thread.isGoodToTrigger()) {
             log.trace(thread.getThreadName() + " : LtEnd");
             thread.setCurrentState(BB_RSI_THREAD_STATE_LT_TRIGGER_END1);
             thread.setTriggerWaveEndTime(System.currentTimeMillis());
         }
     }
 
+    private void checkLtGTT(BbRsiThread thread) {
+        if (thread.getCurrentState() < thread.getBbL()) {
+            thread.setGoodToTrigger(true);
+        }
+        if (!thread.isGoodToTrigger() && thread.getRsi() > RSI_LOWER_LIMIT_REBOUND) {
+            thread.setCurrentState(BB_RSI_THREAD_STATE_LT_GTT_FAILED);
+            thread.setCurrentState(BB_RSI_THREAD_STATE_WAITING_FOR_TRIGGER);
+        }
+    }
+
     private void checkPreMatureLtEnd(BbRsiThread thread) {
         thread.setDip(thread.getCurrentValue());
-        if (!isSameMinTrigger(thread.getTriggerStartTime()) && isEomTrigger(10)) {
+        if (!isSameMinTrigger(thread.getTriggerStartTime()) && isEomTrigger(10) && thread.isGoodToTrigger()) {
             log.debug("");
             log.debug(thread.getThreadName() + " : checkPreMatureLtEnd");
             log.debug(thread.getThreadName() + " : thread.getCurrentValue() - thread.getDip() = " + (thread.getCurrentValue() - thread.getDip()));
@@ -507,6 +520,7 @@ public class BbRsiService extends StratTickerService<BbRsiThread, BbRsiThreadMod
 
     private void checkForLtEnd1(BbRsiThread thread) {
         log.trace(thread.getThreadName() + " : checkForLtEnd1");
+        checkLtGTT(thread);
         checkPreMatureLtEnd(thread);
         if (thread.getCurrentState() == BB_RSI_THREAD_STATE_LT_TRIGGER_END2) {
             log.info(thread.getThreadName() + " : PreMatureLtEnd");
@@ -516,7 +530,7 @@ public class BbRsiService extends StratTickerService<BbRsiThread, BbRsiThreadMod
             log.trace(thread.getThreadName() + " : no check");
             return;
         }
-        if (thread.getRsi() > RSI_LOWER_LIMIT && isUpwardTrend(thread)) {
+        if (thread.getRsi() > RSI_LOWER_LIMIT && isUpwardTrend(thread) && thread.isGoodToTrigger()) {
             log.trace(thread.getThreadName() + " : LtEnd1");
             thread.setCurrentState(BB_RSI_THREAD_STATE_LT_TRIGGER_END2);
             thread.setTriggerWaveEndTime(System.currentTimeMillis());
@@ -530,6 +544,7 @@ public class BbRsiService extends StratTickerService<BbRsiThread, BbRsiThreadMod
 
     private void checkForUtEnd(BbRsiThread thread) {
         log.trace(thread.getThreadName() + " : checkForUtEnd");
+        checkUtGTT(thread);
         checkPreMatureUtEnd(thread);
         if (thread.getCurrentState() == BB_RSI_THREAD_STATE_UT_TRIGGER_END2) {
             log.info(thread.getThreadName() + " : PreMatureUtEnd");
@@ -539,16 +554,26 @@ public class BbRsiService extends StratTickerService<BbRsiThread, BbRsiThreadMod
             log.trace(thread.getThreadName() + " : no check");
             return;
         }
-        if (thread.getRsi() < RSI_UPPER_LIMIT && isDownwardTrend(thread)) {
+        if (thread.getRsi() < RSI_UPPER_LIMIT && isDownwardTrend(thread) && thread.isGoodToTrigger()) {
             log.trace(thread.getThreadName() + " : UtEnd");
             thread.setCurrentState(BB_RSI_THREAD_STATE_UT_TRIGGER_END1);
             thread.setTriggerWaveEndTime(System.currentTimeMillis());
         }
     }
 
+    private void checkUtGTT(BbRsiThread thread) {
+        if (thread.getCurrentState() > thread.getBbU()) {
+            thread.setGoodToTrigger(true);
+        }
+        if (!thread.isGoodToTrigger() && thread.getRsi() < RSI_UPPER_LIMIT_REBOUND) {
+            thread.setCurrentState(BB_RSI_THREAD_STATE_WAITING_FOR_TRIGGER);
+            thread.setCurrentState(BB_RSI_THREAD_STATE_UT_GTT_FAILED);
+        }
+    }
+
     private void checkPreMatureUtEnd(BbRsiThread thread) {
         thread.setPeak(thread.getCurrentValue());
-        if (!isSameMinTrigger(thread.getTriggerStartTime()) && isEomTrigger(10)) {
+        if (!isSameMinTrigger(thread.getTriggerStartTime()) && isEomTrigger(10) && thread.isGoodToTrigger()) {
             log.debug("");
             log.debug(thread.getThreadName() + " : checkPreMatureUtEnd");
             log.debug(thread.getThreadName() + " : thread.getPeak() - thread.getCurrentValue() = " + (thread.getPeak() - thread.getCurrentValue()));
@@ -567,6 +592,7 @@ public class BbRsiService extends StratTickerService<BbRsiThread, BbRsiThreadMod
 
     private void checkForUtEnd1(BbRsiThread thread) {
         log.trace(thread.getThreadName() + " : checkForUtEnd1");
+        checkUtGTT(thread);
         checkPreMatureUtEnd(thread);
         if (thread.getCurrentState() == BB_RSI_THREAD_STATE_UT_TRIGGER_END2) {
             log.info(thread.getThreadName() + " : PreMatureUtEnd");
@@ -576,7 +602,7 @@ public class BbRsiService extends StratTickerService<BbRsiThread, BbRsiThreadMod
             log.trace(thread.getThreadName() + " : no check");
             return;
         }
-        if (thread.getRsi() < RSI_UPPER_LIMIT && isDownwardTrend(thread)) {
+        if (thread.getRsi() < RSI_UPPER_LIMIT && isDownwardTrend(thread) && thread.isGoodToTrigger()) {
             log.trace(thread.getThreadName() + " : UtEnd1");
             thread.setCurrentState(BB_RSI_THREAD_STATE_UT_TRIGGER_END2);
             thread.setTriggerWaveEndTime(System.currentTimeMillis());
