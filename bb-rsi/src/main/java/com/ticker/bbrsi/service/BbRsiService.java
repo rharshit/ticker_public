@@ -494,8 +494,7 @@ public class BbRsiService extends StratTickerService<BbRsiThread, BbRsiThreadMod
             thread.setGoodToTrigger(true);
         }
         if (!thread.isGoodToTrigger() && thread.getRsi() > RSI_LOWER_LIMIT_REBOUND) {
-            thread.setCurrentState(BB_RSI_THREAD_STATE_LT_GTT_FAILED);
-            thread.setCurrentState(BB_RSI_THREAD_STATE_WAITING_FOR_TRIGGER);
+            thread.setIntermediateState(BB_RSI_THREAD_STATE_LT_GTT_FAILED, BB_RSI_THREAD_STATE_WAITING_FOR_TRIGGER);
         }
     }
 
@@ -566,8 +565,7 @@ public class BbRsiService extends StratTickerService<BbRsiThread, BbRsiThreadMod
             thread.setGoodToTrigger(true);
         }
         if (!thread.isGoodToTrigger() && thread.getRsi() < RSI_UPPER_LIMIT_REBOUND) {
-            thread.setCurrentState(BB_RSI_THREAD_STATE_WAITING_FOR_TRIGGER);
-            thread.setCurrentState(BB_RSI_THREAD_STATE_UT_GTT_FAILED);
+            thread.setIntermediateState(BB_RSI_THREAD_STATE_UT_GTT_FAILED, BB_RSI_THREAD_STATE_WAITING_FOR_TRIGGER);
         }
     }
 
