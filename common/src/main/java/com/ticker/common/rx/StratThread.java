@@ -127,6 +127,25 @@ public abstract class StratThread<S extends StratTickerService> extends TickerTh
         stateTrace.put(System.currentTimeMillis(), getCurrentState());
     }
 
+    public void setIntermediateState(int intermediateState) {
+        setStates(intermediateState, getCurrentState());
+    }
+
+    public void setIntermediateState(int intermediateState, int finalState) {
+        setStates(intermediateState, finalState);
+    }
+
+    public void setStates(int... states) {
+        for (int state : states) {
+            setCurrentState(state);
+            try {
+                sleep(5);
+            } catch (InterruptedException e) {
+                log.error(e.getLocalizedMessage());
+            }
+        }
+    }
+
     public void resetTriggers() {
         triggerStartValue = 0;
         triggerStartTime = 0;
