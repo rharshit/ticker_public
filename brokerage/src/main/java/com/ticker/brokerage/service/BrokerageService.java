@@ -24,6 +24,7 @@ public class BrokerageService {
     private static final String OPTIONS = "options";
     private static final Map<String, List<String>> tabs;
     public static final int numTries = 3;
+    private static boolean busy = false;
 
     static {
         initWebdriver();
@@ -92,6 +93,7 @@ public class BrokerageService {
         Map<String, Double> data = new HashMap<>();
         try {
             synchronized (webDriver) {
+                busy = true;
                 WebElement tabDiv = webDriver.findElement(By.id(divId));
                 setTabValues(tabDiv, buy, sell, quantity);
                 boolean isExchangeSelected = false;
@@ -128,6 +130,8 @@ public class BrokerageService {
             } else {
                 throw new TickerException("Error while getting values. Please try again");
             }
+        } finally {
+            busy = false;
         }
         data.put("pnl", data.get("netPnl"));
         data.put("ptb", data.get("pointsToBreakeven"));
@@ -175,5 +179,9 @@ public class BrokerageService {
             camelCase.append(newWord.substring(0, 1).toUpperCase()).append(newWord.substring(1).toLowerCase());
         }
         return camelCase.substring(0, 1).toLowerCase() + camelCase.substring(1);
+    }
+
+    public boolean isBusy() {
+        return busy;
     }
 }
