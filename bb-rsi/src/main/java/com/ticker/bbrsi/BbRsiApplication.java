@@ -9,10 +9,10 @@ import org.springframework.data.jpa.repository.config.EnableJpaRepositories;
 import org.springframework.scheduling.annotation.EnableScheduling;
 
 @EnableScheduling
-@EnableJpaRepositories(basePackages = {"com.ticker.common.fetcher.repository.exchangesymbol"})
-@EntityScan(basePackages = {"com.ticker.common.fetcher.repository.exchangesymbol"})
+@EnableJpaRepositories(basePackages = {"com.ticker.common.entity.exchangesymbol"})
+@EntityScan(basePackages = {"com.ticker.common.entity.exchangesymbol"})
 @ComponentScan({
-		"com.ticker.common.fetcher.repository.exchangesymbol",
+		"com.ticker.common.entity.exchangesymbol",
 		"com.ticker.common.config",
 		"com.ticker.bbrsi"
 })

@@ -1,6 +1,6 @@
 package com.ticker.mwave.rx;
 
-import com.ticker.common.fetcher.repository.exchangesymbol.ExchangeSymbolEntity;
+import com.ticker.common.entity.exchangesymbol.ExchangeSymbolEntity;
 import com.ticker.common.rx.StratThread;
 import com.ticker.mwave.service.MWaveService;
 import lombok.Getter;

@@ -1,7 +1,7 @@
 package com.ticker.common.rx;
 
+import com.ticker.common.entity.exchangesymbol.ExchangeSymbolEntity;
 import com.ticker.common.exception.TickerException;
-import com.ticker.common.fetcher.repository.exchangesymbol.ExchangeSymbolEntity;
 import com.ticker.common.service.TickerThreadService;
 import lombok.Getter;
 import lombok.NoArgsConstructor;

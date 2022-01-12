@@ -1,7 +1,7 @@
 package com.ticker.mockfetcher.common.rx;
 
+import com.ticker.common.entity.exchangesymbol.ExchangeSymbolEntity;
 import com.ticker.common.exception.TickerException;
-import com.ticker.common.fetcher.repository.exchangesymbol.ExchangeSymbolEntity;
 import com.ticker.common.rx.TickerThread;
 import com.ticker.mockfetcher.repository.MockFetcherAppRepository;
 import com.ticker.mockfetcher.service.MockFetcherService;

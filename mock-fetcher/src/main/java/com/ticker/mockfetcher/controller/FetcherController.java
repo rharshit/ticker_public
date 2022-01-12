@@ -1,6 +1,6 @@
 package com.ticker.mockfetcher.controller;
 
-import com.ticker.common.fetcher.repository.exchangesymbol.ExchangeSymbolEntity;
+import com.ticker.common.entity.exchangesymbol.ExchangeSymbolEntity;
 import com.ticker.common.model.ResponseStatus;
 import com.ticker.mockfetcher.model.FetcherThreadModel;
 import com.ticker.mockfetcher.service.TickerService;

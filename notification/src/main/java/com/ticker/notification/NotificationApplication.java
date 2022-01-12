@@ -1,4 +1,4 @@
-package com.ticker.fetcher;
+package com.ticker.notification;
 
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
@@ -6,17 +6,17 @@ import org.springframework.boot.autoconfigure.domain.EntityScan;
 import org.springframework.boot.autoconfigure.jdbc.DataSourceAutoConfiguration;
 import org.springframework.context.annotation.ComponentScan;
 import org.springframework.data.jpa.repository.config.EnableJpaRepositories;
-import org.springframework.scheduling.annotation.EnableScheduling;
 
-@EnableScheduling
-@EnableJpaRepositories(basePackages = {"com.ticker.common.entity.exchangesymbol"})
-@EntityScan(basePackages = {"com.ticker.common.entity.exchangesymbol"})
-@ComponentScan({"com.ticker.common.entity.exchangesymbol", "com.ticker.fetcher"})
+
+@ComponentScan({"com.ticker.notification"})
+@EnableJpaRepositories(basePackages = {"com.ticker.common.entity.notification"})
+@EntityScan(basePackages = {"com.ticker.common.entity.notification"})
+@ComponentScan({"com.ticker.common.entity.notification", "com.ticker.notification"})
 @SpringBootApplication(exclude = {DataSourceAutoConfiguration.class})
-public class FetcherApplication {
+public class NotificationApplication {
 
 	public static void main(String[] args) {
-		SpringApplication.run(FetcherApplication.class, args);
+		SpringApplication.run(NotificationApplication.class, args);
 	}
 
 }
