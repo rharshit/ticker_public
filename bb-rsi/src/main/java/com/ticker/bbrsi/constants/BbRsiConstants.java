@@ -42,4 +42,7 @@ public abstract class BbRsiConstants {
 
     public static final int PANIC_TIME_OFF = 40;
     public static final int PANIC_TIME_OFF_EMERGENCY_RETRIES = 5;
+
+    public static final int GTT_RSI_UPPER_LIMIT = 87;
+    public static final int GTT_RSI_LOWER_LIMIT = 13;
 }
