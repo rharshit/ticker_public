@@ -61,7 +61,7 @@ public class FetcherService {
 
         // Indicators
         waitTillLoad(fetcherThread.getWebDriver(), WAIT_SHORT + iteration * iterationMultiplier, 2);
-        setIndicators(fetcherThread.getWebDriver(), "bb:STD;Bollinger_Bands", "rsi:STD;RSI");
+        setIndicators(fetcherThread.getWebDriver(), "bb:STD;Bollinger_Bands", "rsi:STD;RSI", "tema:STD;TEMA");
 
         if (refresh) {
             log.info(fetcherThread.getExchange() + ":" + fetcherThread.getSymbol() + " - Refreshed");
@@ -225,6 +225,7 @@ public class FetcherService {
                         float bbU = 0;
                         float bbL = 0;
                         float rsi = 0;
+                        float tema = 0;
                         String ohlcbbRowText = texts.get(0);
                         if (!StringUtils.isEmpty(ohlcbbRowText)) {
                             String[] vals = ohlcbbRowText.split("\n");
@@ -247,7 +248,7 @@ public class FetcherService {
                                     fetcherThread.setL(l);
                                     fetcherThread.setC(c);
 
-                                    log.debug("1OHLC at 0");
+                                    log.debug("1OHLC at " + i);
                                 } else if (bbL * bbA * bbU == 0 && "BB".equalsIgnoreCase(vals[i])) {
                                     bbA = Float.parseFloat(vals[i + 2]);
                                     bbU = Float.parseFloat(vals[i + 3]);
@@ -257,10 +258,16 @@ public class FetcherService {
                                     fetcherThread.setBbU(bbU);
                                     fetcherThread.setBbL(bbL);
 
-                                    log.debug("1BB   at 0");
+                                    log.debug("1BB   at " + i);
 
+                                } else if (tema == 0 && "TEMA".equalsIgnoreCase(vals[i])) {
+                                    tema = Float.parseFloat(vals[i + 2]);
+
+                                    fetcherThread.setTema(tema);
+
+                                    log.debug("1TEMA at " + i);
                                 }
-                                tmpVal = o * h * l * c * bbA * bbL * bbU;
+                                tmpVal = o * h * l * c * bbA * bbL * bbU * tema;
                             }
                         }
 
@@ -277,7 +284,7 @@ public class FetcherService {
                                 }
                             }
                         }
-                        float valCheck = o * h * l * c * bbL * bbA * bbU * rsi;
+                        float valCheck = o * h * l * c * bbL * bbA * bbU * rsi * tema;
                         if (valCheck == 0) {
                             log.error(fetcherThread.getThreadName() + " :\n" +
                                     o + "," + h + "," + l + "," + c + "\n"
@@ -287,10 +294,10 @@ public class FetcherService {
                             log.trace(fetcherThread.getThreadName() + " :\n" +
                                     o + "," + h + "," + l + "," + c + "\n"
                                     + bbL + "," + bbA + "," + bbU + "\n"
-                                    + rsi);
+                                    + rsi + "," + tema);
                             synchronized (dataQueue) {
                                 dataQueue.add(new FetcherRepoModel(fetcherThread.getTableName(), System.currentTimeMillis(),
-                                        o, h, l, c, bbU, bbA, bbL, rsi));
+                                        o, h, l, c, bbU, bbA, bbL, rsi, tema));
                             }
                             log.debug("doTask() added data: " + fetcherThread.getThreadName() + ", size: " + dataQueue.size());
                         }

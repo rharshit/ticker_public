@@ -68,18 +68,19 @@ public class MockFetcherService {
                 float bbA = mockFetcherRepoModel.getBbA();
                 float bbU = mockFetcherRepoModel.getBbU();
                 float bbL = mockFetcherRepoModel.getBbL();
-                float rsi = mockFetcherRepoModel.getExtra();
+                float rsi = mockFetcherRepoModel.getRsi();
+                float tema = mockFetcherRepoModel.getTema();
                 float valCheck = o * h * l * c * bbL * bbA * bbU * rsi;
                 if (valCheck == 0) {
                     log.error(mockFetcherThread.getThreadName() + " :\n" +
                             o + "," + h + "," + l + "," + c + "\n"
                             + bbL + "," + bbA + "," + bbU + "\n"
-                            + rsi);
+                            + rsi + "," + tema);
                 } else {
                     log.trace(mockFetcherThread.getThreadName() + " :\n" +
                             o + "," + h + "," + l + "," + c + "\n"
                             + bbL + "," + bbA + "," + bbU + "\n"
-                            + rsi);
+                            + rsi + "," + tema);
                     mockFetcherThread.setO(o);
                     mockFetcherThread.setH(h);
                     mockFetcherThread.setL(l);

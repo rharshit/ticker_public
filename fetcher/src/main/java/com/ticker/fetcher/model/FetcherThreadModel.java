@@ -63,4 +63,8 @@ public class FetcherThreadModel extends TickerThreadModel<FetcherThread> {
     public float getRsi() {
         return thread.getRsi();
     }
+
+    public float getTema() {
+        return thread.getTema();
+    }
 }
