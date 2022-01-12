@@ -1,10 +1,10 @@
 package com.ticker.bbrsisafe.model;
 
-import com.ticker.bbrsisafe.rx.BbRsiThread;
+import com.ticker.bbrsisafe.rx.BbRsiSafeThread;
 import com.ticker.common.model.StratThreadModel;
 
-public class BbRsiThreadModel extends StratThreadModel<BbRsiThread> {
-    public BbRsiThreadModel(BbRsiThread thread) {
+public class BbRsiThreadModel extends StratThreadModel<BbRsiSafeThread> {
+    public BbRsiThreadModel(BbRsiSafeThread thread) {
         super(thread);
     }
 
@@ -17,7 +17,7 @@ public class BbRsiThreadModel extends StratThreadModel<BbRsiThread> {
     }
 
     public boolean isSafeState() {
-        return thread.isSafeState();
+        return thread.getPositionQty() == 0;
     }
 
     public boolean isLowTarget() {
