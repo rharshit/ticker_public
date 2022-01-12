@@ -18,7 +18,7 @@ import static com.ticker.bbrsisafe.constants.BbRsiConstants.BB_RSI_THREAD_COMP_N
 @Component(BB_RSI_THREAD_COMP_NAME)
 @Scope("prototype")
 @NoArgsConstructor
-public class BbRsiThread extends StratThread<BbRsiService> {
+public class BbRsiSafeThread extends StratThread<BbRsiService> {
 
     private long triggerWaveEndTime;
     private long tradeStartTime;
@@ -30,10 +30,9 @@ public class BbRsiThread extends StratThread<BbRsiService> {
     private long rsiSetTime;
     private int panicSell = 0;
     private int panicBuy = 0;
-    private boolean safeState = true;
     private boolean goodToTrigger = false;
 
-    public BbRsiThread(ExchangeSymbolEntity entity) {
+    public BbRsiSafeThread(ExchangeSymbolEntity entity) {
         super(entity);
     }
 
@@ -67,14 +66,6 @@ public class BbRsiThread extends StratThread<BbRsiService> {
     }
 
     @Override
-    public void setPositionQty(int positionQty) {
-        super.setPositionQty(positionQty);
-        if (getPositionQty() == 0) {
-            setSafeState(true);
-        }
-    }
-
-    @Override
     public void resetTriggers() {
         log.trace(getThreadName() + " : Resetting triggers");
         super.resetTriggers();
@@ -85,7 +76,6 @@ public class BbRsiThread extends StratThread<BbRsiService> {
         peak = 0;
         panicSell = 0;
         panicBuy = 0;
-        setSafeState(true);
         setGoodToTrigger(false);
     }
 }
