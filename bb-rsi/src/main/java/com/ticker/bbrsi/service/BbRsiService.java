@@ -490,7 +490,7 @@ public class BbRsiService extends StratTickerService<BbRsiThread, BbRsiThreadMod
     }
 
     private void checkLtGTT(BbRsiThread thread) {
-        if (thread.getCurrentState() < thread.getBbL()) {
+        if (thread.getTema() <= thread.getBbL()) {
             thread.setGoodToTrigger(true);
         }
         if (!thread.isGoodToTrigger() && thread.getRsi() > RSI_LOWER_LIMIT_REBOUND) {
@@ -561,7 +561,7 @@ public class BbRsiService extends StratTickerService<BbRsiThread, BbRsiThreadMod
     }
 
     private void checkUtGTT(BbRsiThread thread) {
-        if (thread.getCurrentState() > thread.getBbU()) {
+        if (thread.getTema() >= thread.getBbU()) {
             thread.setGoodToTrigger(true);
         }
         if (!thread.isGoodToTrigger() && thread.getRsi() < RSI_UPPER_LIMIT_REBOUND) {
