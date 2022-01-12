@@ -22,5 +22,5 @@ jobs:
         java-version: '8'
         distribution: 'adopt'
     - name: Build Ticker
-      run: mvn clean install -X
+      run: mvn clean install
 
