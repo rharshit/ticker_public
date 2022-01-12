@@ -58,7 +58,8 @@ public class MockFetcherAppRepository {
             fetcherRepoModel.setBbU((Float) result.get(0).get("BB_U"));
             fetcherRepoModel.setBbA((Float) result.get(0).get("BB_A"));
             fetcherRepoModel.setBbL((Float) result.get(0).get("BB_L"));
-            fetcherRepoModel.setExtra((Float) result.get(0).get("EXTRA"));
+            fetcherRepoModel.setRsi((Float) result.get(0).get("RSI"));
+            fetcherRepoModel.setTema((Float) result.get(0).get("TEMA"));
         } catch (IndexOutOfBoundsException e) {
             log.error("Cannot fetch from " + fetcherRepoModel.getTableName() + " for " + time);
         } catch (Exception e) {

@@ -16,9 +16,10 @@ public class FetcherRepoModel {
     private final float bbU;
     private final float bbA;
     private final float bbL;
-    private final float extra;
+    private final float rsi;
+    private final float tema;
 
-    public FetcherRepoModel(String tableName, long timestamp, float o, float h, float l, float c, float bbU, float bbA, float bbL, float extra) {
+    public FetcherRepoModel(String tableName, long timestamp, float o, float h, float l, float c, float bbU, float bbA, float bbL, float rsi, float tema) {
         this.tableName = tableName;
         this.timestamp = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss").format(new Timestamp(timestamp));
         this.o = o;
@@ -28,7 +29,8 @@ public class FetcherRepoModel {
         this.bbU = bbU;
         this.bbA = bbA;
         this.bbL = bbL;
-        this.extra = extra;
+        this.rsi = rsi;
+        this.tema = tema;
     }
 
     @Override
@@ -43,7 +45,8 @@ public class FetcherRepoModel {
                 ", bbU=" + bbU +
                 ", bbA=" + bbA +
                 ", bbL=" + bbL +
-                ", extra=" + extra +
+                ", rsi=" + rsi +
+                ", tema=" + tema +
                 '}';
     }
 }

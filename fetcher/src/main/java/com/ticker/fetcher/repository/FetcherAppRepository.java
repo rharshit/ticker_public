@@ -108,10 +108,10 @@ public class FetcherAppRepository {
                     String deleteSql = "DELETE FROM " + data.getTableName() + " WHERE `timestamp`='" + data.getTimestamp() + "'";
                     log.trace(deleteSql);
                     sqlQueue.add(deleteSql);
-                    String insertSql = "INSERT INTO " + data.getTableName() + " (`timestamp`, O, H, L, C, BB_U, BB_A, BB_L, EXTRA)" +
+                    String insertSql = "INSERT INTO " + data.getTableName() + " (`timestamp`, O, H, L, C, BB_U, BB_A, BB_L, RSI, TEMA)" +
                             "VALUES('" + data.getTimestamp() + "', " + data.getO() + ", " + data.getH() +
                             ", " + data.getL() + ", " + data.getC() + ", " + data.getBbU() + ", " +
-                            data.getBbA() + ", " + data.getBbL() + ", " + data.getExtra() + ")";
+                            data.getBbA() + ", " + data.getBbL() + ", " + data.getRsi() + ", " + data.getTema() + ")";
                     log.trace(insertSql);
                     sqlQueue.add(insertSql);
                 }

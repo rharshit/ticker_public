@@ -30,6 +30,7 @@ public abstract class StratThread<S extends StratTickerService> extends TickerTh
     private float bbA;
     private float bbL;
     private float rsi;
+    private float tema;
     private float currentValue;
     private long updatedAt;
     private String tickerType = "";
@@ -96,6 +97,7 @@ public abstract class StratThread<S extends StratTickerService> extends TickerTh
             setBbA(((Double) ticker.get("bbA")).floatValue());
             setBbL(((Double) ticker.get("bbL")).floatValue());
             setRsi(((Double) ticker.get("rsi")).floatValue());
+            setTema(((Double) ticker.get("tema")).floatValue());
             if (getO() * getH() * getL() * getC() * getBbL() * getBbA() * getBbU() * getRsi() == 0) {
                 setFetching(false);
                 setCurrentValue(0);

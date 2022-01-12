@@ -18,9 +18,10 @@ public class MockFetcherRepoModel {
     private float bbU;
     private float bbA;
     private float bbL;
-    private float extra;
+    private float rsi;
+    private float tema;
 
-    public MockFetcherRepoModel(String tableName, long timestamp, float o, float h, float l, float c, float bbU, float bbA, float bbL, float extra) {
+    public MockFetcherRepoModel(String tableName, long timestamp, float o, float h, float l, float c, float bbU, float bbA, float bbL, float rsi, float tema) {
         this.tableName = tableName;
         this.timestamp = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss").format(new Timestamp(timestamp));
         this.o = o;
@@ -30,7 +31,8 @@ public class MockFetcherRepoModel {
         this.bbU = bbU;
         this.bbA = bbA;
         this.bbL = bbL;
-        this.extra = extra;
+        this.rsi = rsi;
+        this.tema = tema;
     }
 
     @Override
@@ -45,7 +47,8 @@ public class MockFetcherRepoModel {
                 ", bbU=" + bbU +
                 ", bbA=" + bbA +
                 ", bbL=" + bbL +
-                ", extra=" + extra +
+                ", rsi=" + rsi +
+                ", tema=" + tema +
                 '}';
     }
 }
