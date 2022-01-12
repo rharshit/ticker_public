@@ -1,7 +1,7 @@
 package com.ticker.bbrsi.rx;
 
 import com.ticker.bbrsi.service.BbRsiService;
-import com.ticker.common.fetcher.repository.exchangesymbol.ExchangeSymbolEntity;
+import com.ticker.common.entity.exchangesymbol.ExchangeSymbolEntity;
 import com.ticker.common.rx.StratThread;
 import lombok.Getter;
 import lombok.NoArgsConstructor;

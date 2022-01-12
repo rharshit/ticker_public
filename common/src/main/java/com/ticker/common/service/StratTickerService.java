@@ -1,8 +1,8 @@
 package com.ticker.common.service;
 
+import com.ticker.common.entity.exchangesymbol.ExchangeSymbolEntity;
+import com.ticker.common.entity.exchangesymbol.ExchangeSymbolEntityPK;
 import com.ticker.common.exception.TickerException;
-import com.ticker.common.fetcher.repository.exchangesymbol.ExchangeSymbolEntity;
-import com.ticker.common.fetcher.repository.exchangesymbol.ExchangeSymbolEntityPK;
 import com.ticker.common.model.ResponseStatus;
 import com.ticker.common.model.StratThreadModel;
 import com.ticker.common.rx.StratThread;

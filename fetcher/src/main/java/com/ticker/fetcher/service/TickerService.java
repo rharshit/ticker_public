@@ -1,7 +1,7 @@
 package com.ticker.fetcher.service;
 
+import com.ticker.common.entity.exchangesymbol.ExchangeSymbolEntity;
 import com.ticker.common.exception.TickerException;
-import com.ticker.common.fetcher.repository.exchangesymbol.ExchangeSymbolEntity;
 import com.ticker.common.service.TickerThreadService;
 import com.ticker.fetcher.common.rx.FetcherThread;
 import com.ticker.fetcher.model.FetcherThreadModel;

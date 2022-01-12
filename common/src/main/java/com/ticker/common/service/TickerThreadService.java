@@ -1,8 +1,8 @@
 package com.ticker.common.service;
 
-import com.ticker.common.fetcher.repository.exchangesymbol.ExchangeSymbolEntity;
-import com.ticker.common.fetcher.repository.exchangesymbol.ExchangeSymbolEntityPK;
-import com.ticker.common.fetcher.repository.exchangesymbol.ExchangeSymbolRepository;
+import com.ticker.common.entity.exchangesymbol.ExchangeSymbolEntity;
+import com.ticker.common.entity.exchangesymbol.ExchangeSymbolEntityPK;
+import com.ticker.common.entity.exchangesymbol.ExchangeSymbolRepository;
 import com.ticker.common.model.TickerThreadModel;
 import com.ticker.common.rx.TickerThread;
 import lombok.extern.slf4j.Slf4j;
