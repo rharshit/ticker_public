@@ -17,12 +17,17 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import org.springframework.web.client.RestTemplate;
 
+import java.io.File;
 import java.io.IOException;
+import java.nio.charset.StandardCharsets;
+import java.nio.file.Files;
+import java.nio.file.Paths;
 import java.text.SimpleDateFormat;
 import java.util.*;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
+import static com.ticker.booker.BookerConstants.LOG_PATH;
 import static com.ticker.common.contants.TickerConstants.APPLICATION_BROKERAGE;
 
 @Slf4j
@@ -108,7 +113,9 @@ public class BookerService {
     }
 
     public static List<TickerTrade> getTrades() {
-        return trades;
+        List<TickerTrade> allTrades = new ArrayList<>(trades);
+        allTrades.sort(Comparator.comparing(o -> o.exchangeTimestamp));
+        return allTrades;
     }
 
     public void populateLogs(String logs) {
@@ -343,5 +350,39 @@ public class BookerService {
         params.put("sell", trade.getSell().averagePrice);
         params.put("quantity", trade.getQuantity());
         return restTemplate.getForObject(url, Map.class, params);
+    }
+
+    public List<String> getLogFiles() {
+        List<String> files = new ArrayList<>();
+        final File folder = new File(LOG_PATH);
+        for (final File fileEntry : folder.listFiles()) {
+            if (!fileEntry.isDirectory()) {
+                String name = fileEntry.getName();
+                if (name.endsWith(".log")) {
+                    files.add(name);
+                }
+            }
+        }
+        files.sort(String::compareTo);
+        return files;
+    }
+
+    public void uploadLogFile(String file) {
+        String path = LOG_PATH + "/" + file;
+        byte[] encoded = new byte[0];
+        try {
+            encoded = Files.readAllBytes(Paths.get(path));
+        } catch (IOException e) {
+            log.error("Error while reading file at path: " + path);
+        }
+        String log = new String(encoded, StandardCharsets.US_ASCII);
+        populateLogs(log);
+    }
+
+    public void uploadAllLogFiles() {
+        List<String> files = getLogFiles();
+        for (String file : files) {
+            uploadLogFile(file);
+        }
     }
 }
