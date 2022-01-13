@@ -55,6 +55,23 @@ public class BookerController {
         return new ResponseEntity<>(new ResponseStatus(), HttpStatus.OK);
     }
 
+    @GetMapping("/logs")
+    public ResponseEntity<List<String>> getLogFiles() {
+        return new ResponseEntity<>(service.getLogFiles(), HttpStatus.OK);
+    }
+
+    @PostMapping("/logs/add")
+    public ResponseEntity<ResponseStatus> uploadLogFile(@RequestParam String file) {
+        service.uploadLogFile(file);
+        return new ResponseEntity<>(new ResponseStatus(), HttpStatus.OK);
+    }
+
+    @PostMapping("/logs/all")
+    public ResponseEntity<ResponseStatus> uploadAllLogFiles() {
+        service.uploadAllLogFiles();
+        return new ResponseEntity<>(new ResponseStatus(), HttpStatus.OK);
+    }
+
     @GetMapping("/trades")
     public ResponseEntity<List<TickerTrade>> getTrades() {
         return new ResponseEntity<>(BookerService.getTrades(), HttpStatus.OK);
