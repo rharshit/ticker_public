@@ -1,6 +1,7 @@
 package com.ticker.brokerage.service;
 
 import com.ticker.common.exception.TickerException;
+import com.ticker.common.util.objectpool.ObjectPool;
 import lombok.extern.slf4j.Slf4j;
 import org.openqa.selenium.*;
 import org.openqa.selenium.chrome.ChromeDriver;
@@ -17,17 +18,22 @@ import static com.ticker.brokerage.common.constants.WebConstants.ZERODHA_BROKERA
 @Slf4j
 public class BrokerageService {
 
-    private static WebDriver webDriver;
     private static final String EQUITY = "equity";
     private static final String INTRADAY = "intraday";
     private static final String FUTURES = "futures";
     private static final String OPTIONS = "options";
     private static final Map<String, List<String>> tabs;
+    private static final ObjectPool<WebDriver> webDrivers;
     public static final int numTries = 3;
     private static boolean busy = false;
 
     static {
-        initWebdriver();
+        webDrivers = new ObjectPool<WebDriver>(15, 45, 100, 500, 60000) {
+            @Override
+            public WebDriver createObject() {
+                return initWebdriver();
+            }
+        };
 
         tabs = new HashMap<String, List<String>>() {{
             put(INTRADAY, Arrays.asList(INTRADAY, "i", "id", "ide", "intraday"));
@@ -37,7 +43,8 @@ public class BrokerageService {
         }};
     }
 
-    private static void initWebdriver() {
+    private static WebDriver initWebdriver() {
+        WebDriver webDriver;
         log.info("Initializing webdriver");
         ChromeOptions options = new ChromeOptions();
         options.setHeadless(true);
@@ -50,6 +57,7 @@ public class BrokerageService {
         webDriver = new ChromeDriver(options);
         webDriver.get(ZERODHA_BROKERAGE_URL);
         log.info("Webdriver initialized");
+        return webDriver;
     }
 
     private static String getTabType(String type) {
@@ -92,19 +100,20 @@ public class BrokerageService {
         }
         Map<String, Double> data = new HashMap<>();
         try {
-            synchronized (webDriver) {
-                busy = true;
-                WebElement tabDiv = webDriver.findElement(By.id(divId));
-                setTabValues(tabDiv, buy, sell, quantity);
-                boolean isExchangeSelected = false;
-                List<WebElement> weExchanges = tabDiv.findElements(By.className("equity-radio"));
-                List<String> exchanges = new ArrayList<>();
-                for (WebElement weExchange : weExchanges) {
-                    WebElement rb = weExchange.findElement(By.tagName("input"));
-                    String exchangeValue = rb.getAttribute("value");
-                    if (exchange.equalsIgnoreCase(exchangeValue)) {
-                        rb.click();
-                        isExchangeSelected = true;
+            busy = true;
+            WebDriver webDriver = webDrivers.get();
+            busy = false;
+            WebElement tabDiv = webDriver.findElement(By.id(divId));
+            setTabValues(tabDiv, buy, sell, quantity);
+            boolean isExchangeSelected = false;
+            List<WebElement> weExchanges = tabDiv.findElements(By.className("equity-radio"));
+            List<String> exchanges = new ArrayList<>();
+            for (WebElement weExchange : weExchanges) {
+                WebElement rb = weExchange.findElement(By.tagName("input"));
+                String exchangeValue = rb.getAttribute("value");
+                if (exchange.equalsIgnoreCase(exchangeValue)) {
+                    rb.click();
+                    isExchangeSelected = true;
                         break;
                     }
                     exchanges.add(exchangeValue);
@@ -119,7 +128,7 @@ public class BrokerageService {
                     WebElement span = div.findElement(By.tagName("span"));
                     data.put(convertToCamelCase(label.getText()), Double.valueOf(span.getText()));
                 }
-            }
+            webDrivers.put(webDriver);
         } catch (TickerException e) {
             throw e;
         } catch (Exception e) {
@@ -130,8 +139,6 @@ public class BrokerageService {
             } else {
                 throw new TickerException("Error while getting values. Please try again");
             }
-        } finally {
-            busy = false;
         }
         data.put("pnl", data.get("netPnl"));
         data.put("ptb", data.get("pointsToBreakeven"));
