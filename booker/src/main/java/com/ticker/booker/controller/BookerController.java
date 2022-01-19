@@ -73,7 +73,7 @@ public class BookerController {
     }
 
     @GetMapping("/trades")
-    public ResponseEntity<List<TickerTrade>> getTrades() {
+    public ResponseEntity<Map<String, Map<String, List<TickerTrade>>>> getTrades() {
         return new ResponseEntity<>(BookerService.getTrades(), HttpStatus.OK);
     }
 

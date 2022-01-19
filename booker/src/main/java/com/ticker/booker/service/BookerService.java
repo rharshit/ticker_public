@@ -112,10 +112,21 @@ public class BookerService {
         return null;
     }
 
-    public static List<TickerTrade> getTrades() {
-        List<TickerTrade> allTrades = new ArrayList<>(trades);
-        allTrades.sort(Comparator.comparing(o -> o.exchangeTimestamp));
-        return allTrades;
+    public static Map<String, Map<String, List<TickerTrade>>> getTrades() {
+        Map<String, Map<String, List<TickerTrade>>> tradeMap = new HashMap<>();
+        for (TickerTrade trade : trades) {
+            tradeMap.computeIfAbsent(trade.getAppName(), s -> new HashMap<>());
+            Map<String, List<TickerTrade>> appTradeMap = tradeMap.get(trade.getAppName());
+            String key = trade.tradingSymbol + " : " + trade.exchange;
+            appTradeMap.computeIfAbsent(key, s -> new ArrayList<>());
+            appTradeMap.get(key).add(trade);
+        }
+        for (Map<String, List<TickerTrade>> appTradeMap : tradeMap.values()) {
+            for (List<TickerTrade> tradeList : appTradeMap.values()) {
+                tradeList.sort(Comparator.comparing(o -> o.exchangeTimestamp));
+            }
+        }
+        return tradeMap;
     }
 
     public void populateLogs(String logs) {
