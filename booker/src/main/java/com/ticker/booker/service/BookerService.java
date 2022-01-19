@@ -284,6 +284,7 @@ public class BookerService {
                             balance.quantity = String.valueOf(Integer.parseInt(buy.quantity) - Integer.parseInt(sell.quantity));
                         }
 
+                        completeTrade.setExchange(exchange);
                         completeTrade.setBuy(buy);
                         completeTrade.setSell(sell);
                         completeTrade.setQuantity(tradeQuantity);
