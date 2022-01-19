@@ -129,7 +129,7 @@ public class BookerService {
         return tradeMap;
     }
 
-    public void populateLogs(String logs) {
+    public void populateLogs(String logs, String app) {
         String[] lines = logs.split("\n");
         for (String line : lines) {
             try {
@@ -138,7 +138,7 @@ public class BookerService {
                     Matcher matcher = pattern.matcher(val);
                     if (matcher.find()) {
                         TickerTrade trade = new TickerTrade();
-                        trade.setAppName("Booker");
+                        trade.setAppName(app == null ? "Booker" : app);
 
                         String transactionType = matcher.group(1);
                         if ("Bought".equalsIgnoreCase(transactionType)) {
@@ -440,7 +440,7 @@ public class BookerService {
             log.error("Error while reading file at path: " + path);
         }
         String log = new String(encoded, StandardCharsets.US_ASCII);
-        populateLogs(log);
+        populateLogs(log, file.replaceAll("\\.log$", ""));
     }
 
     public void uploadAllLogFiles() {

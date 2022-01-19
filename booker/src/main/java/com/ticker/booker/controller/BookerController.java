@@ -50,8 +50,8 @@ public class BookerController {
     }
 
     @PostMapping("/logs")
-    public ResponseEntity<ResponseStatus> populateLogs(@RequestBody String logs) {
-        service.populateLogs(logs);
+    public ResponseEntity<ResponseStatus> populateLogs(@RequestBody String logs, @RequestParam String appName) {
+        service.populateLogs(logs, appName);
         return new ResponseEntity<>(new ResponseStatus(), HttpStatus.OK);
     }
 
