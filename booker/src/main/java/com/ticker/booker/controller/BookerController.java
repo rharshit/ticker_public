@@ -72,6 +72,12 @@ public class BookerController {
         return new ResponseEntity<>(new ResponseStatus(), HttpStatus.OK);
     }
 
+    @DeleteMapping("/logs")
+    public ResponseEntity<ResponseStatus> populateLogs() {
+        service.deleteLogs();
+        return new ResponseEntity<>(new ResponseStatus(), HttpStatus.OK);
+    }
+
     @GetMapping("/trades")
     public ResponseEntity<Map<String, Map<String, List<TickerTrade>>>> getTrades() {
         return new ResponseEntity<>(BookerService.getTrades(), HttpStatus.OK);

@@ -449,4 +449,8 @@ public class BookerService {
             uploadLogFile(file);
         }
     }
+
+    public void deleteLogs() {
+        trades.clear();
+    }
 }
