@@ -290,11 +290,44 @@ public class BookerService {
                         completeTrade.setQuantity(tradeQuantity);
                         completeTrade.setCompleted(true);
 
-                        processTrade(completeTrade, symbol, exchange, product);
 
                         completeTradeList.add(completeTrade);
                     }
                 }
+            }
+        }
+
+        List<Thread> threads = new ArrayList<>();
+        for (Map.Entry<String, Map<String, Map<String, List<TickerTrade>>>> tradeEntry : tradeMap.entrySet()) {
+            String symbol = tradeEntry.getKey();
+            completeTradeMap.computeIfAbsent(symbol, s -> new HashMap<>());
+
+            Map<String, Map<String, List<CompleteTrade>>> completeSymbolMap = completeTradeMap.get(symbol);
+
+            for (Map.Entry<String, Map<String, List<TickerTrade>>> symbolEntry : tradeEntry.getValue().entrySet()) {
+                String exchange = symbolEntry.getKey();
+                completeSymbolMap.computeIfAbsent(exchange, s -> new HashMap<>());
+
+                Map<String, List<CompleteTrade>> completeProductMap = completeSymbolMap.get(exchange);
+
+                for (Map.Entry<String, List<TickerTrade>> productEntry : symbolEntry.getValue().entrySet()) {
+                    String product = productEntry.getKey();
+                    completeProductMap.computeIfAbsent(product, s -> new ArrayList<>());
+
+                    List<CompleteTrade> completeTradeList = completeProductMap.get(product);
+                    for (CompleteTrade completeTrade : completeTradeList) {
+                        Thread thread = new Thread(() -> processTrade(completeTrade, symbol, exchange, product));
+                        thread.start();
+                        threads.add(thread);
+                    }
+                }
+            }
+        }
+        for (Thread thread : threads) {
+            try {
+                thread.join();
+            } catch (InterruptedException e) {
+                e.printStackTrace();
             }
         }
         return completeTradeMap;
