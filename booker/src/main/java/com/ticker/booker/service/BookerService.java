@@ -112,13 +112,24 @@ public class BookerService {
         return null;
     }
 
-    public static List<TickerTrade> getTrades() {
-        List<TickerTrade> allTrades = new ArrayList<>(trades);
-        allTrades.sort(Comparator.comparing(o -> o.exchangeTimestamp));
-        return allTrades;
+    public static Map<String, Map<String, List<TickerTrade>>> getTrades() {
+        Map<String, Map<String, List<TickerTrade>>> tradeMap = new HashMap<>();
+        for (TickerTrade trade : trades) {
+            tradeMap.computeIfAbsent(trade.getAppName(), s -> new HashMap<>());
+            Map<String, List<TickerTrade>> appTradeMap = tradeMap.get(trade.getAppName());
+            String key = trade.tradingSymbol + " : " + trade.exchange;
+            appTradeMap.computeIfAbsent(key, s -> new ArrayList<>());
+            appTradeMap.get(key).add(trade);
+        }
+        for (Map<String, List<TickerTrade>> appTradeMap : tradeMap.values()) {
+            for (List<TickerTrade> tradeList : appTradeMap.values()) {
+                tradeList.sort(Comparator.comparing(o -> o.exchangeTimestamp));
+            }
+        }
+        return tradeMap;
     }
 
-    public void populateLogs(String logs) {
+    public void populateLogs(String logs, String app) {
         String[] lines = logs.split("\n");
         for (String line : lines) {
             try {
@@ -127,7 +138,7 @@ public class BookerService {
                     Matcher matcher = pattern.matcher(val);
                     if (matcher.find()) {
                         TickerTrade trade = new TickerTrade();
-                        trade.setAppName("Booker");
+                        trade.setAppName(app == null ? "Booker" : app);
 
                         String transactionType = matcher.group(1);
                         if ("Bought".equalsIgnoreCase(transactionType)) {
@@ -174,8 +185,8 @@ public class BookerService {
     public TradeMap getTotalTrade() {
         try {
             log.info("Getting total trade");
-            Map<String, Map<String, Map<String, List<TickerTrade>>>> tradeMap = getTradeMap();
-            Map<String, Map<String, Map<String, List<CompleteTrade>>>> completeTradeMap = processTradeMap(tradeMap);
+            Map<String, Map<String, Map<String, Map<String, List<TickerTrade>>>>> tradeMap = getTradeMap();
+            Map<String, Map<String, Map<String, Map<String, List<CompleteTrade>>>>> completeTradeMap = processTradeMap(tradeMap);
             TradeMap totalTrade = new TradeMap(completeTradeMap);
             log.info("Got total trade");
             return totalTrade;
@@ -186,139 +197,154 @@ public class BookerService {
 
     }
 
-    private Map<String, Map<String, Map<String, List<CompleteTrade>>>> processTradeMap(Map<String, Map<String, Map<String, List<TickerTrade>>>> tradeMap) {
-        Map<String, Map<String, Map<String, List<CompleteTrade>>>> completeTradeMap = new HashMap<>();
-        for (Map.Entry<String, Map<String, Map<String, List<TickerTrade>>>> tradeEntry : tradeMap.entrySet()) {
-            String symbol = tradeEntry.getKey();
-            completeTradeMap.computeIfAbsent(symbol, s -> new HashMap<>());
+    private Map<String, Map<String, Map<String, Map<String, List<CompleteTrade>>>>> processTradeMap(Map<String, Map<String, Map<String, Map<String, List<TickerTrade>>>>> appMap) {
+        Map<String, Map<String, Map<String, Map<String, List<CompleteTrade>>>>> completeAppMap = new HashMap<>();
+        for (Map.Entry<String, Map<String, Map<String, Map<String, List<TickerTrade>>>>> appEntry : appMap.entrySet()) {
+            String appName = appEntry.getKey();
+            completeAppMap.computeIfAbsent(appName, s -> new HashMap<>());
 
-            Map<String, Map<String, List<CompleteTrade>>> completeSymbolMap = completeTradeMap.get(symbol);
+            Map<String, Map<String, Map<String, List<CompleteTrade>>>> completeTradeMap = completeAppMap.get(appName);
 
-            for (Map.Entry<String, Map<String, List<TickerTrade>>> symbolEntry : tradeEntry.getValue().entrySet()) {
-                String exchange = symbolEntry.getKey();
-                completeSymbolMap.computeIfAbsent(exchange, s -> new HashMap<>());
+            for (Map.Entry<String, Map<String, Map<String, List<TickerTrade>>>> tradeEntry : appEntry.getValue().entrySet()) {
+                String symbol = tradeEntry.getKey();
+                completeTradeMap.computeIfAbsent(symbol, s -> new HashMap<>());
 
-                Map<String, List<CompleteTrade>> completeProductMap = completeSymbolMap.get(exchange);
+                Map<String, Map<String, List<CompleteTrade>>> completeSymbolMap = completeTradeMap.get(symbol);
 
-                for (Map.Entry<String, List<TickerTrade>> productEntry : symbolEntry.getValue().entrySet()) {
-                    String product = productEntry.getKey();
-                    completeProductMap.computeIfAbsent(product, s -> new ArrayList<>());
+                for (Map.Entry<String, Map<String, List<TickerTrade>>> symbolEntry : tradeEntry.getValue().entrySet()) {
+                    String exchange = symbolEntry.getKey();
+                    completeSymbolMap.computeIfAbsent(exchange, s -> new HashMap<>());
 
-                    List<CompleteTrade> completeTradeList = completeProductMap.get(product);
+                    Map<String, List<CompleteTrade>> completeProductMap = completeSymbolMap.get(exchange);
 
-                    productEntry.getValue().sort(Comparator.comparing(o -> o.fillTimestamp));
+                    for (Map.Entry<String, List<TickerTrade>> productEntry : symbolEntry.getValue().entrySet()) {
+                        String product = productEntry.getKey();
+                        completeProductMap.computeIfAbsent(product, s -> new ArrayList<>());
 
-                    LinkedList<TickerTrade> buyTradeList = new LinkedList<>();
-                    LinkedList<TickerTrade> sellTradeList = new LinkedList<>();
+                        List<CompleteTrade> completeTradeList = completeProductMap.get(product);
 
-                    productEntry.getValue().sort(Comparator.comparing(o -> o.fillTimestamp));
+                        productEntry.getValue().sort(Comparator.comparing(o -> o.fillTimestamp));
 
-                    for (TickerTrade trade : productEntry.getValue()) {
-                        if ("BUY".equalsIgnoreCase(trade.transactionType)) {
-                            buyTradeList.add(trade);
-                        } else if ("SELL".equalsIgnoreCase(trade.transactionType)) {
-                            sellTradeList.add(trade);
-                        } else {
-                            throw new TickerException("Invalid transaction type: " + trade.transactionType);
-                        }
-                    }
+                        LinkedList<TickerTrade> buyTradeList = new LinkedList<>();
+                        LinkedList<TickerTrade> sellTradeList = new LinkedList<>();
 
-                    int balanceQty = 0;
-                    TickerTrade balance = new TickerTrade();
-                    balance.quantity = String.valueOf(0);
-                    balance.averagePrice = String.valueOf(0);
-                    for (; (!buyTradeList.isEmpty() && !sellTradeList.isEmpty()) ||
-                            (buyTradeList.isEmpty() && !sellTradeList.isEmpty() && Integer.parseInt(balance.quantity) < 0) ||
-                            (!buyTradeList.isEmpty() && sellTradeList.isEmpty() && Integer.parseInt(balance.quantity) > 0); ) {
-                        CompleteTrade completeTrade = new CompleteTrade();
-                        TickerTrade buy = null;
-                        TickerTrade sell = null;
+                        productEntry.getValue().sort(Comparator.comparing(o -> o.fillTimestamp));
 
-                        if (Integer.parseInt(balance.quantity) == 0) {
-                            buy = buyTradeList.pop();
-                            sell = sellTradeList.pop();
-                        } else if (Integer.parseInt(balance.quantity) > 0) {
-                            sell = sellTradeList.pop();
-                            buy = new TickerTrade(balance);
-                            if (Integer.parseInt(balance.quantity) == Integer.parseInt(sell.quantity)) {
-                                balance.quantity = String.valueOf(0);
-                                balance.averagePrice = String.valueOf(0);
-                            } else if (Integer.parseInt(balance.quantity) > Integer.parseInt(sell.quantity)) {
-                                buy.quantity = sell.quantity;
-                                balance.quantity = String.valueOf((Integer.parseInt(balance.quantity) - Integer.parseInt(sell.quantity)));
+                        for (TickerTrade trade : productEntry.getValue()) {
+                            if ("BUY".equalsIgnoreCase(trade.transactionType)) {
+                                buyTradeList.add(trade);
+                            } else if ("SELL".equalsIgnoreCase(trade.transactionType)) {
+                                sellTradeList.add(trade);
                             } else {
-                                balance = new TickerTrade(sell);
-                                balance.quantity = String.valueOf(-Integer.parseInt(balance.quantity));
-                                sell.quantity = buy.quantity;
-                            }
-                        } else if (Integer.parseInt(balance.quantity) < 0) {
-                            buy = buyTradeList.pop();
-                            sell = new TickerTrade(balance);
-                            sell.quantity = String.valueOf(-Integer.parseInt(sell.quantity));
-                            if (-Integer.parseInt(balance.quantity) == Integer.parseInt(buy.quantity)) {
-                                balance.quantity = String.valueOf(0);
-                                balance.averagePrice = String.valueOf(0);
-                            } else if (-Integer.parseInt(balance.quantity) > Integer.parseInt(buy.quantity)) {
-                                sell.quantity = buy.quantity;
-                                balance.quantity = String.valueOf((Integer.parseInt(balance.quantity) + Integer.parseInt(buy.quantity)));
-                            } else {
-                                balance = new TickerTrade(buy);
-                                buy.quantity = sell.quantity;
+                                throw new TickerException("Invalid transaction type: " + trade.transactionType);
                             }
                         }
 
-                        if (buy == null || sell == null) {
-                            throw new TickerException("Internal error: Buy or sell trade nto set");
-                        }
+                        int balanceQty = 0;
+                        TickerTrade balance = new TickerTrade();
+                        balance.quantity = String.valueOf(0);
+                        balance.averagePrice = String.valueOf(0);
+                        for (; (!buyTradeList.isEmpty() && !sellTradeList.isEmpty()) ||
+                                (buyTradeList.isEmpty() && !sellTradeList.isEmpty() && Integer.parseInt(balance.quantity) < 0) ||
+                                (!buyTradeList.isEmpty() && sellTradeList.isEmpty() && Integer.parseInt(balance.quantity) > 0); ) {
+                            CompleteTrade completeTrade = new CompleteTrade();
+                            TickerTrade buy = null;
+                            TickerTrade sell = null;
 
-                        int tradeQuantity = Math.min(Integer.parseInt(buy.quantity), Integer.parseInt(sell.quantity));
-                        if (Integer.parseInt(buy.quantity) != Integer.parseInt(sell.quantity)) {
-                            if (Integer.parseInt(balance.quantity) != 0) {
-                                throw new TickerException("Internal error: Error in trades");
+                            if (Integer.parseInt(balance.quantity) == 0) {
+                                buy = buyTradeList.pop();
+                                sell = sellTradeList.pop();
+                            } else if (Integer.parseInt(balance.quantity) > 0) {
+                                sell = sellTradeList.pop();
+                                buy = new TickerTrade(balance);
+                                if (Integer.parseInt(balance.quantity) == Integer.parseInt(sell.quantity)) {
+                                    balance.quantity = String.valueOf(0);
+                                    balance.averagePrice = String.valueOf(0);
+                                } else if (Integer.parseInt(balance.quantity) > Integer.parseInt(sell.quantity)) {
+                                    buy.quantity = sell.quantity;
+                                    balance.quantity = String.valueOf((Integer.parseInt(balance.quantity) - Integer.parseInt(sell.quantity)));
+                                } else {
+                                    balance = new TickerTrade(sell);
+                                    balance.quantity = String.valueOf(-Integer.parseInt(balance.quantity));
+                                    sell.quantity = buy.quantity;
+                                }
+                            } else if (Integer.parseInt(balance.quantity) < 0) {
+                                buy = buyTradeList.pop();
+                                sell = new TickerTrade(balance);
+                                sell.quantity = String.valueOf(-Integer.parseInt(sell.quantity));
+                                if (-Integer.parseInt(balance.quantity) == Integer.parseInt(buy.quantity)) {
+                                    balance.quantity = String.valueOf(0);
+                                    balance.averagePrice = String.valueOf(0);
+                                } else if (-Integer.parseInt(balance.quantity) > Integer.parseInt(buy.quantity)) {
+                                    sell.quantity = buy.quantity;
+                                    balance.quantity = String.valueOf((Integer.parseInt(balance.quantity) + Integer.parseInt(buy.quantity)));
+                                } else {
+                                    balance = new TickerTrade(buy);
+                                    buy.quantity = sell.quantity;
+                                }
                             }
-                            if (Integer.parseInt(buy.quantity) > Integer.parseInt(sell.quantity)) {
-                                balance = new TickerTrade(buy);
-                            } else {
-                                balance = new TickerTrade(sell);
+
+                            if (buy == null || sell == null) {
+                                throw new TickerException("Internal error: Buy or sell trade nto set");
                             }
-                            balance.quantity = String.valueOf(Integer.parseInt(buy.quantity) - Integer.parseInt(sell.quantity));
+
+                            int tradeQuantity = Math.min(Integer.parseInt(buy.quantity), Integer.parseInt(sell.quantity));
+                            if (Integer.parseInt(buy.quantity) != Integer.parseInt(sell.quantity)) {
+                                if (Integer.parseInt(balance.quantity) != 0) {
+                                    throw new TickerException("Internal error: Error in trades");
+                                }
+                                if (Integer.parseInt(buy.quantity) > Integer.parseInt(sell.quantity)) {
+                                    balance = new TickerTrade(buy);
+                                } else {
+                                    balance = new TickerTrade(sell);
+                                }
+                                balance.quantity = String.valueOf(Integer.parseInt(buy.quantity) - Integer.parseInt(sell.quantity));
+                            }
+
+                            completeTrade.setAppName(appName);
+                            completeTrade.setExchange(exchange);
+                            completeTrade.setBuy(buy);
+                            completeTrade.setSell(sell);
+                            completeTrade.setQuantity(tradeQuantity);
+                            completeTrade.setCompleted(true);
+
+
+                            completeTradeList.add(completeTrade);
                         }
-
-                        completeTrade.setExchange(exchange);
-                        completeTrade.setBuy(buy);
-                        completeTrade.setSell(sell);
-                        completeTrade.setQuantity(tradeQuantity);
-                        completeTrade.setCompleted(true);
-
-
-                        completeTradeList.add(completeTrade);
                     }
                 }
             }
         }
 
         List<Thread> threads = new ArrayList<>();
-        for (Map.Entry<String, Map<String, Map<String, List<TickerTrade>>>> tradeEntry : tradeMap.entrySet()) {
-            String symbol = tradeEntry.getKey();
-            completeTradeMap.computeIfAbsent(symbol, s -> new HashMap<>());
+        for (Map.Entry<String, Map<String, Map<String, Map<String, List<TickerTrade>>>>> appEntry : appMap.entrySet()) {
+            String appName = appEntry.getKey();
+            completeAppMap.computeIfAbsent(appName, s -> new HashMap<>());
 
-            Map<String, Map<String, List<CompleteTrade>>> completeSymbolMap = completeTradeMap.get(symbol);
+            Map<String, Map<String, Map<String, List<CompleteTrade>>>> completeTradeMap = completeAppMap.get(appName);
 
-            for (Map.Entry<String, Map<String, List<TickerTrade>>> symbolEntry : tradeEntry.getValue().entrySet()) {
-                String exchange = symbolEntry.getKey();
-                completeSymbolMap.computeIfAbsent(exchange, s -> new HashMap<>());
+            for (Map.Entry<String, Map<String, Map<String, List<TickerTrade>>>> tradeEntry : appEntry.getValue().entrySet()) {
+                String symbol = tradeEntry.getKey();
+                completeTradeMap.computeIfAbsent(symbol, s -> new HashMap<>());
 
-                Map<String, List<CompleteTrade>> completeProductMap = completeSymbolMap.get(exchange);
+                Map<String, Map<String, List<CompleteTrade>>> completeSymbolMap = completeTradeMap.get(symbol);
 
-                for (Map.Entry<String, List<TickerTrade>> productEntry : symbolEntry.getValue().entrySet()) {
-                    String product = productEntry.getKey();
-                    completeProductMap.computeIfAbsent(product, s -> new ArrayList<>());
+                for (Map.Entry<String, Map<String, List<TickerTrade>>> symbolEntry : tradeEntry.getValue().entrySet()) {
+                    String exchange = symbolEntry.getKey();
+                    completeSymbolMap.computeIfAbsent(exchange, s -> new HashMap<>());
 
-                    List<CompleteTrade> completeTradeList = completeProductMap.get(product);
-                    for (CompleteTrade completeTrade : completeTradeList) {
-                        Thread thread = new Thread(() -> processTrade(completeTrade, symbol, exchange, product));
-                        thread.start();
-                        threads.add(thread);
+                    Map<String, List<CompleteTrade>> completeProductMap = completeSymbolMap.get(exchange);
+
+                    for (Map.Entry<String, List<TickerTrade>> productEntry : symbolEntry.getValue().entrySet()) {
+                        String product = productEntry.getKey();
+                        completeProductMap.computeIfAbsent(product, s -> new ArrayList<>());
+
+                        List<CompleteTrade> completeTradeList = completeProductMap.get(product);
+                        for (CompleteTrade completeTrade : completeTradeList) {
+                            Thread thread = new Thread(() -> processTrade(completeTrade, symbol, exchange, product));
+                            thread.start();
+                            threads.add(thread);
+                        }
                     }
                 }
             }
@@ -330,15 +356,19 @@ public class BookerService {
                 e.printStackTrace();
             }
         }
-        return completeTradeMap;
+        return completeAppMap;
     }
 
-    private Map<String, Map<String, Map<String, List<TickerTrade>>>> getTradeMap() {
-        Map<String, Map<String, Map<String, List<TickerTrade>>>> tradeMap = new HashMap<>();
+    private Map<String, Map<String, Map<String, Map<String, List<TickerTrade>>>>> getTradeMap() {
+        Map<String, Map<String, Map<String, Map<String, List<TickerTrade>>>>> appMap = new HashMap<>();
         for (TickerTrade trade : trades) {
+            String appName = trade.getAppName();
             String symbol = trade.tradingSymbol;
             String exchange = trade.exchange;
             String product = trade.product;
+
+            appMap.computeIfAbsent(appName, s -> new HashMap<>());
+            Map<String, Map<String, Map<String, List<TickerTrade>>>> tradeMap = appMap.get(appName);
 
             tradeMap.computeIfAbsent(symbol, s -> new HashMap<>());
             Map<String, Map<String, List<TickerTrade>>> symbolMap = tradeMap.get(symbol);
@@ -351,7 +381,7 @@ public class BookerService {
 
             tradeList.add(trade);
         }
-        return tradeMap;
+        return appMap;
     }
 
     private void processTrade(CompleteTrade trade, String symbol, String exchange, String product) {
@@ -410,7 +440,7 @@ public class BookerService {
             log.error("Error while reading file at path: " + path);
         }
         String log = new String(encoded, StandardCharsets.US_ASCII);
-        populateLogs(log);
+        populateLogs(log, file.replaceAll("\\.log$", ""));
     }
 
     public void uploadAllLogFiles() {
@@ -418,5 +448,9 @@ public class BookerService {
         for (String file : files) {
             uploadLogFile(file);
         }
+    }
+
+    public void deleteLogs() {
+        trades.clear();
     }
 }

@@ -50,8 +50,8 @@ public class BookerController {
     }
 
     @PostMapping("/logs")
-    public ResponseEntity<ResponseStatus> populateLogs(@RequestBody String logs) {
-        service.populateLogs(logs);
+    public ResponseEntity<ResponseStatus> populateLogs(@RequestBody String logs, @RequestParam String appName) {
+        service.populateLogs(logs, appName);
         return new ResponseEntity<>(new ResponseStatus(), HttpStatus.OK);
     }
 
@@ -72,8 +72,14 @@ public class BookerController {
         return new ResponseEntity<>(new ResponseStatus(), HttpStatus.OK);
     }
 
+    @DeleteMapping("/logs")
+    public ResponseEntity<ResponseStatus> populateLogs() {
+        service.deleteLogs();
+        return new ResponseEntity<>(new ResponseStatus(), HttpStatus.OK);
+    }
+
     @GetMapping("/trades")
-    public ResponseEntity<List<TickerTrade>> getTrades() {
+    public ResponseEntity<Map<String, Map<String, List<TickerTrade>>>> getTrades() {
         return new ResponseEntity<>(BookerService.getTrades(), HttpStatus.OK);
     }
 
