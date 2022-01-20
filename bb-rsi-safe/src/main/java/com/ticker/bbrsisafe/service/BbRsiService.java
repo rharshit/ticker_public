@@ -142,6 +142,7 @@ public class BbRsiService extends StratTickerService<BbRsiSafeThread, BbRsiThrea
             thread.setCurrentState(BB_RSI_THREAD_STATE_UT_TRIGGER_START);
             thread.setTradeStartTime(System.currentTimeMillis());
             thread.resetTriggers();
+            thread.setGoodToTrigger(true);
         } catch (Exception e) {
 
         }
@@ -154,6 +155,7 @@ public class BbRsiService extends StratTickerService<BbRsiSafeThread, BbRsiThrea
             thread.setCurrentState(BB_RSI_THREAD_STATE_LT_TRIGGER_START);
             thread.setTradeStartTime(System.currentTimeMillis());
             thread.resetTriggers();
+            thread.setGoodToTrigger(true);
         } catch (Exception e) {
 
         }
@@ -162,6 +164,7 @@ public class BbRsiService extends StratTickerService<BbRsiSafeThread, BbRsiThrea
     private void resetThread(BbRsiSafeThread thread) {
         log.info(thread.getThreadName() + " : Reset triggers");
         thread.resetTriggers();
+        thread.setGoodToTrigger(true);
         thread.setCurrentState(BB_RSI_THREAD_STATE_WAITING_FOR_TRIGGER);
     }
 
@@ -314,6 +317,7 @@ public class BbRsiService extends StratTickerService<BbRsiSafeThread, BbRsiThrea
                     thread.setCurrentState(BB_RSI_THREAD_STATE_UT_WAIT_WAVE_BOUGHT);
                 } else {
                     thread.resetTriggers();
+                    thread.setGoodToTrigger(true);
                     thread.setCurrentState(BB_RSI_THREAD_STATE_UT_TRIGGER_START);
                 }
                 thread.setTradeStartTime(System.currentTimeMillis());
@@ -395,6 +399,7 @@ public class BbRsiService extends StratTickerService<BbRsiSafeThread, BbRsiThrea
                     thread.setCurrentState(BB_RSI_THREAD_STATE_LT_WAIT_WAVE_SOLD);
                 } else {
                     thread.resetTriggers();
+                    thread.setGoodToTrigger(true);
                     thread.setCurrentState(BB_RSI_THREAD_STATE_LT_TRIGGER_START);
                 }
                 thread.setTradeStartTime(System.currentTimeMillis());
