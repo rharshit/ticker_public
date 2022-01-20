@@ -31,6 +31,7 @@ public class BbRsiSafeThread extends StratThread<BbRsiService> {
     private int panicSell = 0;
     private int panicBuy = 0;
     private boolean goodToTrigger = false;
+    private boolean reenter = false;
 
     public BbRsiSafeThread(ExchangeSymbolEntity entity) {
         super(entity);

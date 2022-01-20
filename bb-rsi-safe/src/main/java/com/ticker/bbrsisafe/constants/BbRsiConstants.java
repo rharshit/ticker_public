@@ -29,6 +29,8 @@ public abstract class BbRsiConstants {
     public static final int BB_RSI_THREAD_STATE_UT_WAIT_WAVE_ENDED3 = 23;
     public static final int BB_RSI_THREAD_STATE_LT_GTT_FAILED = 24;
     public static final int BB_RSI_THREAD_STATE_UT_GTT_FAILED = 25;
+    public static final int BB_RSI_THREAD_STATE_LT_REENTER = 26;
+    public static final int BB_RSI_THREAD_STATE_UT_REENTER = 27;
 
     public static final float RSI_LOWER_LIMIT = 25;
     public static final float RSI_LOWER_LIMIT_REBOUND = 40;
