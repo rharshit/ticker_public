@@ -89,6 +89,7 @@ public class MockFetcherService {
                     mockFetcherThread.setBbL(bbL);
                     mockFetcherThread.setBbU(bbU);
                     mockFetcherThread.setRsi(rsi);
+                    mockFetcherThread.setTema(tema);
 
                     mockFetcherThread.setCurrentValue(c);
                 }
