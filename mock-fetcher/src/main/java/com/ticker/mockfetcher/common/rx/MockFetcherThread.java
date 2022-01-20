@@ -43,6 +43,7 @@ public class MockFetcherThread extends TickerThread<TickerService> {
     private float bbA;
     private float bbL;
     private float rsi;
+    private float tema;
     private float currentValue;
     private long updatedAt;
 

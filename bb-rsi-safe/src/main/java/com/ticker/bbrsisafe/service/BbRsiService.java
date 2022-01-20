@@ -42,6 +42,8 @@ public class BbRsiService extends StratTickerService<BbRsiSafeThread, BbRsiThrea
         put(BB_RSI_THREAD_STATE_UT_PANIC_BUY, "Upper trigger panic buy");
         put(BB_RSI_THREAD_STATE_LT_GTT_FAILED, "Lower trigger GTT fail");
         put(BB_RSI_THREAD_STATE_UT_GTT_FAILED, "Upper trigger GTT fail");
+        put(BB_RSI_THREAD_STATE_LT_REENTER, "Lower trigger Re-enter");
+        put(BB_RSI_THREAD_STATE_UT_REENTER, "Upper trigger Re-enter");
     }};
 
     @Override
@@ -142,6 +144,7 @@ public class BbRsiService extends StratTickerService<BbRsiSafeThread, BbRsiThrea
             thread.setCurrentState(BB_RSI_THREAD_STATE_UT_TRIGGER_START);
             thread.setTradeStartTime(System.currentTimeMillis());
             thread.resetTriggers();
+            thread.setGoodToTrigger(true);
         } catch (Exception e) {
 
         }
@@ -154,6 +157,7 @@ public class BbRsiService extends StratTickerService<BbRsiSafeThread, BbRsiThrea
             thread.setCurrentState(BB_RSI_THREAD_STATE_LT_TRIGGER_START);
             thread.setTradeStartTime(System.currentTimeMillis());
             thread.resetTriggers();
+            thread.setGoodToTrigger(true);
         } catch (Exception e) {
 
         }
@@ -162,6 +166,7 @@ public class BbRsiService extends StratTickerService<BbRsiSafeThread, BbRsiThrea
     private void resetThread(BbRsiSafeThread thread) {
         log.info(thread.getThreadName() + " : Reset triggers");
         thread.resetTriggers();
+        thread.setGoodToTrigger(true);
         thread.setCurrentState(BB_RSI_THREAD_STATE_WAITING_FOR_TRIGGER);
     }
 
@@ -171,6 +176,10 @@ public class BbRsiService extends StratTickerService<BbRsiSafeThread, BbRsiThrea
             squareOff(thread);
             thread.setCurrentState(BB_RSI_THREAD_STATE_UT_WAIT_WAVE_BOUGHT);
             thread.setTradeStartTime(System.currentTimeMillis());
+            if (thread.getRsi() >= RSI_UPPER_LIMIT_REBOUND) {
+                log.trace(thread.getThreadName() + " : rebound");
+                thread.setIntermediateState(BB_RSI_THREAD_STATE_UT_WAIT_WAVE_REVENGE, BB_RSI_THREAD_STATE_UT_TRIGGER_START);
+            }
         } catch (Exception e) {
 
         }
@@ -182,6 +191,10 @@ public class BbRsiService extends StratTickerService<BbRsiSafeThread, BbRsiThrea
             squareOff(thread);
             thread.setCurrentState(BB_RSI_THREAD_STATE_LT_WAIT_WAVE_SOLD);
             thread.setTradeStartTime(System.currentTimeMillis());
+            if (thread.getRsi() <= RSI_LOWER_LIMIT_REBOUND) {
+                log.trace(thread.getThreadName() + " : rebound");
+                thread.setIntermediateState(BB_RSI_THREAD_STATE_LT_WAIT_WAVE_REVENGE, BB_RSI_THREAD_STATE_LT_TRIGGER_START);
+            }
         } catch (Exception e) {
 
         }
@@ -191,6 +204,13 @@ public class BbRsiService extends StratTickerService<BbRsiSafeThread, BbRsiThrea
         log.trace("");
         log.trace(thread.getThreadName() + " : checkForUtWaveEnd1");
         checkUtPanicExit(thread);
+        checkUtSatisfyExit(thread);
+        if (thread.getCurrentState() == BB_RSI_THREAD_STATE_UT_WAIT_WAVE_BOUGHT
+                || thread.getCurrentState() == BB_RSI_THREAD_STATE_UT_WAIT_WAVE_ENDED2
+                || thread.getCurrentState() == BB_RSI_THREAD_STATE_UT_REENTER
+                || thread.getCurrentState() == BB_RSI_THREAD_STATE_UT_SOLD) {
+            return;
+        }
         if (isSameMinTrigger(thread.getTriggerStartTime()) || !isEomTrigger()) {
             log.trace(thread.getThreadName() + " : No check");
             return;
@@ -215,11 +235,32 @@ public class BbRsiService extends StratTickerService<BbRsiSafeThread, BbRsiThrea
         }
     }
 
+    private void checkUtSatisfyExit(BbRsiSafeThread thread) {
+        if (thread.getTradeValue() - thread.getTargetThreshold() >= thread.getCurrentValue() - 0.004) {
+            thread.setCurrentState(BB_RSI_THREAD_STATE_UT_WAIT_WAVE_ENDED2);
+            squareOff(thread);
+            if (isDownwardTrend(thread)) {
+                thread.setCurrentState(BB_RSI_THREAD_STATE_UT_REENTER);
+                thread.setReenter(true);
+                sellAction1(thread);
+            } else {
+                thread.setCurrentState(BB_RSI_THREAD_STATE_UT_WAIT_WAVE_BOUGHT);
+            }
+        }
+    }
+
     private void checkForLtWaveEnd1(BbRsiSafeThread thread) {
         log.trace("");
 
         log.trace(thread.getThreadName() + " : checkForLtWaveEnd1");
         checkLtPanicExit(thread);
+        checkLtSatisfyExit(thread);
+        if (thread.getCurrentState() == BB_RSI_THREAD_STATE_LT_WAIT_WAVE_SOLD
+                || thread.getCurrentState() == BB_RSI_THREAD_STATE_LT_WAIT_WAVE_ENDED2
+                || thread.getCurrentState() == BB_RSI_THREAD_STATE_LT_REENTER
+                || thread.getCurrentState() == BB_RSI_THREAD_STATE_LT_BOUGHT) {
+            return;
+        }
         if (isSameMinTrigger(thread.getTriggerStartTime()) || !isEomTrigger()) {
             log.trace(thread.getThreadName() + " : No check");
             return;
@@ -243,10 +284,31 @@ public class BbRsiService extends StratTickerService<BbRsiSafeThread, BbRsiThrea
         }
     }
 
+    private void checkLtSatisfyExit(BbRsiSafeThread thread) {
+        if (thread.getTradeValue() + thread.getTargetThreshold() <= thread.getCurrentValue() + 0.004) {
+            thread.setCurrentState(BB_RSI_THREAD_STATE_LT_WAIT_WAVE_ENDED2);
+            squareOff(thread);
+            if (isUpwardTrend(thread)) {
+                thread.setCurrentState(BB_RSI_THREAD_STATE_LT_REENTER);
+                thread.setReenter(true);
+                buyAction1(thread);
+            } else {
+                thread.setCurrentState(BB_RSI_THREAD_STATE_LT_WAIT_WAVE_SOLD);
+            }
+        }
+    }
+
     private void checkForUtWaveEnd(BbRsiSafeThread thread) {
         log.trace("");
         log.trace(thread.getThreadName() + " : checkForUtWaveEnd");
         checkUtPanicExit(thread);
+        checkUtSatisfyExit(thread);
+        if (thread.getCurrentState() == BB_RSI_THREAD_STATE_UT_WAIT_WAVE_BOUGHT
+                || thread.getCurrentState() == BB_RSI_THREAD_STATE_UT_WAIT_WAVE_ENDED2
+                || thread.getCurrentState() == BB_RSI_THREAD_STATE_UT_REENTER
+                || thread.getCurrentState() == BB_RSI_THREAD_STATE_UT_SOLD) {
+            return;
+        }
         if (isSameMinTrigger(thread.getTradeStartTime()) || !isEomTrigger()) {
             log.trace(thread.getThreadName() + " : No check");
             return;
@@ -310,10 +372,11 @@ public class BbRsiService extends StratTickerService<BbRsiSafeThread, BbRsiThrea
                 float tradeStart = thread.getTradeValue();
                 log.info(thread.getThreadName() + " : panic square-off");
                 float tradeEnd = squareOff(thread);
-                if (tradeStart - tradeEnd > thread.getTargetThreshold()) {
+                if (tradeStart - tradeEnd > thread.getTargetThreshold() || thread.isReenter()) {
                     thread.setCurrentState(BB_RSI_THREAD_STATE_UT_WAIT_WAVE_BOUGHT);
                 } else {
                     thread.resetTriggers();
+                    thread.setGoodToTrigger(true);
                     thread.setCurrentState(BB_RSI_THREAD_STATE_UT_TRIGGER_START);
                 }
                 thread.setTradeStartTime(System.currentTimeMillis());
@@ -327,6 +390,13 @@ public class BbRsiService extends StratTickerService<BbRsiSafeThread, BbRsiThrea
         log.trace("");
         log.trace(thread.getThreadName() + " : checkForLtWaveEnd");
         checkLtPanicExit(thread);
+        checkLtSatisfyExit(thread);
+        if (thread.getCurrentState() == BB_RSI_THREAD_STATE_LT_WAIT_WAVE_SOLD
+                || thread.getCurrentState() == BB_RSI_THREAD_STATE_LT_WAIT_WAVE_ENDED2
+                || thread.getCurrentState() == BB_RSI_THREAD_STATE_LT_REENTER
+                || thread.getCurrentState() == BB_RSI_THREAD_STATE_LT_BOUGHT) {
+            return;
+        }
         if (isSameMinTrigger(thread.getTradeStartTime()) || !isEomTrigger()) {
             log.trace(thread.getThreadName() + " : No check");
             return;
@@ -391,10 +461,11 @@ public class BbRsiService extends StratTickerService<BbRsiSafeThread, BbRsiThrea
                 float tradeStart = thread.getTradeValue();
                 log.info(thread.getThreadName() + " : panic square-off");
                 float tradeEnd = squareOff(thread);
-                if (tradeEnd - tradeStart > thread.getTargetThreshold()) {
+                if (tradeEnd - tradeStart > thread.getTargetThreshold() || thread.isReenter()) {
                     thread.setCurrentState(BB_RSI_THREAD_STATE_LT_WAIT_WAVE_SOLD);
                 } else {
                     thread.resetTriggers();
+                    thread.setGoodToTrigger(true);
                     thread.setCurrentState(BB_RSI_THREAD_STATE_LT_TRIGGER_START);
                 }
                 thread.setTradeStartTime(System.currentTimeMillis());

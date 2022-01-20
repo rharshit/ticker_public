@@ -9,5 +9,5 @@ public class TickerConstants {
     public static final String APPLICATION_BB_RSI = "BB-RSI";
     public static final String APPLICATION_MWAVE = "MWave";
 
-    public static final long THRESHOLD_FETCH_TIMEOUT = 10000;
+    public static final long THRESHOLD_FETCH_TIMEOUT = 60000;
 }

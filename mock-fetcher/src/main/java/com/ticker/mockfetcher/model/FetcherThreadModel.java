@@ -68,6 +68,10 @@ public class FetcherThreadModel extends TickerThreadModel<MockFetcherThread> {
         return thread.getRsi();
     }
 
+    public float getTema() {
+        return thread.getTema();
+    }
+
     public long getDelta() {
         return thread.getDelta();
     }
