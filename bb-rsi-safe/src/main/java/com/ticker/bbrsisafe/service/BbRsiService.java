@@ -336,11 +336,11 @@ public class BbRsiService extends StratTickerService<BbRsiSafeThread, BbRsiThrea
             if (thread.getRsiDiff() > RSI_UPPER_LIMIT_PANIC_DIFF) {
                 log.debug("Panic buy faster rsi diff");
                 thread.setPanicBuy(thread.getPanicBuy() + PANIC_TIME_OFF / PANIC_TIME_OFF_EMERGENCY_RETRIES);
-            } else if (thread.getCurrentValue() - thread.getDip() > 1.2 * thread.getTargetThreshold()) {
+            } else if (thread.getCurrentValue() - thread.getDip() + 0.004 > (thread.isReenter() ? 1 : 1.2) * thread.getTargetThreshold()) {
                 float factor = (((thread.getCurrentValue() - thread.getDip()) / thread.getTargetThreshold() - 0.5f)
-                        * (thread.getCurrentValue() < thread.getTradeValue() - 0.3 * thread.getTargetThreshold() ? 1 : 3) * PANIC_TIME_OFF) / PANIC_TIME_OFF_EMERGENCY_RETRIES;
+                        * ((thread.getCurrentValue() < thread.getTradeValue() - 0.3 * thread.getTargetThreshold() ? 1 : 3) + (thread.isReenter() ? 1 : 0)) * PANIC_TIME_OFF) / PANIC_TIME_OFF_EMERGENCY_RETRIES;
                 log.debug("Panic buy faster " + factor);
-                thread.setPanicSell(thread.getPanicSell() + (int) Math.max(factor, 1));
+                thread.setPanicBuy(thread.getPanicBuy() + (int) Math.max(factor, 1));
             }
             panicBuy(thread);
         } else {
@@ -424,9 +424,9 @@ public class BbRsiService extends StratTickerService<BbRsiSafeThread, BbRsiThrea
             if (thread.getRsiDiff() < RSI_LOWER_LIMIT_PANIC_DIFF) {
                 log.debug("Panic sell faster rsi diff");
                 thread.setPanicSell(thread.getPanicSell() + PANIC_TIME_OFF / PANIC_TIME_OFF_EMERGENCY_RETRIES);
-            } else if (thread.getPeak() - thread.getCurrentValue() > 1.2 * thread.getTargetThreshold()) {
+            } else if (thread.getPeak() - thread.getCurrentValue() + 0.004 > (thread.isReenter() ? 1 : 1.2) * thread.getTargetThreshold()) {
                 float factor = (((thread.getPeak() - thread.getCurrentValue()) / thread.getTargetThreshold() - 0.5f)
-                        * (thread.getCurrentValue() > thread.getTradeValue() + 0.3 * thread.getTargetThreshold() ? 1 : 3) * PANIC_TIME_OFF) / PANIC_TIME_OFF_EMERGENCY_RETRIES;
+                        * ((thread.getCurrentValue() > thread.getTradeValue() + 0.3 * thread.getTargetThreshold() ? 1 : 3) + (thread.isReenter() ? 1 : 0)) * PANIC_TIME_OFF) / PANIC_TIME_OFF_EMERGENCY_RETRIES;
                 log.debug("Panic sell faster " + factor);
                 thread.setPanicSell(thread.getPanicSell() + (int) Math.max(factor, 1));
             }
@@ -536,9 +536,9 @@ public class BbRsiService extends StratTickerService<BbRsiSafeThread, BbRsiThrea
             log.debug(thread.getThreadName() + " : " + thread.getCurrentValue() + " - " + thread.getDip() + " = " + (thread.getCurrentValue() - thread.getDip()));
             log.debug(thread.getThreadName() + " : isUpwardTrend(thread) = " + isUpwardTrend(thread));
             log.debug(thread.getThreadName() + " : RsiDiff " + thread.getRsiDiff());
-            if (((isUpwardTrend(thread) && thread.getCurrentValue() - thread.getDip() > 0.5 * thread.getTargetThreshold()) ||
-                    (thread.getCurrentValue() - thread.getDip() > 0.75f * thread.getTargetThreshold())) &&
-                    thread.getRsiDiff() > RSI_LOWER_LIMIT_PREMATURE_DIFF) {
+            if ((isUpwardTrend(thread) && thread.getCurrentValue() - thread.getDip() > 0.5 * thread.getTargetThreshold()) ||
+                    (thread.getCurrentValue() - thread.getDip() > 0.75f * thread.getTargetThreshold() &&
+                            thread.getRsiDiff() > RSI_LOWER_LIMIT_PREMATURE_DIFF)) {
                 log.debug(thread.getThreadName() + " : PreMatureLtEnd");
                 thread.setCurrentState(BB_RSI_THREAD_STATE_LT_TRIGGER_END2);
             }
@@ -607,9 +607,9 @@ public class BbRsiService extends StratTickerService<BbRsiSafeThread, BbRsiThrea
             log.debug(thread.getThreadName() + " : " + thread.getPeak() + " - " + thread.getCurrentValue() + " = " + (thread.getPeak() - thread.getCurrentValue()));
             log.debug(thread.getThreadName() + " : isDownwardTrend(thread) = " + isDownwardTrend(thread));
             log.debug(thread.getThreadName() + " : RsiDiff " + thread.getRsiDiff());
-            if (((isDownwardTrend(thread) && thread.getPeak() - thread.getCurrentValue() > 0.5f * thread.getTargetThreshold()) ||
-                    (thread.getPeak() - thread.getCurrentValue() > 0.75f * thread.getTargetThreshold())) &&
-                    thread.getRsiDiff() < RSI_UPPER_LIMIT_PREMATURE_DIFF) {
+            if ((isDownwardTrend(thread) && thread.getPeak() - thread.getCurrentValue() > 0.5f * thread.getTargetThreshold()) ||
+                    (thread.getPeak() - thread.getCurrentValue() > 0.75f * thread.getTargetThreshold() &&
+                            thread.getRsiDiff() < RSI_UPPER_LIMIT_PREMATURE_DIFF)) {
                 log.debug(thread.getThreadName() + " : PreMatureUtEnd");
                 thread.setCurrentState(BB_RSI_THREAD_STATE_UT_TRIGGER_END2);
             }
