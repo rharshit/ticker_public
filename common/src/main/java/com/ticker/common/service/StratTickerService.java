@@ -244,7 +244,6 @@ public abstract class StratTickerService<T extends StratThread, TM extends Strat
 
     public void setTargetThreshold(T thread) {
         long start = System.currentTimeMillis();
-        thread.setTargetThreshold(0.0006f * thread.getCurrentValue());
         while (thread.getTargetThreshold() == 0 && System.currentTimeMillis() - start < THRESHOLD_FETCH_TIMEOUT) {
             if (thread.getCurrentValue() != 0) {
                 try {
@@ -271,6 +270,7 @@ public abstract class StratTickerService<T extends StratThread, TM extends Strat
             }
             waitFor(WAIT_MEDIUM);
         }
+        thread.setTargetThreshold(0.0006f * thread.getCurrentValue());
         log.warn(thread.getThreadName() + " : Cannot fetch actual target threshold, using default");
     }
 }

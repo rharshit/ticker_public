@@ -1,6 +1,7 @@
 package com.ticker.brokerage.service;
 
 import com.ticker.common.exception.TickerException;
+import com.ticker.common.util.Util;
 import com.ticker.common.util.objectpool.ObjectPool;
 import lombok.extern.slf4j.Slf4j;
 import org.openqa.selenium.*;
@@ -99,21 +100,21 @@ public class BrokerageService {
                 break;
         }
         Map<String, Double> data = new HashMap<>();
-        try {
-            busy = true;
-            WebDriver webDriver = webDrivers.get();
-            busy = false;
-            WebElement tabDiv = webDriver.findElement(By.id(divId));
-            setTabValues(tabDiv, buy, sell, quantity);
-            boolean isExchangeSelected = false;
-            List<WebElement> weExchanges = tabDiv.findElements(By.className("equity-radio"));
-            List<String> exchanges = new ArrayList<>();
-            for (WebElement weExchange : weExchanges) {
-                WebElement rb = weExchange.findElement(By.tagName("input"));
-                String exchangeValue = rb.getAttribute("value");
-                if (exchange.equalsIgnoreCase(exchangeValue)) {
-                    rb.click();
-                    isExchangeSelected = true;
+        busy = true;
+        WebDriver webDriver = webDrivers.get();
+        synchronized (webDriver) {
+            try {
+                WebElement tabDiv = webDriver.findElement(By.id(divId));
+                setTabValues(tabDiv, buy, sell, quantity);
+                boolean isExchangeSelected = false;
+                List<WebElement> weExchanges = tabDiv.findElements(By.className("equity-radio"));
+                List<String> exchanges = new ArrayList<>();
+                for (WebElement weExchange : weExchanges) {
+                    WebElement rb = weExchange.findElement(By.tagName("input"));
+                    String exchangeValue = rb.getAttribute("value");
+                    if (exchange.equalsIgnoreCase(exchangeValue)) {
+                        rb.click();
+                        isExchangeSelected = true;
                         break;
                     }
                     exchanges.add(exchangeValue);
@@ -123,27 +124,31 @@ public class BrokerageService {
                 }
                 List<WebElement> divs = tabDiv.findElements(By.className("valuation-block"));
                 divs.add(tabDiv.findElement(By.className("net-profit")));
+                Util.waitFor(Util.WAIT_MEDIUM);
                 for (WebElement div : divs) {
                     WebElement label = div.findElement(By.tagName("label"));
                     WebElement span = div.findElement(By.tagName("span"));
                     data.put(convertToCamelCase(label.getText()), Double.valueOf(span.getText()));
                 }
-            webDrivers.put(webDriver);
-        } catch (TickerException e) {
-            throw e;
-        } catch (Exception e) {
-            initWebdriver();
-            if (numTry < numTries) {
-                log.info("Error while getting brokerage, retrying " + numTry);
-                return getZerodhaBrokerage(type, exchange, buy, sell, quantity, numTry + 1);
-            } else {
-                throw new TickerException("Error while getting values. Please try again");
+            } catch (TickerException e) {
+                throw e;
+            } catch (Exception e) {
+                initWebdriver();
+                if (numTry < numTries) {
+                    log.info("Error while getting brokerage, retrying " + numTry);
+                    return getZerodhaBrokerage(type, exchange, buy, sell, quantity, numTry + 1);
+                } else {
+                    throw new TickerException("Error while getting values. Please try again");
+                }
+            } finally {
+                webDrivers.put(webDriver);
+                busy = false;
             }
         }
         data.put("pnl", data.get("netPnl"));
         data.put("ptb", data.get("pointsToBreakeven"));
         data.put("totalBrokerage", data.get("totalTaxAndCharges"));
-        log.info("end: " + exchange + " : " + buy + ", " + sell + ", " + quantity + " in " + (System.currentTimeMillis() - start) + "ms");
+        log.info("end: " + exchange + " : " + buy + ", " + sell + ", " + quantity + ", " + data.get("pointsToBreakeven") + " in " + (System.currentTimeMillis() - start) + "ms");
         return data;
     }
 
