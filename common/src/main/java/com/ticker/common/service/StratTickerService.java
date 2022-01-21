@@ -23,7 +23,8 @@ import java.util.concurrent.Executor;
 
 import static com.ticker.common.contants.DateTimeConstants.*;
 import static com.ticker.common.contants.TickerConstants.*;
-import static com.ticker.common.util.Util.*;
+import static com.ticker.common.util.Util.WAIT_MEDIUM;
+import static com.ticker.common.util.Util.waitFor;
 
 @Slf4j
 @Service
@@ -189,7 +190,7 @@ public abstract class StratTickerService<T extends StratThread, TM extends Strat
 
     // TODO
     protected float buy(T thread, int qty) {
-        waitFor(WAIT_LONG);
+        waitFor(WAIT_MEDIUM);
         log.info("Bought " + qty +
                 " " + thread.getTickerType() +
                 " of " + thread.getExchange() + ":" + thread.getSymbol() +
@@ -201,7 +202,7 @@ public abstract class StratTickerService<T extends StratThread, TM extends Strat
 
     // TODO
     protected float sell(T thread, int qty) {
-        waitFor(WAIT_LONG);
+        waitFor(WAIT_MEDIUM);
         log.info("Sold " + qty +
                 " " + thread.getTickerType() +
                 " of " + thread.getExchange() + ":" + thread.getSymbol() +
