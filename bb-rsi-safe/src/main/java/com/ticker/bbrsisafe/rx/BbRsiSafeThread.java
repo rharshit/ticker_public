@@ -23,6 +23,7 @@ public class BbRsiSafeThread extends StratThread<BbRsiService> {
     private long triggerWaveEndTime;
     private long tradeStartTime;
     private float tradeValue;
+    private float trailValue;
     private float targetValue = 0;
     private float peak;
     private float dip;
@@ -31,7 +32,7 @@ public class BbRsiSafeThread extends StratThread<BbRsiService> {
     private int panicSell = 0;
     private int panicBuy = 0;
     private boolean goodToTrigger = false;
-    private boolean reenter = false;
+    private boolean satisfied = false;
 
     public BbRsiSafeThread(ExchangeSymbolEntity entity) {
         super(entity);
@@ -73,10 +74,12 @@ public class BbRsiSafeThread extends StratThread<BbRsiService> {
         triggerWaveEndTime = 0;
         tradeStartTime = 0;
         tradeValue = 0;
+        trailValue = 0;
         dip = 0;
         peak = 0;
         panicSell = 0;
         panicBuy = 0;
         setGoodToTrigger(false);
+        setSatisfied(false);
     }
 }
