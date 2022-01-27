@@ -52,16 +52,16 @@ public class FetcherService {
         int iterationMultiplier = 200;
         if (!refresh) {
             // Chart style
-            configureMenuByValue(fetcherThread.getWebDriver(), "menu-inner", "header-toolbar-chart-styles", "ha", fetcherThread);
+            configureMenuByValue(fetcherThread.getWebDriver(), "menu-inner", "header-toolbar-chart-styles", "ha");
 
             // Chart interval
-            configureMenuByValue(fetcherThread.getWebDriver(), "menu-inner", "header-toolbar-intervals", "1", fetcherThread);
+            configureMenuByValue(fetcherThread.getWebDriver(), "menu-inner", "header-toolbar-intervals", "1");
 
         }
 
         // Indicators
-        waitTillLoad(fetcherThread.getWebDriver(), WAIT_SHORT + iteration * iterationMultiplier, 2, fetcherThread);
-        setIndicators(fetcherThread.getWebDriver(), fetcherThread, "bb:STD;Bollinger_Bands", "rsi:STD;RSI", "tema:STD;TEMA");
+        waitTillLoad(fetcherThread.getWebDriver(), WAIT_SHORT + iteration * iterationMultiplier, 2);
+        setIndicators(fetcherThread.getWebDriver(), "bb:STD;Bollinger_Bands", "rsi:STD;RSI", "tema:STD;TEMA");
 
         if (refresh) {
             log.info(fetcherThread.getExchange() + ":" + fetcherThread.getSymbol() + " - Refreshed");
@@ -78,15 +78,14 @@ public class FetcherService {
      * @param webDriver
      * @param time
      * @param threshold
-     * @param thread
      */
-    private void waitTillLoad(WebDriver webDriver, long time, int threshold, Thread thread) {
-        waitFor(WAIT_SHORT, thread);
+    private void waitTillLoad(WebDriver webDriver, long time, int threshold) {
+        waitFor(WAIT_SHORT);
         while (webDriver.findElements(By.cssSelector("div[role='progressbar']")).size() > threshold) ;
-        waitFor(time, thread);
+        waitFor(time);
     }
 
-    private void setIndicators(WebDriver webDriver, Thread thread, String... indicators) {
+    private void setIndicators(WebDriver webDriver, String... indicators) {
         WebElement chartStyle = webDriver.findElement(By.id("header-toolbar-indicators"));
         chartStyle.click();
         WebElement overLapManagerRoot = webDriver
@@ -97,7 +96,7 @@ public class FetcherService {
                 .findElement(By.cssSelector("div[data-name='indicators-dialog']"));
 
         for (String indicator : indicators) {
-            selectIndicator(indicator, menuBox, 0, thread);
+            selectIndicator(indicator, menuBox, 0);
         }
         WebElement closeBtn = overLapManagerRoot
                 .findElement(By.cssSelector("span[data-name='close']"))
@@ -105,13 +104,13 @@ public class FetcherService {
         closeBtn.click();
     }
 
-    private void selectIndicator(String indicator, WebElement menuBox, int iteration, Thread thread) {
+    private void selectIndicator(String indicator, WebElement menuBox, int iteration) {
         int numRetries = 5;
         log.debug("Selecting indicator " + indicator);
         try {
             String searchText = indicator.split(":")[0];
             WebElement searchBox = menuBox.findElement(By.cssSelector("input[data-role='search']"));
-            waitFor(WAIT_SHORT, thread);
+            waitFor(WAIT_SHORT);
             searchBox.click();
             if (Platform.getCurrent().is(Platform.MAC)) {
                 searchBox.sendKeys(Keys.COMMAND + "a");
@@ -131,7 +130,7 @@ public class FetcherService {
             iteration = iteration + 1;
             log.debug("Iteration " + iteration + " failed");
             if (iteration < numRetries) {
-                selectIndicator(indicator, menuBox, iteration, thread);
+                selectIndicator(indicator, menuBox, iteration);
             } else {
                 log.error(e.getMessage());
                 throw new TickerException("Cannot select indicator " + indicator);
@@ -140,10 +139,10 @@ public class FetcherService {
         log.debug("Selected indicator " + indicator);
     }
 
-    private void configureMenuByValue(WebDriver webDriver, String dataName, String header, String value, Thread thread) {
+    private void configureMenuByValue(WebDriver webDriver, String dataName, String header, String value) {
         while (CollectionUtils.isEmpty(webDriver.findElements(By.id(header)))) ;
         webDriver.findElement(By.id(header)).click();
-        waitFor(WAIT_MEDIUM, thread);
+        waitFor(WAIT_MEDIUM);
         WebElement menuBox = webDriver
                 .findElement(By.id("overlap-manager-root"))
                 .findElement(By.cssSelector("div[data-name='" + dataName + "']"));
@@ -216,7 +215,7 @@ public class FetcherService {
                         Actions actions = new Actions(fetcherThread.getWebDriver());
                         actions.moveToElement(table).perform();
                         actions.moveByOffset(hoverBox.width / 2 - 1, 1 - (hoverBox.height / 2)).perform();
-                        waitFor(WAIT_SHORT, fetcherThread);
+                        waitFor(WAIT_SHORT);
                         List<WebElement> rows = table.findElements(By.tagName("tr"));
                         texts = rows.stream().map(WebElement::getText).collect(Collectors.toList());
                         float o = 0;

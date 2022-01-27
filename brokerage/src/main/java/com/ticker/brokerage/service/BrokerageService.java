@@ -11,7 +11,6 @@ import org.springframework.stereotype.Service;
 import java.util.*;
 
 import static com.ticker.brokerage.common.constants.WebConstants.ZERODHA_BROKERAGE_URL;
-import static com.ticker.common.util.Util.WAIT_MEDIUM;
 
 
 @Service
@@ -112,8 +111,7 @@ public class BrokerageService {
                     throw new TickerException("Exchange value '" + exchange + "' is invalid. Valid options are: " + exchanges);
                 }
                 List<WebElement> divs = tabDiv.findElements(By.className("valuation-block"));
-            divs.add(tabDiv.findElement(By.className("net-profit")));
-            Thread.sleep(WAIT_MEDIUM);
+                divs.add(tabDiv.findElement(By.className("net-profit")));
                 for (WebElement div : divs) {
                     WebElement label = div.findElement(By.tagName("label"));
                     WebElement span = div.findElement(By.tagName("span"));
