@@ -1,11 +1,10 @@
 package com.ticker.brokerage.service;
 
 import com.ticker.common.exception.TickerException;
+import com.ticker.common.util.Util;
 import com.ticker.common.util.objectpool.ObjectPool;
 import lombok.extern.slf4j.Slf4j;
 import org.openqa.selenium.*;
-import org.openqa.selenium.chrome.ChromeDriver;
-import org.openqa.selenium.chrome.ChromeOptions;
 import org.springframework.cache.annotation.Cacheable;
 import org.springframework.stereotype.Service;
 
@@ -28,7 +27,7 @@ public class BrokerageService {
     private static boolean busy = false;
 
     static {
-        webDrivers = new ObjectPool<WebDriver>(15, 45, 100, 500, 60000) {
+        webDrivers = new ObjectPool<WebDriver>(1, 1, 1, 500, 60000) {
             @Override
             public WebDriver createObject() {
                 return initWebdriver();
@@ -44,17 +43,7 @@ public class BrokerageService {
     }
 
     private static WebDriver initWebdriver() {
-        WebDriver webDriver;
-        log.info("Initializing webdriver");
-        ChromeOptions options = new ChromeOptions();
-        options.setHeadless(true);
-        options.addArguments("--window-size=1920,1080");
-        options.addArguments("incognito");
-        if (Platform.getCurrent().is(Platform.LINUX)) {
-            System.setProperty("webdriver.chrome.driver", "/usr/bin/chromedriver");
-            options.setBinary("/usr/bin/chromium-browser");
-        }
-        webDriver = new ChromeDriver(options);
+        WebDriver webDriver = Util.getWebDriver(true);
         webDriver.get(ZERODHA_BROKERAGE_URL);
         log.info("Webdriver initialized");
         return webDriver;
