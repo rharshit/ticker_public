@@ -27,7 +27,7 @@ public class BrokerageService {
     private static boolean busy = false;
 
     static {
-        webDrivers = new ObjectPool<WebDriverObjectPoolData>(2, 3, 45, 500, 60000) {
+        webDrivers = new ObjectPool<WebDriverObjectPoolData>(5, 10, 45, 500, 60000) {
             @Override
             public WebDriverObjectPoolData createObject() {
                 return new WebDriverObjectPoolData(ZERODHA_BROKERAGE_URL);
