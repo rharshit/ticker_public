@@ -9,13 +9,13 @@ import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
 
-public abstract class ObjectPool<T> {
+public abstract class ObjectPool<D extends ObjectPoolData<?>> {
     private final int min;
     private final int idle;
     private final int max;
     private final long validationTime;
     private final long idleTime;
-    private final Set<ObjectPoolData<T>> pool;
+    private final Set<ObjectPoolData<?>> pool;
 
     public ObjectPool(int min, int idle, int max, long validationTime, long idleTimeout) {
         this.min = min;
@@ -30,22 +30,39 @@ public abstract class ObjectPool<T> {
         executorService.scheduleWithFixedDelay(this::validate, 0, validationTime, TimeUnit.MILLISECONDS);
     }
 
-    public abstract T createObject();
+    private void poolSize() {
+        int idle = 0;
+        int valid = 0;
+        int invalid = 0;
+        for (ObjectPoolData<?> object : pool) {
+            if (object.isIdle()) {
+                idle++;
+            } else if (object.isValid()) {
+                valid++;
+            } else {
+                invalid++;
+            }
+        }
+//        log.info("Total:\t" + pool.size() + "\tIdle:\t" + idle + "\tValid:\t" + valid + "\tInvalid:\t" + invalid);
+    }
 
-    private void removeObject(ObjectPoolData<T> object) {
+    public abstract D createObject();
+
+    private void removeObject(ObjectPoolData<?> object) {
         pool.remove(object);
-        object.destroy();
+        Thread thread = new Thread(() -> object.destroy());
+        thread.start();
     }
 
     private void validate() {
-        for (ObjectPoolData<T> object : pool) {
+        for (ObjectPoolData<?> object : pool) {
             if (object.isValid() && !object.isIdle()) {
                 object.setLastUsed(System.currentTimeMillis());
             }
         }
         if (pool.size() > idle) {
-            int toDestroy = idle - pool.size();
-            for (ObjectPoolData<T> object : pool) {
+            int toDestroy = pool.size() - idle;
+            for (ObjectPoolData<?> object : pool) {
                 if (toDestroy == 0) {
                     break;
                 }
@@ -65,8 +82,8 @@ public abstract class ObjectPool<T> {
             }
         }
         if (pool.size() > min) {
-            int toReduce = pool.size() - 1;
-            for (ObjectPoolData<T> object : pool) {
+            int toReduce = pool.size() - min;
+            for (ObjectPoolData<?> object : pool) {
                 if (toReduce == 0) {
                     break;
                 }
@@ -87,7 +104,9 @@ public abstract class ObjectPool<T> {
             int toAdd = min - pool.size();
             List<Thread> threads = new ArrayList<>();
             for (int i = 0; i < toAdd; i++) {
-                Thread thread = new Thread(() -> pool.add(new ObjectPoolData<>(createObject())));
+                Thread thread = new Thread(() -> {
+                    pool.add(createObject());
+                });
                 thread.start();
                 threads.add(thread);
             }
@@ -101,16 +120,16 @@ public abstract class ObjectPool<T> {
         }
     }
 
-    public T get() {
+    public Object get() {
         do {
-            for (ObjectPoolData<T> object : pool) {
+            for (ObjectPoolData<?> object : pool) {
                 if (object.isValid() && object.isIdle()) {
                     object.setIdle(false);
                     return object.getObject();
                 }
             }
             if (pool.size() < max) {
-                pool.add(new ObjectPoolData<T>(createObject()));
+                pool.add(createObject());
             }
             try {
                 Thread.sleep(validationTime);
@@ -119,9 +138,9 @@ public abstract class ObjectPool<T> {
         } while (true);
     }
 
-    public void put(T data) {
-        for (ObjectPoolData<T> object : pool) {
-            if (object.equals(new ObjectPoolData<>(data))) {
+    public void put(Object data) {
+        for (ObjectPoolData<?> object : pool) {
+            if (object.equalsObject(data)) {
                 object.setIdle(true);
                 break;
             }

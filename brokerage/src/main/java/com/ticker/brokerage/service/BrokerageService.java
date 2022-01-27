@@ -1,8 +1,8 @@
 package com.ticker.brokerage.service;
 
 import com.ticker.common.exception.TickerException;
-import com.ticker.common.util.Util;
 import com.ticker.common.util.objectpool.ObjectPool;
+import com.ticker.common.util.objectpool.impl.WebDriverObjectPoolData;
 import lombok.extern.slf4j.Slf4j;
 import org.openqa.selenium.*;
 import org.springframework.cache.annotation.Cacheable;
@@ -22,15 +22,15 @@ public class BrokerageService {
     private static final String FUTURES = "futures";
     private static final String OPTIONS = "options";
     private static final Map<String, List<String>> tabs;
-    private static final ObjectPool<WebDriver> webDrivers;
+    private static final ObjectPool<WebDriverObjectPoolData> webDrivers;
     public static final int numTries = 3;
     private static boolean busy = false;
 
     static {
-        webDrivers = new ObjectPool<WebDriver>(5, 10, 45, 500, 60000) {
+        webDrivers = new ObjectPool<WebDriverObjectPoolData>(2, 3, 45, 500, 60000) {
             @Override
-            public WebDriver createObject() {
-                return initWebdriver();
+            public WebDriverObjectPoolData createObject() {
+                return new WebDriverObjectPoolData(ZERODHA_BROKERAGE_URL);
             }
         };
 
@@ -40,13 +40,6 @@ public class BrokerageService {
             put(FUTURES, Arrays.asList(FUTURES, "f", "fof", "fnof", "future", "futures"));
             put(OPTIONS, Arrays.asList(OPTIONS, "o", "foo", "fnoo", "option", "options"));
         }};
-    }
-
-    private static WebDriver initWebdriver() {
-        WebDriver webDriver = Util.getWebDriver(true);
-        webDriver.get(ZERODHA_BROKERAGE_URL);
-        log.info("Webdriver initialized");
-        return webDriver;
     }
 
     private static String getTabType(String type) {
@@ -89,7 +82,7 @@ public class BrokerageService {
         }
         Map<String, Double> data = new HashMap<>();
         busy = true;
-        WebDriver webDriver = webDrivers.get();
+        WebDriver webDriver = (WebDriver) webDrivers.get();
         synchronized (webDriver) {
             try {
                 WebElement tabDiv = webDriver.findElement(By.id(divId));
@@ -120,7 +113,6 @@ public class BrokerageService {
             } catch (TickerException e) {
                 throw e;
             } catch (Exception e) {
-                initWebdriver();
                 if (numTry < numTries) {
                     log.info("Error while getting brokerage, retrying " + numTry);
                     return getZerodhaBrokerage(type, exchange, buy, sell, quantity, numTry + 1);
