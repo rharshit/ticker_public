@@ -274,6 +274,6 @@ public abstract class StratTickerService<T extends StratThread, TM extends Strat
             waitFor(WAIT_MEDIUM, thread);
         }
         thread.setTargetThreshold(0.0006f * thread.getCurrentValue());
-        log.warn(thread.getThreadName() + " : Cannot fetch actual target threshold");
+        log.warn(thread.getThreadName() + " : Cannot fetch actual target threshold, using default");
     }
 }

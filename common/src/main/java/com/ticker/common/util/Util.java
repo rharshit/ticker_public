@@ -60,7 +60,7 @@ public abstract class Util {
             options.setBinary("/usr/bin/chromium-browser");
         } else if (Platform.getCurrent().is(Platform.WINDOWS)) {
             System.setProperty("webdriver.chrome.driver", "C:\\WebDriver\\bin\\chromedriver.exe");
-            options.setBinary("C:\\WebDriver\\bin\\chrome.exe");
+            options.setBinary("C:\\Program Files\\Google\\Chrome\\Application\\chrome.exe");
         }
         log.debug("Using chrome driver: " + System.getProperty("webdriver.chrome.driver"));
         webDriver = new ChromeDriver(options);

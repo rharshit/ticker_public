@@ -23,4 +23,12 @@ public class BbRsiThreadModel extends StratThreadModel<BbRsiSafeThread> {
     public boolean isLowTarget() {
         return thread.isLowValue();
     }
+
+    public float getTradeValue() {
+        return thread.getTradeValue();
+    }
+
+    public float getTrailValue() {
+        return thread.getTrailValue();
+    }
 }

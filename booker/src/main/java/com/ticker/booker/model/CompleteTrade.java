@@ -5,6 +5,7 @@ import lombok.Data;
 
 @Data
 public class CompleteTrade {
+    private String appName;
     private TickerTrade buy;
     private TickerTrade sell;
     private String symbol;

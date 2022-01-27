@@ -60,6 +60,10 @@ public class StratThreadModel<T extends StratThread> extends TickerThreadModel<T
         return thread.getTema();
     }
 
+    public float getPositionQty() {
+        return thread.getPositionQty();
+    }
+
     public long getUpdatedAt() {
         return this.thread.getUpdatedAt();
     }
