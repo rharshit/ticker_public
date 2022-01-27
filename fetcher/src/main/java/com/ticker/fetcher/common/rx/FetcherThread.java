@@ -118,7 +118,7 @@ public class FetcherThread extends TickerThread<TickerService> {
         initialize(0, false);
         while (isEnabled()) {
             while (isEnabled() && isInitialized()) {
-                waitFor(WAIT_LONG);
+                waitFor(WAIT_LONG, this);
             }
         }
 

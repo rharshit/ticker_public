@@ -54,12 +54,13 @@ public abstract class StratThread<S extends StratTickerService> extends TickerTh
         initialize();
         if (entity != null) {
             while (!isFetching() && isEnabled()) {
-                waitFor(WAIT_LONG);
+                waitFor(WAIT_LONG, this);
             }
+            setTargetThreshold(0.0006f * getCurrentValue());
             service.setTargetThreshold(this);
             while (isEnabled()) {
                 while (isEnabled() && isInitialized()) {
-                    waitFor(WAIT_LONG);
+                    waitFor(WAIT_LONG, this);
                 }
                 if (isEnabled()) {
                     initialize();

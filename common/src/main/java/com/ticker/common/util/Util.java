@@ -1,6 +1,7 @@
 package com.ticker.common.util;
 
 import lombok.extern.slf4j.Slf4j;
+import org.jetbrains.annotations.NotNull;
 import org.openqa.selenium.Platform;
 import org.openqa.selenium.WebDriver;
 import org.openqa.selenium.chrome.ChromeDriver;
@@ -17,10 +18,12 @@ public abstract class Util {
     public static final long WAIT_MEDIUM = 750;
     public static final long WAIT_LONG = 2000;
 
-    public static void waitFor(long time) {
-        log.debug("Waiting for " + time + "ma");
+    public static void waitFor(long time, @NotNull Thread thread) {
         try {
-            Thread.sleep(time);
+            synchronized (thread) {
+                thread.wait(time);
+                thread.notifyAll();
+            }
         } catch (InterruptedException e) {
             log.error("Error while waiting", e);
         }
@@ -57,7 +60,7 @@ public abstract class Util {
             options.setBinary("/usr/bin/chromium-browser");
         } else if (Platform.getCurrent().is(Platform.WINDOWS)) {
             System.setProperty("webdriver.chrome.driver", "C:\\WebDriver\\bin\\chromedriver.exe");
-            options.setBinary("C:\\WebDriver\\bin\\chrome.exe");
+            options.setBinary("C:\\Program Files\\Google\\Chrome\\Application\\chrome.exe");
         }
         log.debug("Using chrome driver: " + System.getProperty("webdriver.chrome.driver"));
         webDriver = new ChromeDriver(options);
