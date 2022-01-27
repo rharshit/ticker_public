@@ -3,6 +3,7 @@ package com.ticker.fetcher.common.rx;
 import com.ticker.common.entity.exchangesymbol.ExchangeSymbolEntity;
 import com.ticker.common.exception.TickerException;
 import com.ticker.common.rx.TickerThread;
+import com.ticker.common.util.Util;
 import com.ticker.fetcher.repository.FetcherAppRepository;
 import com.ticker.fetcher.service.FetcherService;
 import com.ticker.fetcher.service.TickerService;
@@ -11,12 +12,8 @@ import lombok.NoArgsConstructor;
 import lombok.Setter;
 import lombok.extern.slf4j.Slf4j;
 import org.openqa.selenium.By;
-import org.openqa.selenium.Platform;
 import org.openqa.selenium.WebDriver;
 import org.openqa.selenium.WebElement;
-import org.openqa.selenium.chrome.ChromeDriver;
-import org.openqa.selenium.chrome.ChromeOptions;
-import org.openqa.selenium.remote.CapabilityType;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Scope;
 import org.springframework.stereotype.Component;
@@ -34,7 +31,6 @@ import static com.ticker.common.contants.WebConstants.TRADING_VIEW_CHART;
 import static com.ticker.common.util.Util.WAIT_LONG;
 import static com.ticker.common.util.Util.waitFor;
 import static com.ticker.fetcher.common.constants.FetcherConstants.FETCHER_THREAD_COMP_NAME;
-import static org.openqa.selenium.UnexpectedAlertBehaviour.ACCEPT;
 
 @Getter
 @Setter
@@ -114,18 +110,7 @@ public class FetcherThread extends TickerThread<TickerService> {
             }
 
         }
-        ChromeOptions options = new ChromeOptions();
-        options.setHeadless(true);
-        options.addArguments("--window-size=1920,1080");
-        options.addArguments("--disable-gpu");
-        options.addArguments("incognito");
-        options.setCapability(CapabilityType.UNEXPECTED_ALERT_BEHAVIOUR, ACCEPT);
-        options.setUnhandledPromptBehaviour(ACCEPT);
-        if (Platform.getCurrent().is(Platform.LINUX)) {
-            System.setProperty("webdriver.chrome.driver", "/usr/bin/chromedriver");
-            options.setBinary("/usr/bin/chromium-browser");
-        }
-        this.webDriver = new ChromeDriver(options);
+        this.webDriver = Util.getWebDriver(true);
     }
 
     @Override
