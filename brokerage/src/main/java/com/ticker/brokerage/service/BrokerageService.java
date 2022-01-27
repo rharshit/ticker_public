@@ -28,7 +28,7 @@ public class BrokerageService {
     private static boolean busy = false;
 
     static {
-        webDrivers = new ObjectPool<WebDriver>(1, 1, 1, 500, 60000) {
+        webDrivers = new ObjectPool<WebDriver>(5, 10, 45, 500, 60000) {
             @Override
             public WebDriver createObject() {
                 return initWebdriver();
