@@ -244,7 +244,8 @@ public abstract class StratTickerService<T extends StratThread, TM extends Strat
 
     public void setTargetThreshold(T thread) {
         long start = System.currentTimeMillis();
-        while (thread.getTargetThreshold() == 0 && System.currentTimeMillis() - start < THRESHOLD_FETCH_TIMEOUT) {
+        boolean thresholdSet = false;
+        while (!thresholdSet && System.currentTimeMillis() - start < THRESHOLD_FETCH_TIMEOUT) {
             if (thread.getCurrentValue() != 0) {
                 try {
                     String url = Util.getApplicationUrl(APPLICATION_BROKERAGE) +
@@ -261,6 +262,7 @@ public abstract class StratTickerService<T extends StratThread, TM extends Strat
                     } else {
                         thread.setTargetThreshold(3 * response.get("ptb").floatValue());
                     }
+                    thresholdSet = true;
                     log.info(thread.getThreadName() + " : Target threshold set");
                     return;
                 } catch (Exception e) {

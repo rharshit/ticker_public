@@ -57,7 +57,9 @@ public abstract class StratThread<S extends StratTickerService> extends TickerTh
                 waitFor(WAIT_LONG);
             }
             setTargetThreshold(0.0006f * getCurrentValue());
-            service.setTargetThreshold(this);
+            StratThread thisThread = this;
+            Thread thread = new Thread(() -> service.setTargetThreshold(thisThread));
+            thread.start();
             while (isEnabled()) {
                 while (isEnabled() && isInitialized()) {
                     waitFor(WAIT_LONG);
