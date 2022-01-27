@@ -23,8 +23,7 @@ import java.util.concurrent.Executor;
 
 import static com.ticker.common.contants.DateTimeConstants.*;
 import static com.ticker.common.contants.TickerConstants.*;
-import static com.ticker.common.util.Util.WAIT_MEDIUM;
-import static com.ticker.common.util.Util.waitFor;
+import static com.ticker.common.util.Util.*;
 
 @Slf4j
 @Service
@@ -190,7 +189,7 @@ public abstract class StratTickerService<T extends StratThread, TM extends Strat
 
     // TODO
     protected float buy(T thread, int qty) {
-        waitFor(WAIT_MEDIUM, thread);
+        waitFor(WAIT_LONG);
         log.info("Bought " + qty +
                 " " + thread.getTickerType() +
                 " of " + thread.getExchange() + ":" + thread.getSymbol() +
@@ -202,7 +201,7 @@ public abstract class StratTickerService<T extends StratThread, TM extends Strat
 
     // TODO
     protected float sell(T thread, int qty) {
-        waitFor(WAIT_MEDIUM, thread);
+        waitFor(WAIT_LONG);
         log.info("Sold " + qty +
                 " " + thread.getTickerType() +
                 " of " + thread.getExchange() + ":" + thread.getSymbol() +
@@ -244,9 +243,9 @@ public abstract class StratTickerService<T extends StratThread, TM extends Strat
     public abstract Map<Integer, String> getStateValueMap();
 
     public void setTargetThreshold(T thread) {
-        boolean thresholdFetched = false;
         long start = System.currentTimeMillis();
-        while (!thresholdFetched && System.currentTimeMillis() - start < THRESHOLD_FETCH_TIMEOUT) {
+        boolean thresholdSet = false;
+        while (!thresholdSet && System.currentTimeMillis() - start < THRESHOLD_FETCH_TIMEOUT) {
             if (thread.getCurrentValue() != 0) {
                 try {
                     String url = Util.getApplicationUrl(APPLICATION_BROKERAGE) +
@@ -263,7 +262,7 @@ public abstract class StratTickerService<T extends StratThread, TM extends Strat
                     } else {
                         thread.setTargetThreshold(3 * response.get("ptb").floatValue());
                     }
-                    thresholdFetched = true;
+                    thresholdSet = true;
                     log.info(thread.getThreadName() + " : Target threshold set");
                     return;
                 } catch (Exception e) {
@@ -271,7 +270,7 @@ public abstract class StratTickerService<T extends StratThread, TM extends Strat
                     log.info(e.getMessage());
                 }
             }
-            waitFor(WAIT_MEDIUM, thread);
+            waitFor(WAIT_MEDIUM);
         }
         thread.setTargetThreshold(0.0006f * thread.getCurrentValue());
         log.warn(thread.getThreadName() + " : Cannot fetch actual target threshold, using default");

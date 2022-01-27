@@ -1,7 +1,6 @@
 package com.ticker.common.util;
 
 import lombok.extern.slf4j.Slf4j;
-import org.jetbrains.annotations.NotNull;
 import org.openqa.selenium.Platform;
 import org.openqa.selenium.WebDriver;
 import org.openqa.selenium.chrome.ChromeDriver;
@@ -18,12 +17,10 @@ public abstract class Util {
     public static final long WAIT_MEDIUM = 750;
     public static final long WAIT_LONG = 2000;
 
-    public static void waitFor(long time, @NotNull Thread thread) {
+    public static void waitFor(long time) {
+        log.debug("Waiting for " + time + "ma");
         try {
-            synchronized (thread) {
-                thread.wait(time);
-                thread.notifyAll();
-            }
+            Thread.sleep(time);
         } catch (InterruptedException e) {
             log.error("Error while waiting", e);
         }
@@ -38,6 +35,8 @@ public abstract class Util {
                 return "http://localhost:8082/";
             case APPLICATION_BB_RSI:
                 return "http://localhost:8181/";
+            case APPLICATION_BB_RSI_SAFE:
+                return "http://localhost:8183/";
             case APPLICATION_MWAVE:
                 return "http://localhost:8182/";
             default:
