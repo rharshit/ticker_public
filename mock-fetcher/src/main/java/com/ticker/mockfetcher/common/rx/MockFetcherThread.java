@@ -100,7 +100,7 @@ public class MockFetcherThread extends TickerThread<TickerService> {
         initialize(0, false);
         while (isEnabled()) {
             while (isEnabled() && isInitialized()) {
-                waitFor(WAIT_LONG);
+                waitFor(WAIT_LONG, this);
             }
             if (!isInitialized()) {
                 initialize(0, false);

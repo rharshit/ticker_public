@@ -51,19 +51,34 @@ public abstract class StratThread<S extends StratTickerService> extends TickerTh
     @Override
     public void run() {
         enabled = true;
+        log.info("CP1");
         initialize();
+        log.info("CP2");
         if (entity != null) {
+            log.info("CP3");
             while (!isFetching() && isEnabled()) {
-                waitFor(WAIT_LONG);
+                log.info("CP4");
+                waitFor(WAIT_LONG, this);
+                log.info("CP5");
             }
+            log.info("CP6");
+            setTargetThreshold(0.0006f * getCurrentValue());
             service.setTargetThreshold(this);
+            log.info("CP7");
             while (isEnabled()) {
+                log.info("CP8");
                 while (isEnabled() && isInitialized()) {
-                    waitFor(WAIT_LONG);
+                    log.info("CP9");
+                    waitFor(WAIT_LONG, this);
+                    log.info("CP10");
                 }
+                log.info("CP11");
                 if (isEnabled()) {
+                    log.info("CP12");
                     initialize();
+                    log.info("CP13");
                 }
+                log.info("CP14");
             }
         }
         destroy();
