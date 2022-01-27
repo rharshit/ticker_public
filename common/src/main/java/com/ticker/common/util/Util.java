@@ -35,6 +35,8 @@ public abstract class Util {
                 return "http://localhost:8082/";
             case APPLICATION_BB_RSI:
                 return "http://localhost:8181/";
+            case APPLICATION_BB_RSI_SAFE:
+                return "http://localhost:8183/";
             case APPLICATION_MWAVE:
                 return "http://localhost:8182/";
             default:
