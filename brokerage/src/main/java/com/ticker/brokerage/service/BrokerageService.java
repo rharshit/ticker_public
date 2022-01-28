@@ -175,4 +175,8 @@ public class BrokerageService {
     public boolean isBusy() {
         return busy;
     }
+
+    public int[] getZerodhaWebdriverPoolSize() {
+        return webDrivers.poolSize();
+    }
 }

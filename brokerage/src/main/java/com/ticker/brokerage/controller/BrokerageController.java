@@ -28,4 +28,9 @@ public class BrokerageController {
     public ResponseEntity<Boolean> isBusy() {
         return new ResponseEntity<>(service.isBusy(), HttpStatus.OK);
     }
+
+    @GetMapping("/zerodha/pool")
+    public ResponseEntity<int[]> getZerodhaWebdriverPoolSize() {
+        return new ResponseEntity<>(service.getZerodhaWebdriverPoolSize(), HttpStatus.OK);
+    }
 }
