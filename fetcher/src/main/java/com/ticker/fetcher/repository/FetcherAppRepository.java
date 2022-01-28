@@ -78,7 +78,6 @@ public class FetcherAppRepository {
                     Statement statement = connection.createStatement();
                     synchronized (sqlQueue) {
                         log.debug("Pushing data, size: " + sqlQueue.size());
-                        log.debug(sqlQueue.get(0));
                         for (String sql : sqlQueue) {
                             log.trace(sql);
                             statement.addBatch(sql);
