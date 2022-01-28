@@ -53,10 +53,6 @@ public class FetcherThread extends TickerThread<TickerService> {
 
     private WebDriver webDriver;
 
-    {
-        setDaemon(true);
-    }
-
     private final Object postInitLock = new Object();
     private Set<String> fetcherApps = new HashSet<>();
 

@@ -23,6 +23,10 @@ public abstract class TickerThread<S extends TickerThreadService> extends Thread
     protected S service;
     protected ExchangeSymbolEntity entity;
 
+    {
+        setDaemon(true);
+    }
+
     public TickerThread(ExchangeSymbolEntity entity) {
         this.entity = entity;
     }
