@@ -7,20 +7,19 @@ import java.util.Objects;
 
 @Data
 public abstract class ObjectPoolData<T> {
-    private boolean valid = false;
+    private boolean initializingObject;
+    private boolean valid;
     private boolean idle = true;
 
     private long lastUsed;
     private T object;
 
     public ObjectPoolData() {
+        this.initializingObject = true;
         this.object = createObject();
+        this.initializingObject = false;
         this.lastUsed = System.currentTimeMillis();
         this.valid = true;
-    }
-
-    protected void setObject(Object object) {
-        this.object = (T) object;
     }
 
     public abstract T createObject();

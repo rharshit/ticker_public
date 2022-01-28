@@ -50,8 +50,7 @@ public abstract class ObjectPool<D extends ObjectPoolData<?>> {
 
     private void removeObject(ObjectPoolData<?> object) {
         pool.remove(object);
-        Thread thread = new Thread(() -> object.destroy());
-        thread.start();
+        object.destroy();
     }
 
     private void validate() {
@@ -62,41 +61,52 @@ public abstract class ObjectPool<D extends ObjectPoolData<?>> {
         }
         if (pool.size() > idle) {
             int toDestroy = pool.size() - idle;
-            for (ObjectPoolData<?> object : pool) {
-                if (toDestroy == 0) {
-                    break;
-                }
-                if (object.isValid()) {
-                    if (object.isIdle()) {
-                        if (toDestroy > 0) {
-                            removeObject(object);
-                            toDestroy--;
+            synchronized (pool) {
+                for (ObjectPoolData<?> object : pool) {
+                    if (toDestroy == 0) {
+                        break;
+                    }
+                    if (object.isInitializingObject()) {
+                        continue;
+                    }
+                    if (object.isValid()) {
+                        if (object.isIdle()) {
+                            if (toDestroy > 0) {
+                                removeObject(object);
+                                toDestroy--;
+                            }
+                        } else {
+                            object.setLastUsed(System.currentTimeMillis());
                         }
                     } else {
-                        object.setLastUsed(System.currentTimeMillis());
+                        removeObject(object);
+                        toDestroy--;
                     }
-                } else {
-                    removeObject(object);
-                    toDestroy--;
                 }
             }
+
         }
         if (pool.size() > min) {
             int toReduce = pool.size() - min;
-            for (ObjectPoolData<?> object : pool) {
-                if (toReduce == 0) {
-                    break;
-                }
-                if (object.isValid()) {
-                    if (object.isIdle() && System.currentTimeMillis() - object.getLastUsed() > idleTime) {
-                        if (toReduce > 0) {
-                            removeObject(object);
-                            toReduce--;
-                        }
+            synchronized (pool) {
+                for (ObjectPoolData<?> object : pool) {
+                    if (toReduce == 0) {
+                        break;
                     }
-                } else {
-                    removeObject(object);
-                    toReduce--;
+                    if (object.isInitializingObject()) {
+                        continue;
+                    }
+                    if (object.isValid()) {
+                        if (object.isIdle() && System.currentTimeMillis() - object.getLastUsed() > idleTime) {
+                            if (toReduce > 0) {
+                                removeObject(object);
+                                toReduce--;
+                            }
+                        }
+                    } else {
+                        removeObject(object);
+                        toReduce--;
+                    }
                 }
             }
         }
@@ -122,27 +132,31 @@ public abstract class ObjectPool<D extends ObjectPoolData<?>> {
 
     public Object get() {
         do {
-            for (ObjectPoolData<?> object : pool) {
-                if (object.isValid() && object.isIdle()) {
-                    object.setIdle(false);
-                    return object.getObject();
+            synchronized (pool) {
+                for (ObjectPoolData<?> object : pool) {
+                    if (object.isValid() && object.isIdle()) {
+                        object.setIdle(false);
+                        return object.getObject();
+                    }
                 }
-            }
-            if (pool.size() < max) {
-                pool.add(createObject());
-            }
-            try {
-                Thread.sleep(validationTime);
-            } catch (InterruptedException ignored) {
+                if (pool.size() < max) {
+                    pool.add(createObject());
+                }
+                try {
+                    this.wait(validationTime);
+                } catch (InterruptedException ignored) {
+                }
             }
         } while (true);
     }
 
     public void put(Object data) {
-        for (ObjectPoolData<?> object : pool) {
-            if (object.equalsObject(data)) {
-                object.setIdle(true);
-                break;
+        synchronized (pool) {
+            for (ObjectPoolData<?> object : pool) {
+                if (object.equalsObject(data)) {
+                    object.setIdle(true);
+                    break;
+                }
             }
         }
     }
