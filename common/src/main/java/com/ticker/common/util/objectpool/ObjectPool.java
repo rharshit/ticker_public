@@ -179,7 +179,7 @@ public abstract class ObjectPool<D extends ObjectPoolData<?>> {
                     pool.add(createObject());
                 }
                 try {
-                    this.wait(validationTime);
+                    pool.wait(validationTime);
                 } catch (InterruptedException ignored) {
                 }
             }
