@@ -30,7 +30,12 @@ public abstract class ObjectPool<D extends ObjectPoolData<?>> {
         executorService.scheduleWithFixedDelay(this::validate, 0, validationTime, TimeUnit.MILLISECONDS);
     }
 
-    private void poolSize() {
+    /**
+     * Get pool size
+     *
+     * @return An array with values [idle, valid, total]
+     */
+    public int[] poolSize() {
         int idle = 0;
         int valid = 0;
         int invalid = 0;
@@ -43,6 +48,7 @@ public abstract class ObjectPool<D extends ObjectPoolData<?>> {
                 invalid++;
             }
         }
+        return new int[]{idle, valid, pool.size()};
 //        log.info("Total:\t" + pool.size() + "\tIdle:\t" + idle + "\tValid:\t" + valid + "\tInvalid:\t" + invalid);
     }
 
