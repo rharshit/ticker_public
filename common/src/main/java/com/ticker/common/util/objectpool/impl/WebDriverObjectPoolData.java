@@ -8,6 +8,11 @@ import org.openqa.selenium.WebDriver;
 @Slf4j
 public class WebDriverObjectPoolData extends ObjectPoolData<WebDriver> {
 
+    public WebDriverObjectPoolData() {
+        super();
+        log.info("Webdriver created");
+    }
+
     public WebDriverObjectPoolData(String url) {
         super();
         getObject().get(url);
@@ -22,9 +27,10 @@ public class WebDriverObjectPoolData extends ObjectPoolData<WebDriver> {
     @Override
     public void destroyObject(WebDriver object) {
         try {
+            log.debug("Quitting webdriver: " + object);
             object.quit();
         } catch (Exception e) {
-            log.error("Cannot close webdriver: " + null, e);
+            log.error("Cannot quit webdriver: " + object, e);
         }
     }
 }

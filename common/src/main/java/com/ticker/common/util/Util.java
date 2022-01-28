@@ -63,7 +63,7 @@ public abstract class Util {
         }
         log.debug("Using chrome driver: " + System.getProperty("webdriver.chrome.driver"));
         webDriver = new ChromeDriver(options);
-        log.info("Initialized webdriver");
+        log.debug("Initialized webdriver: " + webDriver);
         return webDriver;
     }
 }
