@@ -3,8 +3,7 @@ package com.ticker.fetcher.common.rx;
 import com.ticker.common.entity.exchangesymbol.ExchangeSymbolEntity;
 import com.ticker.common.exception.TickerException;
 import com.ticker.common.rx.TickerThread;
-import com.ticker.common.util.objectpool.ObjectPool;
-import com.ticker.common.util.objectpool.impl.WebDriverObjectPoolData;
+import com.ticker.common.util.Util;
 import com.ticker.fetcher.repository.FetcherAppRepository;
 import com.ticker.fetcher.service.FetcherService;
 import com.ticker.fetcher.service.TickerService;
@@ -13,7 +12,6 @@ import lombok.NoArgsConstructor;
 import lombok.Setter;
 import lombok.extern.slf4j.Slf4j;
 import org.openqa.selenium.By;
-import org.openqa.selenium.NoSuchSessionException;
 import org.openqa.selenium.WebDriver;
 import org.openqa.selenium.WebElement;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -48,9 +46,6 @@ public class FetcherThread extends TickerThread<TickerService> {
     @Autowired
     private FetcherService fetcherService;
 
-    private ObjectPool<WebDriverObjectPoolData> webDrivers;
-    private String url;
-
     private WebDriver webDriver;
 
     private final Object postInitLock = new Object();
@@ -73,6 +68,8 @@ public class FetcherThread extends TickerThread<TickerService> {
     public void setProperties(String... apps) {
         this.enabled = true;
         this.fetcherApps = Arrays.stream(apps).collect(Collectors.toSet());
+
+        initialize();
     }
 
     public void setEntity(ExchangeSymbolEntity entity) {
@@ -106,18 +103,15 @@ public class FetcherThread extends TickerThread<TickerService> {
     }
 
     protected void initializeWebDriver() {
-        try {
-            if (isEnabled()) {
-                log.debug(getExchange() + ":" + getSymbol() + " - Initializing webdriver");
-                this.webDriver = (WebDriver) webDrivers.get();
-                getWebDriver().get(url);
-                log.debug(getExchange() + ":" + getSymbol() + " - Initialized webdriver " + this.webDriver);
+        if (this.webDriver != null) {
+            try {
+                this.webDriver.quit();
+            } catch (Exception e) {
+                log.error("Error while closing webdriver");
             }
-        } catch (NoSuchSessionException e) {
-            log.error(getExchange() + ":" + getSymbol() + " - Error in initializing webdriver. Reinitializing");
-            webDrivers.put(this.webDriver);
-            initializeWebDriver();
+
         }
+        this.webDriver = Util.getWebDriver(true);
     }
 
     @Override
@@ -128,13 +122,19 @@ public class FetcherThread extends TickerThread<TickerService> {
                 waitFor(WAIT_LONG);
             }
         }
-        webDrivers.put(this.webDriver);
+
+        if (this.webDriver != null) {
+            try {
+                this.webDriver.quit();
+            } catch (Exception e) {
+                log.error("Error while closing webdriver");
+            }
+        }
         log.info("Terminated thread : " + getThreadName());
     }
 
     protected void initialize(int iteration, boolean refresh) {
         this.initialized = false;
-        this.url = TRADING_VIEW_BASE + TRADING_VIEW_CHART + getExchange() + ":" + getSymbol();
         if (refresh) {
             log.info(getExchange() + ":" + getSymbol() + " - Refreshing");
         } else {
@@ -142,13 +142,14 @@ public class FetcherThread extends TickerThread<TickerService> {
         }
 
         try {
-            initialize();
+            String url = TRADING_VIEW_BASE + TRADING_VIEW_CHART + getExchange() + ":" + getSymbol();
             if (refresh) {
                 getWebDriver().navigate().refresh();
+            } else {
+                getWebDriver().get(url);
             }
             fetcherService.setChartSettings(this, iteration, refresh);
         } catch (Exception e) {
-            webDrivers.put(this.webDriver);
             if (refresh) {
                 log.warn("Error while refreshing " + getThreadName());
             } else {
@@ -279,11 +280,5 @@ public class FetcherThread extends TickerThread<TickerService> {
     public void setCurrentValue(float currentValue) {
         this.currentValue = currentValue;
         this.updatedAt = System.currentTimeMillis();
-    }
-
-    @Override
-    public void terminateThread() {
-        super.terminateThread();
-        webDrivers.put(this.webDriver);
     }
 }
