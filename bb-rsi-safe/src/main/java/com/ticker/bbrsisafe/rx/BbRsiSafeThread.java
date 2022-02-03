@@ -1,6 +1,6 @@
 package com.ticker.bbrsisafe.rx;
 
-import com.ticker.bbrsisafe.service.BbRsiService;
+import com.ticker.bbrsisafe.service.BbRsiSafeService;
 import com.ticker.common.entity.exchangesymbol.ExchangeSymbolEntity;
 import com.ticker.common.rx.StratThread;
 import lombok.Getter;
@@ -10,7 +10,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.context.annotation.Scope;
 import org.springframework.stereotype.Component;
 
-import static com.ticker.bbrsisafe.constants.BbRsiConstants.BB_RSI_THREAD_COMP_NAME;
+import static com.ticker.bbrsisafe.constants.BbRsiSafeConstants.BB_RSI_THREAD_COMP_NAME;
 
 @Getter
 @Setter
@@ -18,7 +18,7 @@ import static com.ticker.bbrsisafe.constants.BbRsiConstants.BB_RSI_THREAD_COMP_N
 @Component(BB_RSI_THREAD_COMP_NAME)
 @Scope("prototype")
 @NoArgsConstructor
-public class BbRsiSafeThread extends StratThread<BbRsiService> {
+public class BbRsiSafeThread extends StratThread<BbRsiSafeService> {
 
     private long triggerWaveEndTime;
     private long tradeStartTime;

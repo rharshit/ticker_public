@@ -3,8 +3,8 @@ package com.ticker.bbrsisafe.model;
 import com.ticker.bbrsisafe.rx.BbRsiSafeThread;
 import com.ticker.common.model.StratThreadModel;
 
-public class BbRsiThreadModel extends StratThreadModel<BbRsiSafeThread> {
-    public BbRsiThreadModel(BbRsiSafeThread thread) {
+public class BbRsiSafeThreadModel extends StratThreadModel<BbRsiSafeThread> {
+    public BbRsiSafeThreadModel(BbRsiSafeThread thread) {
         super(thread);
     }
 
