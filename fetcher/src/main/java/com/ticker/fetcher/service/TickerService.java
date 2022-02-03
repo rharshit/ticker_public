@@ -3,8 +3,6 @@ package com.ticker.fetcher.service;
 import com.ticker.common.entity.exchangesymbol.ExchangeSymbolEntity;
 import com.ticker.common.exception.TickerException;
 import com.ticker.common.service.TickerThreadService;
-import com.ticker.common.util.objectpool.ObjectPool;
-import com.ticker.common.util.objectpool.impl.WebDriverObjectPoolData;
 import com.ticker.fetcher.common.rx.FetcherThread;
 import com.ticker.fetcher.model.FetcherThreadModel;
 import com.ticker.fetcher.repository.FetcherAppRepository;
@@ -23,17 +21,6 @@ public class TickerService extends TickerThreadService<FetcherThread, FetcherThr
 
     @Autowired
     FetcherAppRepository repository;
-
-    private static final ObjectPool<WebDriverObjectPoolData> webDrivers;
-
-    static {
-        webDrivers = new ObjectPool<WebDriverObjectPoolData>(5, 15, 60, 2000, 60000) {
-            @Override
-            public WebDriverObjectPoolData createObject() {
-                return new WebDriverObjectPoolData();
-            }
-        };
-    }
 
     @Override
     public FetcherThreadModel createTickerThreadModel(FetcherThread thread) {
@@ -59,7 +46,6 @@ public class TickerService extends TickerThreadService<FetcherThread, FetcherThr
             if (thread == null) {
                 throw new TickerException("Error while adding thread");
             }
-            thread.setWebDrivers(webDrivers);
             thread.setProperties(extras[0]);
             thread.start();
         }
@@ -158,9 +144,5 @@ public class TickerService extends TickerThreadService<FetcherThread, FetcherThr
             exchangeSymbolEntity.setLotSize(lotSize);
         }
         return exchangeSymbolRepository.save(exchangeSymbolEntity);
-    }
-
-    public int[] getPoolSize() {
-        return webDrivers.poolSize();
     }
 }
