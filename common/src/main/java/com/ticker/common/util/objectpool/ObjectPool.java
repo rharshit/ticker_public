@@ -19,7 +19,7 @@ public abstract class ObjectPool<D extends ObjectPoolData<?>> {
     private final long validationTime;
     private final long idleTime;
     private final Set<ObjectPoolData<?>> pool;
-    private Integer initializng = 0;
+    private Integer initializing = 0;
 
     private boolean shutdown;
 
@@ -57,7 +57,7 @@ public abstract class ObjectPool<D extends ObjectPoolData<?>> {
                 invalid++;
             }
         }
-        return new int[]{idle, valid, pool.size()};
+        return new int[]{idle, valid, pool.size(), initializing};
 //        log.info("Total:\t" + pool.size() + "\tIdle:\t" + idle + "\tValid:\t" + valid + "\tInvalid:\t" + invalid);
     }
 
@@ -88,16 +88,16 @@ public abstract class ObjectPool<D extends ObjectPoolData<?>> {
     }
 
     private void addObject() {
-        synchronized (this.initializng) {
-            this.initializng++;
+        synchronized (this.initializing) {
+            this.initializing++;
         }
         ObjectPoolData<?> object = createObject();
         synchronized (this) {
             pool.add(object);
             notifyAll();
         }
-        synchronized (this.initializng) {
-            this.initializng--;
+        synchronized (this.initializing) {
+            this.initializing--;
         }
     }
 
@@ -161,8 +161,8 @@ public abstract class ObjectPool<D extends ObjectPoolData<?>> {
                 }
             }
         }
-        if (pool.size() + this.initializng < min) {
-            int toAdd = min - pool.size() - this.initializng;
+        if (pool.size() + this.initializing < min) {
+            int toAdd = min - pool.size() - this.initializing;
             List<Thread> threads = new ArrayList<>();
             for (int i = 0; i < toAdd; i++) {
                 Thread thread = new Thread(this::addObject);
@@ -188,7 +188,7 @@ public abstract class ObjectPool<D extends ObjectPoolData<?>> {
                 }
             }
         }
-        if (pool.size() + this.initializng < max) {
+        if (pool.size() + this.initializing < max) {
             Thread thread = new Thread(this::addObject);
             thread.start();
         }
