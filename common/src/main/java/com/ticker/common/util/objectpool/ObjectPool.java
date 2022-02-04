@@ -19,6 +19,7 @@ public abstract class ObjectPool<D extends ObjectPoolData<?>> {
     private final long validationTime;
     private final long idleTime;
     private final Set<ObjectPoolData<?>> pool;
+    private Integer initializng = 0;
 
     private boolean shutdown;
 
@@ -86,6 +87,20 @@ public abstract class ObjectPool<D extends ObjectPoolData<?>> {
         object.destroy();
     }
 
+    private void addObject() {
+        synchronized (this.initializng) {
+            this.initializng++;
+        }
+        ObjectPoolData<?> object = createObject();
+        synchronized (this) {
+            pool.add(object);
+            notifyAll();
+        }
+        synchronized (this.initializng) {
+            this.initializng--;
+        }
+    }
+
     private void validate() {
         if (shutdown) {
             return;
@@ -97,7 +112,7 @@ public abstract class ObjectPool<D extends ObjectPoolData<?>> {
         }
         if (pool.size() > idle) {
             int toDestroy = pool.size() - idle;
-            synchronized (pool) {
+            synchronized (this) {
                 for (ObjectPoolData<?> object : pool) {
                     if (toDestroy == 0) {
                         break;
@@ -124,7 +139,7 @@ public abstract class ObjectPool<D extends ObjectPoolData<?>> {
         }
         if (pool.size() > min) {
             int toReduce = pool.size() - min;
-            synchronized (pool) {
+            synchronized (this) {
                 for (ObjectPoolData<?> object : pool) {
                     if (toReduce == 0) {
                         break;
@@ -146,13 +161,11 @@ public abstract class ObjectPool<D extends ObjectPoolData<?>> {
                 }
             }
         }
-        if (pool.size() < min) {
-            int toAdd = min - pool.size();
+        if (pool.size() + this.initializng < min) {
+            int toAdd = min - pool.size() - this.initializng;
             List<Thread> threads = new ArrayList<>();
             for (int i = 0; i < toAdd; i++) {
-                Thread thread = new Thread(() -> {
-                    pool.add(createObject());
-                });
+                Thread thread = new Thread(this::addObject);
                 thread.start();
                 threads.add(thread);
             }
@@ -167,27 +180,23 @@ public abstract class ObjectPool<D extends ObjectPoolData<?>> {
     }
 
     public Object get() {
-        do {
-            synchronized (pool) {
-                for (ObjectPoolData<?> object : pool) {
-                    if (object.isValid() && object.isIdle()) {
-                        object.setIdle(false);
-                        return object.getObject();
-                    }
-                }
-                if (pool.size() < max) {
-                    pool.add(createObject());
-                }
-                try {
-                    pool.wait(validationTime);
-                } catch (InterruptedException ignored) {
+        synchronized (this) {
+            for (ObjectPoolData<?> object : pool) {
+                if (object.isValid() && object.isIdle()) {
+                    object.setIdle(false);
+                    return object.getObject();
                 }
             }
-        } while (true);
+        }
+        if (pool.size() + this.initializng < max) {
+            Thread thread = new Thread(this::addObject);
+            thread.start();
+        }
+        return null;
     }
 
     public void put(Object data) {
-        synchronized (pool) {
+        synchronized (this) {
             for (ObjectPoolData<?> object : pool) {
                 if (object.equalsObject(data)) {
                     object.setIdle(true);
