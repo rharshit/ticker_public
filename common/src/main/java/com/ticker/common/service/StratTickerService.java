@@ -74,7 +74,7 @@ public abstract class StratTickerService<T extends StratThread, TM extends Strat
     }
 
     @Async("scheduledExecutor")
-    @Scheduled(fixedDelay = 2000)
+    @Scheduled(fixedDelay = 300)
     public void checkFetchingForApps() {
         for (T thread : getCurrentTickerList()) {
             checkFetchingForApp(thread);

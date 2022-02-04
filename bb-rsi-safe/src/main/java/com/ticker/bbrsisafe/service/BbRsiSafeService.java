@@ -244,7 +244,7 @@ public class BbRsiSafeService extends StratTickerService<BbRsiSafeThread, BbRsiS
         } else if (thread.getTrailValue() - thread.getTargetThreshold() >= thread.getCurrentValue() - 0.004) {
             thread.setCurrentState(BB_RSI_SAFE_THREAD_STATE_UT_WAIT_WAVE_ENDED2);
             if (isDownwardTrend(thread)) {
-                thread.setIntermediateState(BB_RSI_SAFE_THREAD_STATE_UT_REENTER, BB_RSI_SAFE_THREAD_STATE_UT_SOLD);
+                thread.setIntermediateState(BB_RSI_SAFE_THREAD_STATE_UT_REENTER);
                 thread.setSatisfied(true);
             } else {
                 squareOff(thread);
@@ -297,7 +297,7 @@ public class BbRsiSafeService extends StratTickerService<BbRsiSafeThread, BbRsiS
         } else if (thread.getTrailValue() + thread.getTargetThreshold() <= thread.getCurrentValue() + 0.004) {
             thread.setCurrentState(BB_RSI_SAFE_THREAD_STATE_LT_WAIT_WAVE_ENDED2);
             if (isUpwardTrend(thread)) {
-                thread.setIntermediateState(BB_RSI_SAFE_THREAD_STATE_LT_REENTER, BB_RSI_SAFE_THREAD_STATE_LT_BOUGHT);
+                thread.setIntermediateState(BB_RSI_SAFE_THREAD_STATE_LT_REENTER);
                 thread.setSatisfied(true);
             } else {
                 squareOff(thread);
@@ -533,7 +533,7 @@ public class BbRsiSafeService extends StratTickerService<BbRsiSafeThread, BbRsiS
             log.trace(thread.getThreadName() + " : no check");
             return;
         }
-        if (thread.getRsi() > RSI_LOWER_LIMIT && isUpwardTrend(thread) && thread.isGoodToTrigger()) {
+        if (thread.getRsi() > RSI_LOWER_LIMIT && isUpwardTrend(thread)) {
             log.trace(thread.getThreadName() + " : LtEnd");
             thread.setCurrentState(BB_RSI_SAFE_THREAD_STATE_LT_TRIGGER_END1);
             thread.setTriggerWaveEndTime(System.currentTimeMillis());
@@ -551,7 +551,11 @@ public class BbRsiSafeService extends StratTickerService<BbRsiSafeThread, BbRsiS
 
     private void checkPreMatureLtEnd(BbRsiSafeThread thread) {
         thread.setDip(thread.getCurrentValue());
-        if (!isSameMinTrigger(thread.getTriggerStartTime()) && isEomTrigger(10) && thread.isGoodToTrigger()) {
+        if (thread.getRsi() >= RSI_LOWER_LIMIT
+                && thread.getTema() >= thread.getBbL()
+                && !isSameMinTrigger(thread.getTriggerStartTime())
+                && isEomTrigger(10)
+                && thread.isGoodToTrigger()) {
             log.debug("");
             log.debug(thread.getThreadName() + " : checkPreMatureLtEnd");
             log.debug(thread.getThreadName() + " : thread.getCurrentValue() - thread.getDip() = " + (thread.getCurrentValue() - thread.getDip()));
@@ -580,12 +584,15 @@ public class BbRsiSafeService extends StratTickerService<BbRsiSafeThread, BbRsiS
             log.trace(thread.getThreadName() + " : no check");
             return;
         }
-        if (thread.getRsi() > RSI_LOWER_LIMIT && isUpwardTrend(thread) && thread.isGoodToTrigger()) {
+        if (thread.getRsi() > RSI_LOWER_LIMIT
+                && thread.getTema() > thread.getBbL()
+                && isUpwardTrend(thread)
+                && thread.isGoodToTrigger()) {
             log.trace(thread.getThreadName() + " : LtEnd1");
             thread.setCurrentState(BB_RSI_SAFE_THREAD_STATE_LT_TRIGGER_END2);
             thread.setTriggerWaveEndTime(System.currentTimeMillis());
         } else {
-            if (thread.getRsi() <= RSI_LOWER_LIMIT_REBOUND) {
+            if (thread.getRsi() <= RSI_LOWER_LIMIT_REBOUND || thread.getTema() <= thread.getBbL()) {
                 log.trace(thread.getThreadName() + " : rebound");
                 thread.setCurrentState(BB_RSI_SAFE_THREAD_STATE_LT_TRIGGER_START);
             }
@@ -604,7 +611,7 @@ public class BbRsiSafeService extends StratTickerService<BbRsiSafeThread, BbRsiS
             log.trace(thread.getThreadName() + " : no check");
             return;
         }
-        if (thread.getRsi() < RSI_UPPER_LIMIT && isDownwardTrend(thread) && thread.isGoodToTrigger()) {
+        if (thread.getRsi() < RSI_UPPER_LIMIT && isDownwardTrend(thread)) {
             log.trace(thread.getThreadName() + " : UtEnd");
             thread.setCurrentState(BB_RSI_SAFE_THREAD_STATE_UT_TRIGGER_END1);
             thread.setTriggerWaveEndTime(System.currentTimeMillis());
@@ -622,7 +629,11 @@ public class BbRsiSafeService extends StratTickerService<BbRsiSafeThread, BbRsiS
 
     private void checkPreMatureUtEnd(BbRsiSafeThread thread) {
         thread.setPeak(thread.getCurrentValue());
-        if (!isSameMinTrigger(thread.getTriggerStartTime()) && isEomTrigger(10) && thread.isGoodToTrigger()) {
+        if (thread.getRsi() <= RSI_UPPER_LIMIT
+                && thread.getTema() <= thread.getBbU()
+                && !isSameMinTrigger(thread.getTriggerStartTime())
+                && isEomTrigger(10)
+                && thread.isGoodToTrigger()) {
             log.debug("");
             log.debug(thread.getThreadName() + " : checkPreMatureUtEnd");
             log.debug(thread.getThreadName() + " : thread.getPeak() - thread.getCurrentValue() = " + (thread.getPeak() - thread.getCurrentValue()));
@@ -651,12 +662,15 @@ public class BbRsiSafeService extends StratTickerService<BbRsiSafeThread, BbRsiS
             log.trace(thread.getThreadName() + " : no check");
             return;
         }
-        if (thread.getRsi() < RSI_UPPER_LIMIT && isDownwardTrend(thread) && thread.isGoodToTrigger()) {
+        if (thread.getRsi() < RSI_UPPER_LIMIT
+                && thread.getTema() < thread.getBbU()
+                && isDownwardTrend(thread)
+                && thread.isGoodToTrigger()) {
             log.trace(thread.getThreadName() + " : UtEnd1");
             thread.setCurrentState(BB_RSI_SAFE_THREAD_STATE_UT_TRIGGER_END2);
             thread.setTriggerWaveEndTime(System.currentTimeMillis());
         } else {
-            if (thread.getRsi() >= RSI_UPPER_LIMIT_REBOUND) {
+            if (thread.getRsi() >= RSI_UPPER_LIMIT_REBOUND || thread.getTema() >= thread.getBbU()) {
                 log.trace(thread.getThreadName() + " : rebound");
                 thread.setCurrentState(BB_RSI_SAFE_THREAD_STATE_UT_TRIGGER_START);
             }
