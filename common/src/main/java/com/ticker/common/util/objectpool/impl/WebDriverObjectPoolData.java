@@ -23,8 +23,10 @@ public class WebDriverObjectPoolData extends ObjectPoolData<WebDriver> {
     public void destroyObject(WebDriver object) {
         try {
             object.quit();
+            log.info("Closed webdriver");
+
         } catch (Exception e) {
-            log.error("Cannot close webdriver: " + null, e);
+            log.error("Cannot close webdriver: " + object, e);
         }
     }
 }
