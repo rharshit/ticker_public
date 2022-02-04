@@ -29,6 +29,8 @@ public abstract class Util {
 
     public static String getApplicationUrl(String application) {
         switch (application) {
+            case APPLICATION_HOME:
+                return "http://localhost:8080/";
             case APPLICATION_FETCHER:
                 return "http://localhost:8081/";
             case APPLICATION_BROKERAGE:
