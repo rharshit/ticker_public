@@ -52,16 +52,17 @@ public class FetcherService {
         int iterationMultiplier = 200;
         if (!refresh) {
             // Chart style
+            waitTillLoad(fetcherThread.getWebDriver(), WAIT_SHORT + iteration * iterationMultiplier, 2);
             configureMenuByValue(fetcherThread.getWebDriver(), "menu-inner", "header-toolbar-chart-styles", "ha");
 
             // Chart interval
+            waitTillLoad(fetcherThread.getWebDriver(), WAIT_SHORT + iteration * iterationMultiplier, 2);
             configureMenuByValue(fetcherThread.getWebDriver(), "menu-inner", "header-toolbar-intervals", "1");
 
         }
 
         // Indicators
-        waitTillLoad(fetcherThread.getWebDriver(), WAIT_SHORT + iteration * iterationMultiplier, 2);
-        setIndicators(fetcherThread.getWebDriver(), "bb:STD;Bollinger_Bands", "rsi:STD;RSI", "tema:STD;TEMA");
+        setIndicators(fetcherThread.getWebDriver(), WAIT_SHORT + iteration * iterationMultiplier, "bb:STD;Bollinger_Bands", "rsi:STD;RSI", "tema:STD;TEMA");
 
         if (refresh) {
             log.info(fetcherThread.getExchange() + ":" + fetcherThread.getSymbol() + " - Refreshed");
@@ -80,12 +81,14 @@ public class FetcherService {
      * @param threshold
      */
     private void waitTillLoad(WebDriver webDriver, long time, int threshold) {
-        waitFor(WAIT_SHORT);
-        while (webDriver.findElements(By.cssSelector("div[role='progressbar']")).size() > threshold) ;
+        while (webDriver.findElements(By.cssSelector("div[role='progressbar']")).size() > threshold) {
+            waitFor(WAIT_SHORT);
+        }
         waitFor(time);
     }
 
-    private void setIndicators(WebDriver webDriver, String... indicators) {
+    private void setIndicators(WebDriver webDriver, long waitTime, String... indicators) {
+        waitTillLoad(webDriver, waitTime, 2);
         WebElement chartStyle = webDriver.findElement(By.id("header-toolbar-indicators"));
         chartStyle.click();
         WebElement overLapManagerRoot = webDriver
@@ -96,6 +99,7 @@ public class FetcherService {
                 .findElement(By.cssSelector("div[data-name='indicators-dialog']"));
 
         for (String indicator : indicators) {
+            waitTillLoad(webDriver, waitTime, 2);
             selectIndicator(indicator, menuBox, 0);
         }
         WebElement closeBtn = overLapManagerRoot
