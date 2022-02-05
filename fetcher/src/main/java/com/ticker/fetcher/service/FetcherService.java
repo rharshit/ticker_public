@@ -1,6 +1,7 @@
 package com.ticker.fetcher.service;
 
 import com.ticker.common.exception.TickerException;
+import com.ticker.common.service.BaseService;
 import com.ticker.fetcher.common.rx.FetcherThread;
 import com.ticker.fetcher.model.FetcherRepoModel;
 import com.ticker.fetcher.repository.FetcherAppRepository;
@@ -18,7 +19,9 @@ import org.springframework.util.StringUtils;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.concurrent.Executor;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
@@ -27,7 +30,7 @@ import static com.ticker.common.util.Util.*;
 
 @Service
 @Slf4j
-public class FetcherService {
+public class FetcherService extends BaseService {
 
     @Autowired
     private TickerService appService;
@@ -39,7 +42,24 @@ public class FetcherService {
     @Qualifier("fetcherTaskExecutor")
     private Executor fetcherTaskExecutor;
 
+    @Autowired
+    @Qualifier("scheduledExecutor")
+    private Executor scheduledExecutor;
+
+    @Autowired
+    @Qualifier("repoExecutor")
+    private Executor repoExecutor;
+
     private static final List<FetcherRepoModel> dataQueue = new ArrayList<>();
+
+    public Map<String, Map<String, Integer>> getExecutorDetails() {
+        Map<String, Map<String, Integer>> details = new HashMap<>();
+        details.put("fetcherTaskExecutor", getExecutorDetails(fetcherTaskExecutor));
+        details.put("scheduledExecutor", getExecutorDetails(scheduledExecutor));
+        details.put("repoExecutor", getExecutorDetails(repoExecutor));
+        return details;
+    }
+
 
     /**
      * Set setting for the charts that are loaded

@@ -1,6 +1,7 @@
 package com.ticker.mockfetcher.service;
 
 import com.ticker.common.exception.TickerException;
+import com.ticker.common.service.BaseService;
 import com.ticker.mockfetcher.common.rx.MockFetcherThread;
 import com.ticker.mockfetcher.model.MockFetcherRepoModel;
 import com.ticker.mockfetcher.repository.MockFetcherAppRepository;
@@ -11,12 +12,14 @@ import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
 
 import java.sql.Timestamp;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.concurrent.Executor;
 
 @Service
 @Slf4j
-public class MockFetcherService {
+public class MockFetcherService extends BaseService {
 
     @Autowired
     private MockFetcherAppRepository repository;
@@ -126,5 +129,11 @@ public class MockFetcherService {
         } catch (Exception e) {
             throw new TickerException("Error while crating table: " + tableName);
         }
+    }
+
+    public Map<String, Map<String, Integer>> getExecutorDetails() {
+        Map<String, Map<String, Integer>> details = new HashMap<>();
+        details.put("fetcherTaskExecutor", getExecutorDetails(fetcherTaskExecutor));
+        return details;
     }
 }
