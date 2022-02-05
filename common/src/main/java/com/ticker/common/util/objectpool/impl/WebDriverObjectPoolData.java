@@ -14,6 +14,11 @@ public class WebDriverObjectPoolData extends ObjectPoolData<WebDriver> {
         log.info("Webdriver initialized");
     }
 
+    public WebDriverObjectPoolData() {
+        super();
+        log.info("Webdriver initialized");
+    }
+
     @Override
     public WebDriver createObject() {
         return Util.getWebDriver(true);

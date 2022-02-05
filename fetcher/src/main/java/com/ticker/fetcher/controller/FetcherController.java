@@ -140,4 +140,9 @@ public class FetcherController {
         service.deleteAllTickers();
         return new ResponseEntity<>(new ResponseStatus(), HttpStatus.OK);
     }
+
+    @GetMapping("/pool/webdrivers")
+    public ResponseEntity<int[]> getZerodhaWebdriverPoolSize() {
+        return new ResponseEntity<>(service.getWebdriverPoolSize(), HttpStatus.OK);
+    }
 }
