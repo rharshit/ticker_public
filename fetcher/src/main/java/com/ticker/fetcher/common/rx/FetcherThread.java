@@ -4,6 +4,8 @@ import com.ticker.common.entity.exchangesymbol.ExchangeSymbolEntity;
 import com.ticker.common.exception.TickerException;
 import com.ticker.common.rx.TickerThread;
 import com.ticker.common.util.Util;
+import com.ticker.common.util.objectpool.ObjectPool;
+import com.ticker.common.util.objectpool.impl.WebDriverObjectPoolData;
 import com.ticker.fetcher.repository.FetcherAppRepository;
 import com.ticker.fetcher.service.FetcherService;
 import com.ticker.fetcher.service.TickerService;
@@ -46,6 +48,8 @@ public class FetcherThread extends TickerThread<TickerService> {
     @Autowired
     private FetcherService fetcherService;
 
+    private static final ObjectPool<WebDriverObjectPoolData> webDrivers;
+
     private WebDriver webDriver;
 
     private final Object postInitLock = new Object();
@@ -64,6 +68,15 @@ public class FetcherThread extends TickerThread<TickerService> {
     private long updatedAt;
 
     public static final int RETRY_LIMIT = 10;
+
+    static {
+        webDrivers = new ObjectPool<WebDriverObjectPoolData>(10, 20, 45, 5000, 60000) {
+            @Override
+            public WebDriverObjectPoolData createObject() {
+                return new WebDriverObjectPoolData();
+            }
+        };
+    }
 
     public void setProperties(String... apps) {
         this.enabled = true;
@@ -87,6 +100,10 @@ public class FetcherThread extends TickerThread<TickerService> {
         return entity.getSymbolId();
     }
 
+    public static ObjectPool<WebDriverObjectPoolData> getWebDrivers() {
+        return webDrivers;
+    }
+
     @Override
     protected void initialize() {
         initializeWebDriver();
@@ -103,15 +120,25 @@ public class FetcherThread extends TickerThread<TickerService> {
     }
 
     protected void initializeWebDriver() {
-        if (this.webDriver != null) {
-            try {
-                this.webDriver.quit();
-            } catch (Exception e) {
-                log.error("Error while closing webdriver");
-            }
+        webDrivers.put(this.webDriver);
 
+        while (this.webDriver == null) {
+            log.debug(getThreadName() + ": Getting webdriver");
+            this.webDriver = (WebDriver) webDrivers.get();
+            if (this.webDriver != null) {
+                break;
+            }
+            try {
+                synchronized (webDrivers) {
+                    log.trace(getThreadName() + ": Wait started");
+                    webDrivers.wait(Util.WAIT_SHORT);
+                    log.trace(getThreadName() + ": Wait ended");
+                }
+            } catch (InterruptedException e) {
+                e.printStackTrace();
+            }
         }
-        this.webDriver = Util.getWebDriver(true);
+        log.debug(getThreadName() + ": Got webdriver");
     }
 
     @Override
@@ -123,13 +150,7 @@ public class FetcherThread extends TickerThread<TickerService> {
             }
         }
 
-        if (this.webDriver != null) {
-            try {
-                this.webDriver.quit();
-            } catch (Exception e) {
-                log.error("Error while closing webdriver");
-            }
-        }
+        webDrivers.put(this.webDriver);
         log.info("Terminated thread : " + getThreadName());
     }
 
