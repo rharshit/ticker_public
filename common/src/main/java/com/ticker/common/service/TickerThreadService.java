@@ -15,7 +15,7 @@ import java.util.concurrent.ConcurrentSkipListSet;
 
 @Slf4j
 @Service
-public abstract class TickerThreadService<T extends TickerThread, TM extends TickerThreadModel> {
+public abstract class TickerThreadService<T extends TickerThread, TM extends TickerThreadModel> extends BaseService {
 
     protected Set<T> threadPool;
 

@@ -3,6 +3,7 @@ package com.ticker.fetcher.controller;
 import com.ticker.common.entity.exchangesymbol.ExchangeSymbolEntity;
 import com.ticker.common.model.ResponseStatus;
 import com.ticker.fetcher.model.FetcherThreadModel;
+import com.ticker.fetcher.service.FetcherService;
 import com.ticker.fetcher.service.TickerService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
@@ -19,6 +20,9 @@ public class FetcherController {
 
     @Autowired
     private TickerService service;
+
+    @Autowired
+    private FetcherService fetcherService;
 
     /**
      * Check if the instance is mock
@@ -144,5 +148,10 @@ public class FetcherController {
     @GetMapping("/pool/webdrivers")
     public ResponseEntity<int[]> getZerodhaWebdriverPoolSize() {
         return new ResponseEntity<>(service.getWebdriverPoolSize(), HttpStatus.OK);
+    }
+
+    @GetMapping("/executors")
+    public ResponseEntity<Map<String, Map<String, Integer>>> getExecutorDetails() {
+        return new ResponseEntity<>(fetcherService.getExecutorDetails(), HttpStatus.OK);
     }
 }

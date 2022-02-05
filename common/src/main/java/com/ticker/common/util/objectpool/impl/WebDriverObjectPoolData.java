@@ -11,12 +11,12 @@ public class WebDriverObjectPoolData extends ObjectPoolData<WebDriver> {
     public WebDriverObjectPoolData(String url) {
         super();
         getObject().get(url);
-        log.info("Webdriver initialized");
+        log.debug("Webdriver initialized");
     }
 
     public WebDriverObjectPoolData() {
         super();
-        log.info("Webdriver initialized");
+        log.debug("Webdriver initialized");
     }
 
     @Override
@@ -28,7 +28,7 @@ public class WebDriverObjectPoolData extends ObjectPoolData<WebDriver> {
     public void destroyObject(WebDriver object) {
         try {
             object.quit();
-            log.info("Closed webdriver");
+            log.debug("Closed webdriver");
 
         } catch (Exception e) {
             log.error("Cannot close webdriver: " + object, e);

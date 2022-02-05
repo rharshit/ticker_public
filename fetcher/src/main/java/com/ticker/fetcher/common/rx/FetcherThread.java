@@ -69,6 +69,8 @@ public class FetcherThread extends TickerThread<TickerService> {
 
     public static final int RETRY_LIMIT = 10;
 
+    private boolean taskStarted = false;
+
     static {
         webDrivers = new ObjectPool<WebDriverObjectPoolData>(10, 20, 45, 5000, 60000) {
             @Override
