@@ -9,6 +9,9 @@ import org.springframework.scheduling.concurrent.ThreadPoolTaskExecutor;
 
 import java.util.concurrent.Executor;
 
+/**
+ * The type Async config.
+ */
 @Configuration
 @EnableAsync
 @Slf4j
@@ -26,6 +29,11 @@ public class AsyncConfig implements AsyncConfigurer {
         return executor;
     }
 
+    /**
+     * Gets fetcher async executor.
+     *
+     * @return the fetcher async executor
+     */
     @Bean(name = "fetcherTaskExecutor")
     public Executor getFetcherAsyncExecutor() {
         ThreadPoolTaskExecutor executor = new ThreadPoolTaskExecutor();
@@ -37,6 +45,11 @@ public class AsyncConfig implements AsyncConfigurer {
         return executor;
     }
 
+    /**
+     * Gets scheduled repo executor.
+     *
+     * @return the scheduled repo executor
+     */
     @Bean(name = "scheduledExecutor")
     public Executor getScheduledRepoExecutor() {
         ThreadPoolTaskExecutor executor = new ThreadPoolTaskExecutor();
@@ -48,6 +61,11 @@ public class AsyncConfig implements AsyncConfigurer {
         return executor;
     }
 
+    /**
+     * Gets repo async executor.
+     *
+     * @return the repo async executor
+     */
     @Bean(name = "repoExecutor")
     public Executor getRepoAsyncExecutor() {
         ThreadPoolTaskExecutor executor = new ThreadPoolTaskExecutor();

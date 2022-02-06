@@ -9,6 +9,9 @@ import org.springframework.stereotype.Repository;
 
 import javax.sql.DataSource;
 
+/**
+ * The type Fetcher repository.
+ */
 @Repository
 @Getter
 public class FetcherRepository extends BaseRepository {

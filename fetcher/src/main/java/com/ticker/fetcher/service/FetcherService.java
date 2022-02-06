@@ -28,6 +28,9 @@ import java.util.stream.Collectors;
 
 import static com.ticker.common.util.Util.*;
 
+/**
+ * The type Fetcher service.
+ */
 @Service
 @Slf4j
 public class FetcherService extends BaseService {
@@ -47,6 +50,11 @@ public class FetcherService extends BaseService {
     @Qualifier("repoExecutor")
     private Executor repoExecutor;
 
+    /**
+     * Gets executor details.
+     *
+     * @return the executor details
+     */
     public Map<String, Map<String, Integer>> getExecutorDetails() {
         Map<String, Map<String, Integer>> details = new HashMap<>();
         details.put("fetcherTaskExecutor", getExecutorDetails(fetcherTaskExecutor));
@@ -59,9 +67,9 @@ public class FetcherService extends BaseService {
     /**
      * Set setting for the charts that are loaded
      *
-     * @param fetcherThread
-     * @param iteration
-     * @param refresh
+     * @param fetcherThread the fetcher thread
+     * @param iteration     the iteration
+     * @param refresh       the refresh
      */
     public void setChartSettings(FetcherThread fetcherThread, int iteration, boolean refresh) {
         int iterationMultiplier = 200;
@@ -197,6 +205,9 @@ public class FetcherService extends BaseService {
         webDriver.findElement(By.id(header)).click();
     }
 
+    /**
+     * Do thread tasks.
+     */
     @Scheduled(fixedRate = 750)
     public void doThreadTasks() {
         List<FetcherThread> pool = appService.getCurrentTickerList();
@@ -218,6 +229,11 @@ public class FetcherService extends BaseService {
         }
     }
 
+    /**
+     * Do task.
+     *
+     * @param fetcherThread the fetcher thread
+     */
     public void doTask(FetcherThread fetcherThread) {
         if (!fetcherThread.isEnabled()) {
             log.info("Terminating fetch task: " + fetcherThread.getThreadName());
@@ -375,6 +391,9 @@ public class FetcherService extends BaseService {
         }
     }
 
+    /**
+     * Scheduled job.
+     */
     @Async("scheduledExecutor")
     @Scheduled(fixedRate = 850)
     public void scheduledJob() {
@@ -392,6 +411,11 @@ public class FetcherService extends BaseService {
         log.debug("Scheduled task ended: " + sNow);
     }
 
+    /**
+     * Create table.
+     *
+     * @param tableName the table name
+     */
     public void createTable(String tableName) {
         try {
             repository.addTable(tableName);

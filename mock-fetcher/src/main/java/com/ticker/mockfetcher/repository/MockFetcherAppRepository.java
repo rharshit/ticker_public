@@ -18,14 +18,25 @@ import java.util.Map;
 import static com.ticker.mockfetcher.constants.DBConstants.TABLE_NAME;
 import static com.ticker.mockfetcher.constants.ProcedureConstants.ADD_TABLE;
 
+/**
+ * The type Mock fetcher app repository.
+ */
 @Repository
 @Slf4j
 public class MockFetcherAppRepository {
 
     private final Connection fetcherConnection = null;
+    /**
+     * The Fetcher repository.
+     */
     @Autowired
     FetcherRepository fetcherRepository;
 
+    /**
+     * Add table.
+     *
+     * @param tableName the table name
+     */
     public void addTable(String tableName) {
         try {
             SqlParameter[] parameters = {
@@ -41,6 +52,12 @@ public class MockFetcherAppRepository {
 
     }
 
+    /**
+     * Populate fetcher thread model.
+     *
+     * @param fetcherRepoModel the fetcher repo model
+     * @param timestamp        the timestamp
+     */
     public void populateFetcherThreadModel(MockFetcherRepoModel fetcherRepoModel, long timestamp) {
         String time = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss").format(new Timestamp(timestamp));
         String query = "SELECT * FROM " + fetcherRepoModel.getTableName() + " WHERE `timestamp`='" + time + "'";

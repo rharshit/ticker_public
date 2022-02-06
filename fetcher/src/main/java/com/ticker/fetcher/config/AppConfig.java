@@ -5,6 +5,9 @@ import org.springframework.context.annotation.Configuration;
 
 import java.util.logging.Level;
 
+/**
+ * The type App config.
+ */
 @Configuration
 public class AppConfig {
     static {

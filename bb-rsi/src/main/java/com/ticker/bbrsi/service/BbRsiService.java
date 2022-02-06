@@ -11,6 +11,9 @@ import java.util.Map;
 
 import static com.ticker.bbrsi.constants.BbRsiConstants.*;
 
+/**
+ * The type Bb rsi service.
+ */
 @Slf4j
 @Service
 public class BbRsiService extends StratTickerService<BbRsiThread, BbRsiThreadModel> {

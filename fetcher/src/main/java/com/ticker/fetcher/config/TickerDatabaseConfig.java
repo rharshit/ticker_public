@@ -10,6 +10,9 @@ import org.springframework.jdbc.core.JdbcTemplate;
 import javax.sql.DataSource;
 
 
+/**
+ * The type Ticker database config.
+ */
 @Configuration
 public class TickerDatabaseConfig {
 
@@ -37,6 +40,11 @@ public class TickerDatabaseConfig {
     @Value("${spring.datasource.hikari.ticker.maximum-pool-size}")
     private int maxPoolSize;
 
+    /**
+     * Gets ticker data source.
+     *
+     * @return the ticker data source
+     */
     @Bean(name = "tickerDataSource")
     public DataSource getTickerDataSource() {
         HikariConfig hikariConfig = new HikariConfig();
@@ -53,6 +61,11 @@ public class TickerDatabaseConfig {
         return new HikariDataSource(hikariConfig);
     }
 
+    /**
+     * Gets jdbc template.
+     *
+     * @return the jdbc template
+     */
     @Bean(name = "tickerJdbcTemplate")
     public JdbcTemplate getJdbcTemplate() {
         return new JdbcTemplate(getTickerDataSource());

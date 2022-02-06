@@ -26,6 +26,9 @@ import static com.ticker.fetcher.constants.DBConstants.TABLE_NAME;
 import static com.ticker.fetcher.constants.FetcherConstants.FETCHER_DATE_FORMAT_LOGGING;
 import static com.ticker.fetcher.constants.ProcedureConstants.ADD_TABLE;
 
+/**
+ * The type Fetcher app repository.
+ */
 @Repository
 @Slf4j
 public class FetcherAppRepository {
@@ -38,6 +41,11 @@ public class FetcherAppRepository {
     private Executor repoExecutor;
     private Connection fetcherConnection = null;
 
+    /**
+     * Add table.
+     *
+     * @param tableName the table name
+     */
     public void addTable(String tableName) {
         try {
             SqlParameter[] parameters = {
@@ -64,6 +72,9 @@ public class FetcherAppRepository {
         }
     }
 
+    /**
+     * Push data.
+     */
     @Scheduled(fixedRate = 1000)
     public void pushData() {
         repoExecutor.execute(() -> {
@@ -93,6 +104,12 @@ public class FetcherAppRepository {
         });
     }
 
+    /**
+     * Add to queue.
+     *
+     * @param datas the datas
+     * @param sNow  the s now
+     */
     public void addToQueue(List<FetcherRepoModel> datas, String sNow) {
         log.debug("addToQueue task started: " + sNow);
         log.debug("Adding data, size: " + datas.size());

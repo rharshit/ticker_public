@@ -10,13 +10,33 @@ import org.openqa.selenium.remote.CapabilityType;
 import static com.ticker.common.contants.TickerConstants.*;
 import static org.openqa.selenium.UnexpectedAlertBehaviour.ACCEPT;
 
+/**
+ * The type Util.
+ */
 @Slf4j
 public abstract class Util {
+    /**
+     * The constant WAIT_QUICK.
+     */
     public static final long WAIT_QUICK = 25;
+    /**
+     * The constant WAIT_SHORT.
+     */
     public static final long WAIT_SHORT = 250;
+    /**
+     * The constant WAIT_MEDIUM.
+     */
     public static final long WAIT_MEDIUM = 750;
+    /**
+     * The constant WAIT_LONG.
+     */
     public static final long WAIT_LONG = 2000;
 
+    /**
+     * Wait for.
+     *
+     * @param time the time
+     */
     public static void waitFor(long time) {
         log.debug("Waiting for " + time + "ma");
         try {
@@ -27,6 +47,12 @@ public abstract class Util {
         log.debug("Resume");
     }
 
+    /**
+     * Gets application url.
+     *
+     * @param application the application
+     * @return the application url
+     */
     public static String getApplicationUrl(String application) {
         switch (application) {
             case APPLICATION_HOME:
@@ -46,6 +72,12 @@ public abstract class Util {
         }
     }
 
+    /**
+     * Gets web driver.
+     *
+     * @param headless the headless
+     * @return the web driver
+     */
     public static WebDriver getWebDriver(boolean headless) {
         WebDriver webDriver;
         log.debug("Initializing webdriver");

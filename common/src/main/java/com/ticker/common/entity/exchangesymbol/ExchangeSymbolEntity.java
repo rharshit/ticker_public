@@ -12,6 +12,9 @@ import java.io.Serializable;
 import java.time.LocalDate;
 import java.time.format.DateTimeFormatter;
 
+/**
+ * The type Exchange symbol entity.
+ */
 @Data
 @Entity
 @Table(name = "exchange_symbol")
@@ -32,6 +35,17 @@ public class ExchangeSymbolEntity implements Serializable {
     private Integer incQty = 1;
     private Integer lotSize = 1;
 
+    /**
+     * Instantiates a new Exchange symbol entity.
+     *
+     * @param exchangeId      the exchange id
+     * @param symbolId        the symbol id
+     * @param tableName       the table name
+     * @param tradingviewUrl  the tradingview url
+     * @param zerodhaExchange the zerodha exchange
+     * @param zerodhaSymbol   the zerodha symbol
+     * @param tickerType      the ticker type
+     */
     public ExchangeSymbolEntity(String exchangeId, String symbolId, String tableName, String tradingviewUrl, String zerodhaExchange, String zerodhaSymbol, String tickerType) {
         this.exchangeId = exchangeId;
         this.symbolId = symbolId;
@@ -42,11 +56,22 @@ public class ExchangeSymbolEntity implements Serializable {
         this.tickerType = tickerType;
     }
 
+    /**
+     * Instantiates a new Exchange symbol entity.
+     *
+     * @param exchangeId the exchange id
+     * @param symbolId   the symbol id
+     */
     public ExchangeSymbolEntity(String exchangeId, String symbolId) {
         this.exchangeId = exchangeId;
         this.symbolId = symbolId;
     }
 
+    /**
+     * Gets final table name.
+     *
+     * @return the final table name
+     */
     public String getFinalTableName() {
         if (tableName != null && tableName.contains(":")) {
             String[] split = tableName.split(":", 2);

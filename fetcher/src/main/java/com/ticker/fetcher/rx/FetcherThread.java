@@ -34,6 +34,9 @@ import static com.ticker.common.util.Util.WAIT_LONG;
 import static com.ticker.common.util.Util.waitFor;
 import static com.ticker.fetcher.constants.FetcherConstants.FETCHER_THREAD_COMP_NAME;
 
+/**
+ * The type Fetcher thread.
+ */
 @Getter
 @Setter
 @Slf4j
@@ -42,6 +45,9 @@ import static com.ticker.fetcher.constants.FetcherConstants.FETCHER_THREAD_COMP_
 @NoArgsConstructor
 public class FetcherThread extends TickerThread<TickerService> {
 
+    /**
+     * The constant RETRY_LIMIT.
+     */
     public static final int RETRY_LIMIT = 10;
     private static final ObjectPool<WebDriverObjectPoolData> webDrivers;
 
@@ -74,10 +80,20 @@ public class FetcherThread extends TickerThread<TickerService> {
     private long updatedAt;
     private boolean taskStarted = false;
 
+    /**
+     * Gets web drivers.
+     *
+     * @return the web drivers
+     */
     public static ObjectPool<WebDriverObjectPoolData> getWebDrivers() {
         return webDrivers;
     }
 
+    /**
+     * Sets properties.
+     *
+     * @param apps the apps
+     */
     public void setProperties(String... apps) {
         this.enabled = true;
         this.fetcherApps = Arrays.stream(apps).collect(Collectors.toSet());
@@ -111,10 +127,18 @@ public class FetcherThread extends TickerThread<TickerService> {
         fetcherService.createTable(tableName);
     }
 
+    /**
+     * Gets table name.
+     *
+     * @return the table name
+     */
     public String getTableName() {
         return this.entity.getFinalTableName();
     }
 
+    /**
+     * Initialize web driver.
+     */
     protected void initializeWebDriver() {
         webDrivers.put(this.webDriver);
 
@@ -150,6 +174,12 @@ public class FetcherThread extends TickerThread<TickerService> {
         log.info("Terminated thread : " + getThreadName());
     }
 
+    /**
+     * Initialize.
+     *
+     * @param iteration the iteration
+     * @param refresh   the refresh
+     */
     protected void initialize(int iteration, boolean refresh) {
         this.initialized = false;
         if (refresh) {
@@ -273,14 +303,27 @@ public class FetcherThread extends TickerThread<TickerService> {
         service.deleteTicker(this);
     }
 
+    /**
+     * Refresh browser.
+     */
     public void refreshBrowser() {
         initialize(0, true);
     }
 
+    /**
+     * Add app.
+     *
+     * @param appName the app name
+     */
     public void addApp(String appName) {
         getFetcherApps().add(appName);
     }
 
+    /**
+     * Remove app.
+     *
+     * @param appName the app name
+     */
     public void removeApp(String appName) {
         getFetcherApps().remove(appName);
         if (getFetcherApps().isEmpty()) {
@@ -294,6 +337,11 @@ public class FetcherThread extends TickerThread<TickerService> {
         return getTableName().replace(":", "_");
     }
 
+    /**
+     * Sets current value.
+     *
+     * @param currentValue the current value
+     */
     public void setCurrentValue(float currentValue) {
         this.currentValue = currentValue;
         this.updatedAt = System.currentTimeMillis();

@@ -13,12 +13,20 @@ import java.util.Map;
 import static com.ticker.common.util.Util.WAIT_LONG;
 import static com.ticker.common.util.Util.waitFor;
 
+/**
+ * The type Strat thread.
+ *
+ * @param <S> the type parameter
+ */
 @Getter
 @Setter
 @Slf4j
 @NoArgsConstructor
 public abstract class StratThread<S extends StratTickerService> extends TickerThread<S> {
 
+    /**
+     * The State trace.
+     */
     Map<Long, Integer> stateTrace = new HashMap<>();
     private boolean fetching = false;
     private int currentState;
@@ -41,6 +49,11 @@ public abstract class StratThread<S extends StratTickerService> extends TickerTh
     private float targetThreshold;
     private boolean lowValue = false;
 
+    /**
+     * Instantiates a new Strat thread.
+     *
+     * @param entity the entity
+     */
     public StratThread(ExchangeSymbolEntity entity) {
         super(entity);
     }
@@ -85,6 +98,11 @@ public abstract class StratThread<S extends StratTickerService> extends TickerTh
         return getExchange() + ":" + getSymbol();
     }
 
+    /**
+     * Sets fetch metrics.
+     *
+     * @param ticker the ticker
+     */
     public void setFetchMetrics(Map<String, Object> ticker) {
         if ((Double) ticker.get("currentValue") != 0) {
             setFetching(true);
@@ -121,6 +139,11 @@ public abstract class StratThread<S extends StratTickerService> extends TickerTh
         log.debug(String.valueOf(getRsi()));
     }
 
+    /**
+     * Sets current state.
+     *
+     * @param currentState the current state
+     */
     public void setCurrentState(int currentState) {
         log.info(getThreadName() + " : change state");
         log.info(getThreadName() + " : from " + getCurrentState() + " : " + service.getStateValueMap().get(getCurrentState()));
@@ -129,14 +152,30 @@ public abstract class StratThread<S extends StratTickerService> extends TickerTh
         stateTrace.put(System.currentTimeMillis(), getCurrentState());
     }
 
+    /**
+     * Sets intermediate state.
+     *
+     * @param intermediateState the intermediate state
+     */
     public void setIntermediateState(int intermediateState) {
         setStates(intermediateState, getCurrentState());
     }
 
+    /**
+     * Sets intermediate state.
+     *
+     * @param intermediateState the intermediate state
+     * @param finalState        the final state
+     */
     public void setIntermediateState(int intermediateState, int finalState) {
         setStates(intermediateState, finalState);
     }
 
+    /**
+     * Sets states.
+     *
+     * @param states the states
+     */
     public void setStates(int... states) {
         for (int state : states) {
             setCurrentState(state);
@@ -148,11 +187,19 @@ public abstract class StratThread<S extends StratTickerService> extends TickerTh
         }
     }
 
+    /**
+     * Reset triggers.
+     */
     public void resetTriggers() {
         triggerStartValue = 0;
         triggerStartTime = 0;
     }
 
+    /**
+     * Sets target threshold.
+     *
+     * @param targetThreshold the target threshold
+     */
     public void setTargetThreshold(float targetThreshold) {
         if (targetThreshold < 0.055f) {
             this.targetThreshold = 0.045f;

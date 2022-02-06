@@ -7,8 +7,17 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.concurrent.Executor;
 
+/**
+ * The type Base service.
+ */
 @Service
 public class BaseService {
+    /**
+     * Gets executor details.
+     *
+     * @param taskExecutor the task executor
+     * @return the executor details
+     */
     protected Map<String, Integer> getExecutorDetails(Executor taskExecutor) {
         Map<String, Integer> details = new HashMap<>();
         details.put("ActiveCount", ((ThreadPoolTaskExecutor) taskExecutor).getActiveCount());

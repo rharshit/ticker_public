@@ -8,6 +8,9 @@ import javax.persistence.*;
 import java.io.Serializable;
 import java.sql.Timestamp;
 
+/**
+ * The type Notification entity.
+ */
 @Data
 @Entity
 @Table(name = "notifications")

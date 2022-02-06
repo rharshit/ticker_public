@@ -10,6 +10,9 @@ import org.springframework.jdbc.core.JdbcTemplate;
 import javax.sql.DataSource;
 
 
+/**
+ * The type Fetcher database config.
+ */
 @Configuration
 public class FetcherDatabaseConfig {
 
@@ -37,6 +40,11 @@ public class FetcherDatabaseConfig {
     @Value("${spring.datasource.hikari.fetcher.maximum-pool-size}")
     private int maxPoolSize;
 
+    /**
+     * Gets ticker data source.
+     *
+     * @return the ticker data source
+     */
     @Bean(name = "fetcherDataSource")
     public DataSource getTickerDataSource() {
         HikariConfig hikariConfig = new HikariConfig();
@@ -53,6 +61,11 @@ public class FetcherDatabaseConfig {
         return new HikariDataSource(hikariConfig);
     }
 
+    /**
+     * Gets jdbc template.
+     *
+     * @return the jdbc template
+     */
     @Bean(name = "fetcherJdbcTemplate")
     public JdbcTemplate getJdbcTemplate() {
         return new JdbcTemplate(getTickerDataSource());

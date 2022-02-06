@@ -15,10 +15,16 @@ import java.util.Set;
 
 import static com.ticker.mockfetcher.constants.FetcherConstants.MOCK_FETCHER_THREAD_COMP_NAME;
 
+/**
+ * The type Ticker service.
+ */
 @Service
 @Slf4j
 public class TickerService extends TickerThreadService<MockFetcherThread, FetcherThreadModel> {
 
+    /**
+     * The Repository.
+     */
     @Autowired
     MockFetcherAppRepository repository;
 
@@ -54,8 +60,8 @@ public class TickerService extends TickerThreadService<MockFetcherThread, Fetche
     /**
      * Remove tracking for the ticker, given exchange and symbol for all apps
      *
-     * @param exchange
-     * @param symbol
+     * @param exchange the exchange
+     * @param symbol   the symbol
      */
     public void deleteTicker(String exchange, String symbol) {
         destroyThread(exchange, symbol);
@@ -65,12 +71,15 @@ public class TickerService extends TickerThreadService<MockFetcherThread, Fetche
     /**
      * Remove tracking for the ticker, given the thread
      *
-     * @param thread
+     * @param thread the thread
      */
     public void deleteTicker(MockFetcherThread thread) {
         destroyThread(thread);
     }
 
+    /**
+     * Delete all tickers.
+     */
     public void deleteAllTickers() {
         Set<MockFetcherThread> threadMap = getThreadPool();
         for (MockFetcherThread threadName : threadMap) {
@@ -78,6 +87,9 @@ public class TickerService extends TickerThreadService<MockFetcherThread, Fetche
         }
     }
 
+    /**
+     * Process tickers.
+     */
     @Scheduled(fixedRate = 1000)
     public void processTickers() {
         Set<MockFetcherThread> pool = getThreadPool();
@@ -88,6 +100,12 @@ public class TickerService extends TickerThreadService<MockFetcherThread, Fetche
         }
     }
 
+    /**
+     * Refresh browser.
+     *
+     * @param exchange the exchange
+     * @param symbol   the symbol
+     */
     public void refreshBrowser(String exchange, String symbol) {
         MockFetcherThread thread = getThread(exchange, symbol);
         if (thread == null) {
@@ -96,6 +114,13 @@ public class TickerService extends TickerThreadService<MockFetcherThread, Fetche
         thread.refreshBrowser();
     }
 
+    /**
+     * Gets current.
+     *
+     * @param exchange the exchange
+     * @param symbol   the symbol
+     * @return the current
+     */
     public FetcherThreadModel getCurrent(String exchange, String symbol) {
         MockFetcherThread thread = getThread(exchange, symbol);
         if (thread == null) {
@@ -105,10 +130,26 @@ public class TickerService extends TickerThreadService<MockFetcherThread, Fetche
         return new FetcherThreadModel(thread);
     }
 
+    /**
+     * Gets all tickers.
+     *
+     * @return the all tickers
+     */
     public Iterable<ExchangeSymbolEntity> getAllTickers() {
         return exchangeSymbolRepository.findAll();
     }
 
+    /**
+     * Add ticker to db exchange symbol entity.
+     *
+     * @param exchange   the exchange
+     * @param symbol     the symbol
+     * @param tickerType the ticker type
+     * @param minQty     the min qty
+     * @param incQty     the inc qty
+     * @param lotSize    the lot size
+     * @return the exchange symbol entity
+     */
     public ExchangeSymbolEntity addTickerToDB(String exchange, String symbol, String tickerType, Integer minQty, Integer incQty, Integer lotSize) {
         exchange = exchange.toUpperCase();
         symbol = symbol.toUpperCase();

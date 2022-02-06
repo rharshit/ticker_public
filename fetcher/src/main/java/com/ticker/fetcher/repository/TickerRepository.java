@@ -9,6 +9,9 @@ import org.springframework.stereotype.Repository;
 
 import javax.sql.DataSource;
 
+/**
+ * The type Ticker repository.
+ */
 @Repository
 @Getter
 public class TickerRepository extends BaseRepository {

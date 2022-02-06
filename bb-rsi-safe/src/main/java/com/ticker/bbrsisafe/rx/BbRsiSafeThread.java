@@ -12,6 +12,9 @@ import org.springframework.stereotype.Component;
 
 import static com.ticker.bbrsisafe.constants.BbRsiSafeConstants.BB_RSI_THREAD_COMP_NAME;
 
+/**
+ * The type Bb rsi safe thread.
+ */
 @Getter
 @Setter
 @Slf4j
@@ -34,6 +37,11 @@ public class BbRsiSafeThread extends StratThread<BbRsiSafeService> {
     private boolean goodToTrigger = false;
     private boolean satisfied = false;
 
+    /**
+     * Instantiates a new Bb rsi safe thread.
+     *
+     * @param entity the entity
+     */
     public BbRsiSafeThread(ExchangeSymbolEntity entity) {
         super(entity);
     }
@@ -47,10 +55,20 @@ public class BbRsiSafeThread extends StratThread<BbRsiSafeService> {
         super.setRsi(rsi);
     }
 
+    /**
+     * Gets rsi diff.
+     *
+     * @return the rsi diff
+     */
     public float getRsiDiff() {
         return getRsi() - getRsiPrev();
     }
 
+    /**
+     * Sets peak.
+     *
+     * @param peak the peak
+     */
     public void setPeak(float peak) {
         if (this.peak == 0 || this.peak < peak) {
             log.debug(getThreadName() + " : peak changed from " + this.peak);
@@ -59,6 +77,11 @@ public class BbRsiSafeThread extends StratThread<BbRsiSafeService> {
         }
     }
 
+    /**
+     * Sets dip.
+     *
+     * @param dip the dip
+     */
     public void setDip(float dip) {
         if (this.dip == 0 || this.dip > dip) {
             log.debug(getThreadName() + " : dip changed from " + this.dip);

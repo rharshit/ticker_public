@@ -10,27 +10,58 @@ import lombok.extern.slf4j.Slf4j;
 
 import java.util.Objects;
 
+/**
+ * The type Ticker thread.
+ *
+ * @param <S> the type parameter
+ */
 @Getter
 @Setter
 @Slf4j
 @NoArgsConstructor
 public abstract class TickerThread<S extends TickerThreadService> extends Thread {
 
+    /**
+     * The Enabled.
+     */
     protected boolean enabled = false;
+    /**
+     * The Initialized.
+     */
     protected boolean initialized = false;
+    /**
+     * The Locked.
+     */
     protected boolean locked = false;
 
+    /**
+     * The Service.
+     */
     protected S service;
+    /**
+     * The Entity.
+     */
     protected ExchangeSymbolEntity entity;
 
     {
         setDaemon(true);
     }
 
+    /**
+     * Instantiates a new Ticker thread.
+     *
+     * @param entity the entity
+     */
     public TickerThread(ExchangeSymbolEntity entity) {
         this.entity = entity;
     }
 
+    /**
+     * Create compare object ticker thread.
+     *
+     * @param entity the entity
+     * @return the ticker thread
+     */
     public static TickerThread createCompareObject(ExchangeSymbolEntity entity) {
         return new TickerThread(entity) {
             @Override
@@ -55,10 +86,23 @@ public abstract class TickerThread<S extends TickerThreadService> extends Thread
         };
     }
 
+    /**
+     * Initialize.
+     */
     protected abstract void initialize();
 
+    /**
+     * Gets thread name.
+     *
+     * @return the thread name
+     */
     public abstract String getThreadName();
 
+    /**
+     * Sets entity.
+     *
+     * @param entity the entity
+     */
     public void setEntity(ExchangeSymbolEntity entity) {
         if (entity == null) {
             throw new TickerException(getThreadName() + " : No entity found for the given exchange and symbol");
@@ -72,15 +116,28 @@ public abstract class TickerThread<S extends TickerThreadService> extends Thread
     @Override
     public abstract void destroy();
 
+    /**
+     * Terminate thread.
+     */
     public void terminateThread() {
         this.enabled = false;
         log.info(getThreadName() + " : terminating thread");
     }
 
+    /**
+     * Gets exchange.
+     *
+     * @return the exchange
+     */
     public String getExchange() {
         return entity.getExchangeId();
     }
 
+    /**
+     * Gets symbol.
+     *
+     * @return the symbol
+     */
     public String getSymbol() {
         return entity.getSymbolId();
     }
@@ -99,6 +156,9 @@ public abstract class TickerThread<S extends TickerThreadService> extends Thread
         return Objects.hash(getExchange(), getSymbol());
     }
 
+    /**
+     * The type Comparator.
+     */
     public static class Comparator implements java.util.Comparator<TickerThread> {
 
         @Override

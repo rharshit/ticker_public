@@ -30,6 +30,9 @@ import java.util.regex.Pattern;
 import static com.ticker.booker.BookerConstants.LOG_PATH;
 import static com.ticker.common.contants.TickerConstants.APPLICATION_BROKERAGE;
 
+/**
+ * The type Booker service.
+ */
 @Slf4j
 @Service
 public class BookerService {
@@ -68,6 +71,11 @@ public class BookerService {
         getKiteSdk().setPublicToken(user.publicToken);
     }
 
+    /**
+     * Gets trades.
+     *
+     * @return the trades
+     */
     public static Map<String, Map<String, List<TickerTrade>>> getTrades() {
         Map<String, Map<String, List<TickerTrade>>> tradeMap = new HashMap<>();
         for (TickerTrade trade : trades) {
@@ -85,6 +93,13 @@ public class BookerService {
         return tradeMap;
     }
 
+    /**
+     * Gets properties bean.
+     *
+     * @param apiKey    the api key
+     * @param apiSecret the api secret
+     * @param userId    the user id
+     */
     @Autowired
     public void getPropertiesBean(@Value("${com.zerodha.apikey}") String apiKey, @Value("${com.zerodha.apisecret}") String apiSecret, @Value("${com.zerodha.userid}") String userId) {
         BookerService.apiKey = apiKey;
@@ -92,10 +107,20 @@ public class BookerService {
         BookerService.userId = userId;
     }
 
+    /**
+     * Gets zerodha login url.
+     *
+     * @return the zerodha login url
+     */
     public String getZerodhaLoginURL() {
         return getKiteSdk().getLoginURL();
     }
 
+    /**
+     * Sets request token.
+     *
+     * @param requestToken the request token
+     */
     public void setRequestToken(String requestToken) {
         BookerService.requestToken = requestToken;
         try {
@@ -105,6 +130,11 @@ public class BookerService {
         }
     }
 
+    /**
+     * Gets zerodha margins.
+     *
+     * @return the zerodha margins
+     */
     public Map<String, Margin> getZerodhaMargins() {
         try {
             return getKiteSdk().getMargins();
@@ -118,12 +148,34 @@ public class BookerService {
         }
     }
 
+    /**
+     * Book regular order integer.
+     *
+     * @param tradingSymbol     the trading symbol
+     * @param exchange          the exchange
+     * @param transactionType   the transaction type
+     * @param orderType         the order type
+     * @param quantity          the quantity
+     * @param product           the product
+     * @param price             the price
+     * @param triggerPrice      the trigger price
+     * @param disclosedQuantity the disclosed quantity
+     * @param validity          the validity
+     * @param tag               the tag
+     * @return the integer
+     */
     public Integer bookRegularOrder(String tradingSymbol, String exchange, String transactionType, String orderType,
                                     Integer quantity, String product, Float price, Float triggerPrice,
                                     Integer disclosedQuantity, String validity, String tag) {
         return null;
     }
 
+    /**
+     * Populate logs.
+     *
+     * @param logs the logs
+     * @param app  the app
+     */
     public void populateLogs(String logs, String app) {
         String[] lines = logs.split("\n");
         for (String line : lines) {
@@ -177,6 +229,11 @@ public class BookerService {
         log.info("Added trades from log");
     }
 
+    /**
+     * Gets total trade.
+     *
+     * @return the total trade
+     */
     public TradeMap getTotalTrade() {
         try {
             log.info("Getting total trade");
@@ -399,6 +456,12 @@ public class BookerService {
         trade.setTaxes(brokerage.get("totalBrokerage").floatValue());
     }
 
+    /**
+     * Gets brokerage.
+     *
+     * @param trade the trade
+     * @return the brokerage
+     */
     public Map<String, Double> getBrokerage(CompleteTrade trade) {
         String url = Util.getApplicationUrl(APPLICATION_BROKERAGE) +
                 "zerodha/" +
@@ -411,6 +474,11 @@ public class BookerService {
         return restTemplate.getForObject(url, Map.class, params);
     }
 
+    /**
+     * Gets log files.
+     *
+     * @return the log files
+     */
     public List<String> getLogFiles() {
         List<String> files = new ArrayList<>();
         final File folder = new File(LOG_PATH);
@@ -426,6 +494,11 @@ public class BookerService {
         return files;
     }
 
+    /**
+     * Upload log file.
+     *
+     * @param file the file
+     */
     public void uploadLogFile(String file) {
         String path = LOG_PATH + "/" + file;
         byte[] encoded = new byte[0];
@@ -438,6 +511,9 @@ public class BookerService {
         populateLogs(log, file.replaceAll("\\.log$", ""));
     }
 
+    /**
+     * Upload all log files.
+     */
     public void uploadAllLogFiles() {
         List<String> files = getLogFiles();
         for (String file : files) {
@@ -445,6 +521,9 @@ public class BookerService {
         }
     }
 
+    /**
+     * Delete logs.
+     */
     public void deleteLogs() {
         trades.clear();
     }

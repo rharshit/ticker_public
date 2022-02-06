@@ -14,6 +14,9 @@ import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 
+/**
+ * The type Fetcher controller.
+ */
 @RestController
 @RequestMapping("/")
 public class FetcherController {
@@ -38,7 +41,7 @@ public class FetcherController {
     /**
      * Get all tickers saved in DB
      *
-     * @return
+     * @return all tickers
      */
     @GetMapping("tickers")
     public Iterable<ExchangeSymbolEntity> getAllTickers() {
@@ -48,9 +51,9 @@ public class FetcherController {
     /**
      * Get current value of the ticker
      *
-     * @param exchange
-     * @param symbol
-     * @return
+     * @param exchange the exchange
+     * @param symbol   the symbol
+     * @return current value
      */
     @GetMapping("current")
     public ResponseEntity<FetcherThreadModel> getCurrentValue(@RequestParam String exchange, @RequestParam String symbol) {
@@ -60,13 +63,13 @@ public class FetcherController {
     /**
      * Save a new ticker to DB
      *
-     * @param exchange
-     * @param symbol
-     * @param tickerType
-     * @param minQty
-     * @param incQty
-     * @param lotSize
-     * @return
+     * @param exchange   the exchange
+     * @param symbol     the symbol
+     * @param tickerType the ticker type
+     * @param minQty     the min qty
+     * @param incQty     the inc qty
+     * @param lotSize    the lot size
+     * @return exchange symbol entity
      */
     @PostMapping("ticker")
     public ExchangeSymbolEntity addTickerToDB(@RequestParam String exchange, @RequestParam String symbol,
@@ -79,7 +82,7 @@ public class FetcherController {
     /**
      * Get a map of all the tickers currently being tracked
      *
-     * @return
+     * @return current tickers
      */
     @GetMapping
     public ResponseEntity<Map<String, List<FetcherThreadModel>>> getCurrentTickers() {
@@ -89,10 +92,10 @@ public class FetcherController {
     /**
      * Add tracking for the ticker, given exchange and symbol for app
      *
-     * @param exchange
-     * @param symbol
-     * @param time
-     * @return
+     * @param exchange the exchange
+     * @param symbol   the symbol
+     * @param time     the time
+     * @return response entity
      */
     @PostMapping
     public ResponseEntity<ResponseStatus> addTicker(@RequestParam String exchange, @RequestParam String symbol,
@@ -101,6 +104,13 @@ public class FetcherController {
         return new ResponseEntity<>(new ResponseStatus(), HttpStatus.OK);
     }
 
+    /**
+     * Refresh response entity.
+     *
+     * @param exchange the exchange
+     * @param symbol   the symbol
+     * @return the response entity
+     */
     @PutMapping("refresh")
     public ResponseEntity<ResponseStatus> refresh(@RequestParam String exchange, @RequestParam String symbol) {
         service.refreshBrowser(exchange, symbol);
@@ -110,10 +120,10 @@ public class FetcherController {
     /**
      * Remove tracking for the ticker, given exchange and symbol for app
      *
-     * @param exchange
-     * @param symbol
-     * @param appName
-     * @return
+     * @param exchange the exchange
+     * @param symbol   the symbol
+     * @param appName  the app name
+     * @return response entity
      */
     @DeleteMapping
     public ResponseEntity<ResponseStatus> deleteTicker(@RequestParam String exchange, @RequestParam String symbol,
@@ -124,9 +134,9 @@ public class FetcherController {
     /**
      * Remove tracking for the ticker, given exchange and symbol for all apps
      *
-     * @param exchange
-     * @param symbol
-     * @return
+     * @param exchange the exchange
+     * @param symbol   the symbol
+     * @return response entity
      */
     @DeleteMapping("/ticker/")
     public ResponseEntity<ResponseStatus> deleteTicker(@RequestParam String exchange, @RequestParam String symbol) {
@@ -137,7 +147,7 @@ public class FetcherController {
     /**
      * Delete all tickers
      *
-     * @return
+     * @return response entity
      */
     @DeleteMapping(path = "/all/")
     public ResponseEntity<ResponseStatus> deleteAllTickers() {
@@ -146,6 +156,11 @@ public class FetcherController {
     }
 
 
+    /**
+     * Gets executor details.
+     *
+     * @return the executor details
+     */
     @GetMapping("/executors")
     public ResponseEntity<Map<String, Map<String, Integer>>> getExecutorDetails() {
         return new ResponseEntity<>(mockFetcherService.getExecutorDetails(), HttpStatus.OK);

@@ -21,6 +21,9 @@ import static com.ticker.common.util.Util.WAIT_LONG;
 import static com.ticker.common.util.Util.waitFor;
 import static com.ticker.mockfetcher.constants.FetcherConstants.MOCK_FETCHER_THREAD_COMP_NAME;
 
+/**
+ * The type Mock fetcher thread.
+ */
 @Getter
 @Setter
 @Slf4j
@@ -29,6 +32,9 @@ import static com.ticker.mockfetcher.constants.FetcherConstants.MOCK_FETCHER_THR
 @NoArgsConstructor
 public class MockFetcherThread extends TickerThread<TickerService> {
 
+    /**
+     * The constant RETRY_LIMIT.
+     */
     public static final int RETRY_LIMIT = 10;
     private final Object postInitLock = new Object();
     @Autowired
@@ -50,6 +56,11 @@ public class MockFetcherThread extends TickerThread<TickerService> {
     private long startTime;
     private long delta;
 
+    /**
+     * Sets properties.
+     *
+     * @param startTime the start time
+     */
     public void setProperties(Long startTime) {
         this.enabled = true;
         setStartTime(startTime);
@@ -83,6 +94,11 @@ public class MockFetcherThread extends TickerThread<TickerService> {
         fetcherService.createTable(tableName);
     }
 
+    /**
+     * Gets table name.
+     *
+     * @return the table name
+     */
     public String getTableName() {
         if (entity.getTableName() != null && entity.getTableName().contains(":")) {
             String[] split = entity.getTableName().split(":", 2);
@@ -92,6 +108,9 @@ public class MockFetcherThread extends TickerThread<TickerService> {
         }
     }
 
+    /**
+     * Initialize web driver.
+     */
     protected void initializeWebDriver() {
 
     }
@@ -110,6 +129,12 @@ public class MockFetcherThread extends TickerThread<TickerService> {
         log.info("Terminated thread : " + getThreadName());
     }
 
+    /**
+     * Initialize.
+     *
+     * @param iteration the iteration
+     * @param refresh   the refresh
+     */
     protected void initialize(int iteration, boolean refresh) {
         this.initialized = false;
         if (refresh) {
@@ -161,6 +186,9 @@ public class MockFetcherThread extends TickerThread<TickerService> {
         service.deleteTicker(this);
     }
 
+    /**
+     * Refresh browser.
+     */
     public void refreshBrowser() {
         initialize(0, true);
     }
@@ -170,11 +198,21 @@ public class MockFetcherThread extends TickerThread<TickerService> {
         return getTableName().replace(":", "_");
     }
 
+    /**
+     * Sets start time.
+     *
+     * @param startTime the start time
+     */
     public void setStartTime(long startTime) {
         setInitialized(false);
         this.startTime = startTime;
     }
 
+    /**
+     * Sets current value.
+     *
+     * @param currentValue the current value
+     */
     public void setCurrentValue(float currentValue) {
         this.currentValue = currentValue;
         this.updatedAt = System.currentTimeMillis() + getDelta();

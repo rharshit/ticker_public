@@ -12,6 +12,9 @@ import java.util.Map;
 import static com.ticker.mwave.constants.MWaveConstants.MWAVE_THREAD_STATE_STRAT_FAILED;
 import static com.ticker.mwave.constants.MWaveConstants.MWAVE_THREAD_STATE_WAITING_FOR_ACTION;
 
+/**
+ * The type M wave service.
+ */
 @Slf4j
 @Service
 public class MWaveService extends StratTickerService<MWaveThread, MWaveThreadModel> {
