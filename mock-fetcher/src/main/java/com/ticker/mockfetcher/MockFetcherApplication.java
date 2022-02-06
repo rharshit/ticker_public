@@ -8,6 +8,9 @@ import org.springframework.context.annotation.ComponentScan;
 import org.springframework.data.jpa.repository.config.EnableJpaRepositories;
 import org.springframework.scheduling.annotation.EnableScheduling;
 
+/**
+ * The type Mock fetcher application.
+ */
 @EnableScheduling
 @EnableJpaRepositories(basePackages = {"com.ticker.common.entity.exchangesymbol"})
 @EntityScan(basePackages = {"com.ticker.common.entity.exchangesymbol"})
@@ -15,8 +18,13 @@ import org.springframework.scheduling.annotation.EnableScheduling;
 @SpringBootApplication(exclude = {DataSourceAutoConfiguration.class})
 public class MockFetcherApplication {
 
-	public static void main(String[] args) {
-		SpringApplication.run(MockFetcherApplication.class, args);
-	}
+    /**
+     * The entry point of application.
+     *
+     * @param args the input arguments
+     */
+    public static void main(String[] args) {
+        SpringApplication.run(MockFetcherApplication.class, args);
+    }
 
 }

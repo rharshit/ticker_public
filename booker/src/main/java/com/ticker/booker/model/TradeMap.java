@@ -9,6 +9,9 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
+/**
+ * The type Trade map.
+ */
 @Data
 public class TradeMap extends HashMap<String, Object> {
 
@@ -19,6 +22,11 @@ public class TradeMap extends HashMap<String, Object> {
     private Float pnl;
     private Float taxes;
 
+    /**
+     * Instantiates a new Trade map.
+     *
+     * @param values the values
+     */
     public TradeMap(Map<String, ?> values) {
         super(values);
         for (Entry<String, Object> entry : entrySet()) {
@@ -31,6 +39,11 @@ public class TradeMap extends HashMap<String, Object> {
         put("taxes", getTaxes());
     }
 
+    /**
+     * Gets pnl.
+     *
+     * @return the pnl
+     */
     public Float getPnl() {
         if (pnl == null) {
             float pnlTmp = 0;
@@ -52,6 +65,11 @@ public class TradeMap extends HashMap<String, Object> {
         return pnl;
     }
 
+    /**
+     * Gets taxes.
+     *
+     * @return the taxes
+     */
     public Float getTaxes() {
         if (taxes == null) {
             float taxTmp = 0;

@@ -6,6 +6,9 @@ import lombok.NoArgsConstructor;
 import java.sql.Timestamp;
 import java.text.SimpleDateFormat;
 
+/**
+ * The type Mock fetcher repo model.
+ */
 @Data
 @NoArgsConstructor
 public class MockFetcherRepoModel {
@@ -21,6 +24,21 @@ public class MockFetcherRepoModel {
     private float rsi;
     private float tema;
 
+    /**
+     * Instantiates a new Mock fetcher repo model.
+     *
+     * @param tableName the table name
+     * @param timestamp the timestamp
+     * @param o         the o
+     * @param h         the h
+     * @param l         the l
+     * @param c         the c
+     * @param bbU       the bb u
+     * @param bbA       the bb a
+     * @param bbL       the bb l
+     * @param rsi       the rsi
+     * @param tema      the tema
+     */
     public MockFetcherRepoModel(String tableName, long timestamp, float o, float h, float l, float c, float bbU, float bbA, float bbL, float rsi, float tema) {
         this.tableName = tableName;
         this.timestamp = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss").format(new Timestamp(timestamp));

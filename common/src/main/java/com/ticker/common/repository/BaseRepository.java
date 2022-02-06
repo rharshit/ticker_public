@@ -17,23 +17,54 @@ import javax.sql.DataSource;
 import java.util.List;
 import java.util.Map;
 
+/**
+ * The type Base repository.
+ */
 @Repository
 @Slf4j
 @Setter
 public abstract class BaseRepository {
 
+    /**
+     * Sets datasource.
+     *
+     * @param procedure the procedure
+     */
     protected void setDatasource(StoredProcedure procedure) {
         procedure.setDataSource(getDataSource());
     }
 
+    /**
+     * Gets datasource name.
+     *
+     * @return the datasource name
+     */
     protected String getDatasourceName() {
         return ((HikariDataSource) getDataSource()).getPoolName();
     }
 
+    /**
+     * Gets data source.
+     *
+     * @return the data source
+     */
     protected abstract DataSource getDataSource();
 
+    /**
+     * Gets jdbc template.
+     *
+     * @return the jdbc template
+     */
     protected abstract JdbcTemplate getJdbcTemplate();
 
+    /**
+     * Execute procedure map.
+     *
+     * @param procedureName   the procedure name
+     * @param sqlParameters   the sql parameters
+     * @param inputParameters the input parameters
+     * @return the map
+     */
     public Map<String, Object> executeProcedure(String procedureName, SqlParameter[] sqlParameters, Map<String, Object> inputParameters) {
         StoredProcedure procedure = new GenericStoredProcedure();
         setDatasource(procedure);
@@ -50,9 +81,9 @@ public abstract class BaseRepository {
     /**
      * Executes sql query.
      *
-     * @param sqlQuery
-     * @param rowMapper
-     * @return
+     * @param sqlQuery  the sql query
+     * @param rowMapper the row mapper
+     * @return list
      */
     public List executeQuery(final String sqlQuery, final RowMapper rowMapper) {
         try {
@@ -69,11 +100,10 @@ public abstract class BaseRepository {
     /**
      * Executes sql query.
      *
-     * @param sqlQuery
-     * @param rowMapper
-     * @param args
-     * @return
-     * @throws java.lang.Exception
+     * @param sqlQuery  the sql query
+     * @param rowMapper the row mapper
+     * @param args      the args
+     * @return list
      */
     public List executeQuery(final String sqlQuery, final RowMapper rowMapper, final Object... args) {
         log.debug("sqlQuery : " + sqlQuery);
@@ -94,7 +124,7 @@ public abstract class BaseRepository {
     /**
      * Executes sql query.
      *
-     * @param sqlQuery
+     * @param sqlQuery the sql query
      */
     public void executeQuery(final String sqlQuery) {
         try {
@@ -110,8 +140,8 @@ public abstract class BaseRepository {
     /**
      * Executes sql query.
      *
-     * @param sqlQuery
-     * @param args
+     * @param sqlQuery the sql query
+     * @param args     the args
      */
     public void executeQuery(final String sqlQuery, final Object... args) {
         try {
@@ -128,11 +158,11 @@ public abstract class BaseRepository {
     /**
      * Executes sql query.
      *
-     * @param <T>
-     * @param sqlQuery
-     * @param requiredType
-     * @param args
-     * @return
+     * @param <T>          the type parameter
+     * @param sqlQuery     the sql query
+     * @param requiredType the required type
+     * @param args         the args
+     * @return t
      */
     public <T> T queryForObject(final String sqlQuery, Class<T> requiredType, final Object... args) {
         try {
@@ -147,11 +177,11 @@ public abstract class BaseRepository {
     /**
      * Executes the query and return the object provided in the rowmapper.
      *
-     * @param <T>
-     * @param sqlQuery
-     * @param rowMapper
-     * @param args
-     * @return
+     * @param <T>       the type parameter
+     * @param sqlQuery  the sql query
+     * @param rowMapper the row mapper
+     * @param args      the args
+     * @return t
      */
     public <T> T queryForObject(final String sqlQuery, RowMapper<T> rowMapper, final Object... args) {
         return getJdbcTemplate().queryForObject(sqlQuery, rowMapper, args);
@@ -160,9 +190,9 @@ public abstract class BaseRepository {
     /**
      * Executes the query and return the map of return value
      *
-     * @param sqlQuery
-     * @param args
-     * @return
+     * @param sqlQuery the sql query
+     * @param args     the args
+     * @return list
      */
     public List<Map<String, Object>> queryForList(final String sqlQuery, final Object... args) {
         try {
@@ -177,11 +207,11 @@ public abstract class BaseRepository {
     /**
      * Executes the query and return the list of object provided in the class.
      *
-     * @param sqlQuery
-     * @param requiredType
-     * @param args
-     * @param <T>
-     * @return
+     * @param <T>          the type parameter
+     * @param sqlQuery     the sql query
+     * @param requiredType the required type
+     * @param args         the args
+     * @return list
      */
     public <T> List<T> queryForList(final String sqlQuery, Class<T> requiredType, final Object... args) {
         try {
@@ -196,10 +226,11 @@ public abstract class BaseRepository {
     /**
      * Executes the query and return the map of return value
      *
-     * @param sqlQuery
-     * @param args
-     * @return
-     * @author RanganathPrasad
+     * @param <T>       the type parameter
+     * @param sqlQuery  the sql query
+     * @param rowMapper the row mapper
+     * @param args      the args
+     * @return list
      */
     public <T> List<T> queryForList(final String sqlQuery, RowMapper<T> rowMapper, final Object... args) {
         try {
@@ -214,7 +245,7 @@ public abstract class BaseRepository {
     /**
      * Executes sql query.
      *
-     * @param sqlQuery
+     * @param sqlQuery the sql query
      */
     public void executeQueryForUpdate(final String sqlQuery) {
         try {

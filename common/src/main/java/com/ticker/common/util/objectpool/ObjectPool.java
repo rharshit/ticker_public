@@ -11,6 +11,11 @@ import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
 
+/**
+ * The type Object pool.
+ *
+ * @param <D> the type parameter
+ */
 @Slf4j
 public abstract class ObjectPool<D extends ObjectPoolData<?>> {
     private final int min;
@@ -23,6 +28,15 @@ public abstract class ObjectPool<D extends ObjectPoolData<?>> {
 
     private boolean shutdown;
 
+    /**
+     * Instantiates a new Object pool.
+     *
+     * @param min            the min
+     * @param idle           the idle
+     * @param max            the max
+     * @param validationTime the validation time
+     * @param idleTimeout    the idle timeout
+     */
     public ObjectPool(int min, int idle, int max, long validationTime, long idleTimeout) {
         log.info("Object pool  - Starting...");
         this.min = min;
@@ -61,6 +75,11 @@ public abstract class ObjectPool<D extends ObjectPoolData<?>> {
 //        log.info("Total:\t" + pool.size() + "\tIdle:\t" + idle + "\tValid:\t" + valid + "\tInvalid:\t" + invalid);
     }
 
+    /**
+     * Create object d.
+     *
+     * @return the d
+     */
     public abstract D createObject();
 
     private void destroyPool() {
@@ -179,6 +198,11 @@ public abstract class ObjectPool<D extends ObjectPoolData<?>> {
         }
     }
 
+    /**
+     * Get object.
+     *
+     * @return the object
+     */
     public Object get() {
         synchronized (this) {
             for (ObjectPoolData<?> object : pool) {
@@ -195,6 +219,11 @@ public abstract class ObjectPool<D extends ObjectPoolData<?>> {
         return null;
     }
 
+    /**
+     * Put.
+     *
+     * @param data the data
+     */
     public void put(Object data) {
         synchronized (this) {
             for (ObjectPoolData<?> object : pool) {

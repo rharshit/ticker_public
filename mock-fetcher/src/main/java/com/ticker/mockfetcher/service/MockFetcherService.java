@@ -2,9 +2,9 @@ package com.ticker.mockfetcher.service;
 
 import com.ticker.common.exception.TickerException;
 import com.ticker.common.service.BaseService;
-import com.ticker.mockfetcher.common.rx.MockFetcherThread;
 import com.ticker.mockfetcher.model.MockFetcherRepoModel;
 import com.ticker.mockfetcher.repository.MockFetcherAppRepository;
+import com.ticker.mockfetcher.rx.MockFetcherThread;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
@@ -17,6 +17,9 @@ import java.util.List;
 import java.util.Map;
 import java.util.concurrent.Executor;
 
+/**
+ * The type Mock fetcher service.
+ */
 @Service
 @Slf4j
 public class MockFetcherService extends BaseService {
@@ -35,7 +38,7 @@ public class MockFetcherService extends BaseService {
     /**
      * Set setting for the charts that are loaded
      *
-     * @param fetcherThread
+     * @param fetcherThread the fetcher thread
      */
     public void setDelta(MockFetcherThread fetcherThread) {
         Timestamp curr = new Timestamp(System.currentTimeMillis());
@@ -45,6 +48,9 @@ public class MockFetcherService extends BaseService {
         fetcherThread.setInitialized(true);
     }
 
+    /**
+     * Do thread tasks.
+     */
     @Scheduled(fixedDelay = 500)
     public void doThreadTasks() {
         List<MockFetcherThread> pool = appService.getCurrentTickerList();
@@ -58,6 +64,11 @@ public class MockFetcherService extends BaseService {
         }
     }
 
+    /**
+     * Do task.
+     *
+     * @param mockFetcherThread the mock fetcher thread
+     */
     public void doTask(MockFetcherThread mockFetcherThread) {
         if (mockFetcherThread.isInitialized() && mockFetcherThread.isEnabled()) {
             try { // Get OHLC Value
@@ -121,6 +132,11 @@ public class MockFetcherService extends BaseService {
         }
     }
 
+    /**
+     * Create table.
+     *
+     * @param tableName the table name
+     */
     public void createTable(String tableName) {
         try {
             repository.addTable(tableName);
@@ -131,6 +147,11 @@ public class MockFetcherService extends BaseService {
         }
     }
 
+    /**
+     * Gets executor details.
+     *
+     * @return the executor details
+     */
     public Map<String, Map<String, Integer>> getExecutorDetails() {
         Map<String, Map<String, Integer>> details = new HashMap<>();
         details.put("fetcherTaskExecutor", getExecutorDetails(fetcherTaskExecutor));

@@ -1,7 +1,6 @@
 package com.ticker.mockfetcher.repository;
 
 import com.ticker.common.exception.TickerException;
-import com.ticker.mockfetcher.common.repository.FetcherRepository;
 import com.ticker.mockfetcher.model.MockFetcherRepoModel;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -16,18 +15,28 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-import static com.ticker.mockfetcher.common.constants.DBConstants.TABLE_NAME;
-import static com.ticker.mockfetcher.common.constants.ProcedureConstants.ADD_TABLE;
+import static com.ticker.mockfetcher.constants.DBConstants.TABLE_NAME;
+import static com.ticker.mockfetcher.constants.ProcedureConstants.ADD_TABLE;
 
+/**
+ * The type Mock fetcher app repository.
+ */
 @Repository
 @Slf4j
 public class MockFetcherAppRepository {
 
+    private final Connection fetcherConnection = null;
+    /**
+     * The Fetcher repository.
+     */
     @Autowired
     FetcherRepository fetcherRepository;
 
-    private final Connection fetcherConnection = null;
-
+    /**
+     * Add table.
+     *
+     * @param tableName the table name
+     */
     public void addTable(String tableName) {
         try {
             SqlParameter[] parameters = {
@@ -43,6 +52,12 @@ public class MockFetcherAppRepository {
 
     }
 
+    /**
+     * Populate fetcher thread model.
+     *
+     * @param fetcherRepoModel the fetcher repo model
+     * @param timestamp        the timestamp
+     */
     public void populateFetcherThreadModel(MockFetcherRepoModel fetcherRepoModel, long timestamp) {
         String time = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss").format(new Timestamp(timestamp));
         String query = "SELECT * FROM " + fetcherRepoModel.getTableName() + " WHERE `timestamp`='" + time + "'";

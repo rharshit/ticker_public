@@ -13,19 +13,32 @@ import org.springframework.stereotype.Service;
 import java.util.*;
 import java.util.concurrent.ConcurrentSkipListSet;
 
+/**
+ * The type Ticker thread service.
+ *
+ * @param <T>  the type parameter
+ * @param <TM> the type parameter
+ */
 @Slf4j
 @Service
 public abstract class TickerThreadService<T extends TickerThread, TM extends TickerThreadModel> extends BaseService {
 
+    /**
+     * The Thread pool.
+     */
     protected Set<T> threadPool;
 
+    /**
+     * The Ctx.
+     */
     @Autowired
     protected ApplicationContext ctx;
 
+    /**
+     * The Exchange symbol repository.
+     */
     @Autowired
     protected ExchangeSymbolRepository exchangeSymbolRepository;
-
-    public abstract void createThread(String exchange, String symbol, String... extras);
 
     {
         Runtime.getRuntime().addShutdownHook(new Thread() {
@@ -42,11 +55,20 @@ public abstract class TickerThreadService<T extends TickerThread, TM extends Tic
     }
 
     /**
+     * Create thread.
+     *
+     * @param exchange the exchange
+     * @param symbol   the symbol
+     * @param extras   the extras
+     */
+    public abstract void createThread(String exchange, String symbol, String... extras);
+
+    /**
      * Override the var arg method in your service
      *
-     * @param exchange
-     * @param symbol
-     * @param threadBeanName
+     * @param exchange       the exchange
+     * @param symbol         the symbol
+     * @param threadBeanName the thread bean name
      */
     @Deprecated
     public void createThread(String exchange, String symbol, String threadBeanName) {
@@ -75,6 +97,11 @@ public abstract class TickerThreadService<T extends TickerThread, TM extends Tic
         }
     }
 
+    /**
+     * Gets thread pool.
+     *
+     * @return the thread pool
+     */
     protected synchronized Set<T> getThreadPool() {
         if (threadPool == null) {
             initializeThreadPool();
@@ -83,6 +110,11 @@ public abstract class TickerThreadService<T extends TickerThread, TM extends Tic
         return threadPool;
     }
 
+    /**
+     * Destroy thread.
+     *
+     * @param thread the thread
+     */
     public void destroyThread(T thread) {
         if (thread == null) {
             return;
@@ -92,22 +124,51 @@ public abstract class TickerThreadService<T extends TickerThread, TM extends Tic
         log.info(thread.getThreadName() + " : removed thread");
     }
 
+    /**
+     * Destroy thread.
+     *
+     * @param exchange the exchange
+     * @param symbol   the symbol
+     */
     public void destroyThread(String exchange, String symbol) {
         destroyThread(getThread(exchange, symbol));
     }
 
+    /**
+     * Gets thread.
+     *
+     * @param exchange the exchange
+     * @param symbol   the symbol
+     * @return the thread
+     */
     protected T getThread(String exchange, String symbol) {
         Set<T> threadMap = getThreadPool();
         TickerThread compare = TickerThread.createCompareObject(new ExchangeSymbolEntity(exchange, symbol));
         return threadMap.stream().filter(thread -> thread.equals(compare)).findFirst().orElse(null);
     }
 
+    /**
+     * Gets current ticker list.
+     *
+     * @return the current ticker list
+     */
     public List<T> getCurrentTickerList() {
         return new ArrayList<>(getThreadPool());
     }
 
+    /**
+     * Create ticker thread model tm.
+     *
+     * @param thread the thread
+     * @return the tm
+     */
     public abstract TM createTickerThreadModel(T thread);
 
+    /**
+     * Gets current tickers.
+     *
+     * @return the current tickers
+     */
     public Map<String, List<TM>> getCurrentTickers() {
         List<T> threads = getCurrentTickerList();
         List<TM> tickers = new ArrayList<>();

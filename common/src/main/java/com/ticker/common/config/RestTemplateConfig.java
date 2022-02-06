@@ -13,9 +13,17 @@ import org.springframework.web.util.UriTemplateHandler;
 import java.net.URI;
 import java.util.Map;
 
+/**
+ * The type Rest template config.
+ */
 @Slf4j
 @Configuration
 public class RestTemplateConfig extends RestTemplate {
+    /**
+     * Gets rest template.
+     *
+     * @return the rest template
+     */
     @Bean(name = "restTemplate")
     public RestTemplate getRestTemplate() {
         RestTemplate restTemplate = new RestTemplate() {

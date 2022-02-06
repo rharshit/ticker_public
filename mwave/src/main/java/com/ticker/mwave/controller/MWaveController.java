@@ -8,6 +8,9 @@ import org.springframework.web.bind.annotation.RestController;
 
 import static com.ticker.mwave.constants.MWaveConstants.MWAVE_THREAD_COMP_NAME;
 
+/**
+ * The type M wave controller.
+ */
 @RestController
 @RequestMapping("/")
 public class MWaveController extends StratController<MWaveService, MWaveThreadModel> {

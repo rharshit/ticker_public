@@ -5,6 +5,11 @@ import lombok.Data;
 import java.util.Objects;
 
 
+/**
+ * The type Object pool data.
+ *
+ * @param <T> the type parameter
+ */
 @Data
 public abstract class ObjectPoolData<T> {
     private boolean initializingObject;
@@ -14,6 +19,9 @@ public abstract class ObjectPoolData<T> {
     private long lastUsed;
     private T object;
 
+    /**
+     * Instantiates a new Object pool data.
+     */
     public ObjectPoolData() {
         this.initializingObject = true;
         this.object = createObject();
@@ -22,10 +30,23 @@ public abstract class ObjectPoolData<T> {
         this.valid = true;
     }
 
+    /**
+     * Create object t.
+     *
+     * @return the t
+     */
     public abstract T createObject();
 
+    /**
+     * Destroy object.
+     *
+     * @param object the object
+     */
     public abstract void destroyObject(T object);
 
+    /**
+     * Destroy.
+     */
     public void destroy() {
         this.valid = false;
         destroyObject(this.object);
@@ -45,6 +66,12 @@ public abstract class ObjectPoolData<T> {
         return Objects.hash(object);
     }
 
+    /**
+     * Equals object boolean.
+     *
+     * @param o the o
+     * @return the boolean
+     */
     public boolean equalsObject(Object o) {
         if (this.getObject() == o) return true;
         if (o == null || getObject().getClass() != o.getClass()) return false;

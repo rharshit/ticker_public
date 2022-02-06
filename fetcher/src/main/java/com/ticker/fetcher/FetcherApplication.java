@@ -8,6 +8,9 @@ import org.springframework.context.annotation.ComponentScan;
 import org.springframework.data.jpa.repository.config.EnableJpaRepositories;
 import org.springframework.scheduling.annotation.EnableScheduling;
 
+/**
+ * The type Fetcher application.
+ */
 @EnableScheduling
 @EnableJpaRepositories(basePackages = {"com.ticker.common.entity.exchangesymbol"})
 @EntityScan(basePackages = {"com.ticker.common.entity.exchangesymbol"})
@@ -15,8 +18,13 @@ import org.springframework.scheduling.annotation.EnableScheduling;
 @SpringBootApplication(exclude = {DataSourceAutoConfiguration.class})
 public class FetcherApplication {
 
-	public static void main(String[] args) {
-		SpringApplication.run(FetcherApplication.class, args);
-	}
+    /**
+     * The entry point of application.
+     *
+     * @param args the input arguments
+     */
+    public static void main(String[] args) {
+        SpringApplication.run(FetcherApplication.class, args);
+    }
 
 }

@@ -25,6 +25,12 @@ import static com.ticker.common.contants.DateTimeConstants.*;
 import static com.ticker.common.contants.TickerConstants.*;
 import static com.ticker.common.util.Util.*;
 
+/**
+ * The type Strat ticker service.
+ *
+ * @param <T>  the type parameter
+ * @param <TM> the type parameter
+ */
 @Slf4j
 @Service
 public abstract class StratTickerService<T extends StratThread, TM extends StratThreadModel> extends TickerThreadService<T, TM> {
@@ -68,11 +74,19 @@ public abstract class StratTickerService<T extends StratThread, TM extends Strat
     @Override
     public abstract TM createTickerThreadModel(T thread);
 
+    /**
+     * Initialize thread.
+     *
+     * @param t the t
+     */
     public void initializeThread(T t) {
         startFetching(t);
         t.setTickerType(getFavourableTickerType(t));
     }
 
+    /**
+     * Check fetching for apps.
+     */
     @Async("scheduledExecutor")
     @Scheduled(fixedDelay = 300)
     public void checkFetchingForApps() {
@@ -104,6 +118,9 @@ public abstract class StratTickerService<T extends StratThread, TM extends Strat
         }
     }
 
+    /**
+     * Run strategy.
+     */
     @Scheduled(fixedDelay = 750)
     public void runStrategy() {
         for (T thread : getCurrentTickerList()) {
@@ -115,10 +132,20 @@ public abstract class StratTickerService<T extends StratThread, TM extends Strat
         }
     }
 
+    /**
+     * Do action.
+     *
+     * @param thread the thread
+     */
     public abstract void doAction(T thread);
 
+    /**
+     * Start fetching.
+     *
+     * @param thread the thread
+     */
     @Async
-    private void startFetching(T thread) {
+    public void startFetching(T thread) {
         try {
             String baseUrl = Util.getApplicationUrl(APPLICATION_FETCHER);
             Map<String, Object> params = new HashMap<>();
@@ -141,6 +168,12 @@ public abstract class StratTickerService<T extends StratThread, TM extends Strat
     }
 
 
+    /**
+     * Stop fetching.
+     *
+     * @param exchange the exchange
+     * @param symbol   the symbol
+     */
     public void stopFetching(String exchange, String symbol) {
         try {
             destroyThread(exchange, symbol);
@@ -155,39 +188,84 @@ public abstract class StratTickerService<T extends StratThread, TM extends Strat
         }
     }
 
+    /**
+     * Stop fetching all.
+     */
     public void stopFetchingAll() {
         for (T thread : getCurrentTickerList()) {
             stopFetching(thread.getExchange(), thread.getSymbol());
         }
     }
 
+    /**
+     * Refresh browser.
+     *
+     * @param exchange the exchange
+     * @param symbol   the symbol
+     */
     public void refreshBrowser(String exchange, String symbol) {
         T thread = getThread(exchange, symbol);
         thread.initialize();
     }
 
+    /**
+     * Is upward trend boolean.
+     *
+     * @param thread the thread
+     * @return the boolean
+     */
     protected boolean isUpwardTrend(T thread) {
         return thread.getO() <= thread.getC();
     }
 
+    /**
+     * Is downward trend boolean.
+     *
+     * @param thread the thread
+     * @return the boolean
+     */
     protected boolean isDownwardTrend(T thread) {
         return thread.getO() >= thread.getC();
     }
 
+    /**
+     * Is eom trigger boolean.
+     *
+     * @return the boolean
+     */
     protected boolean isEomTrigger() {
         return isEomTrigger(50);
     }
 
+    /**
+     * Is eom trigger boolean.
+     *
+     * @param eom the eom
+     * @return the boolean
+     */
     protected boolean isEomTrigger(int eom) {
         return Integer.parseInt(DATE_TIME_FORMATTER_TIME_ONLY_SECONDS.format(System.currentTimeMillis())) >= eom;
     }
 
+    /**
+     * Is same min trigger boolean.
+     *
+     * @param triggerTime the trigger time
+     * @return the boolean
+     */
     public boolean isSameMinTrigger(long triggerTime) {
         return DATE_TIME_FORMATTER_TIME_MINUTES.format(new Date(triggerTime)).equals(
                 DATE_TIME_FORMATTER_TIME_MINUTES.format(new Date(System.currentTimeMillis())));
     }
 
-    // TODO
+    /**
+     * Buy float.
+     *
+     * @param thread the thread
+     * @param qty    the qty
+     * @return the float
+     */
+// TODO
     protected float buy(T thread, int qty) {
         waitFor(WAIT_LONG);
         log.info("Bought " + qty +
@@ -199,7 +277,14 @@ public abstract class StratTickerService<T extends StratThread, TM extends Strat
         return thread.getCurrentValue();
     }
 
-    // TODO
+    /**
+     * Sell float.
+     *
+     * @param thread the thread
+     * @param qty    the qty
+     * @return the float
+     */
+// TODO
     protected float sell(T thread, int qty) {
         waitFor(WAIT_LONG);
         log.info("Sold " + qty +
@@ -211,6 +296,12 @@ public abstract class StratTickerService<T extends StratThread, TM extends Strat
         return thread.getCurrentValue();
     }
 
+    /**
+     * Square off float.
+     *
+     * @param thread the thread
+     * @return the float
+     */
     protected float squareOff(T thread) {
         if (thread.getPositionQty() == 0) {
             log.warn(thread.getThreadName() + " : No positions to square-off");
@@ -222,6 +313,12 @@ public abstract class StratTickerService<T extends StratThread, TM extends Strat
         return 0;
     }
 
+    /**
+     * Gets favourable ticker type.
+     *
+     * @param thread the thread
+     * @return the favourable ticker type
+     */
     public String getFavourableTickerType(T thread) {
         ExchangeSymbolEntity exchangeSymbolEntity = thread.getEntity();
         String tickerTypes = exchangeSymbolEntity.getTickerType();
@@ -240,8 +337,18 @@ public abstract class StratTickerService<T extends StratThread, TM extends Strat
         }
     }
 
+    /**
+     * Gets state value map.
+     *
+     * @return the state value map
+     */
     public abstract Map<Integer, String> getStateValueMap();
 
+    /**
+     * Sets target threshold.
+     *
+     * @param thread the thread
+     */
     public void setTargetThreshold(T thread) {
         long start = System.currentTimeMillis();
         boolean thresholdSet = false;

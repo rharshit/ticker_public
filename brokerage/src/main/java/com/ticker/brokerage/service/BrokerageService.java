@@ -11,20 +11,26 @@ import org.springframework.stereotype.Service;
 
 import java.util.*;
 
-import static com.ticker.brokerage.common.constants.WebConstants.ZERODHA_BROKERAGE_URL;
+import static com.ticker.brokerage.constants.WebConstants.ZERODHA_BROKERAGE_URL;
 
 
+/**
+ * The type Brokerage service.
+ */
 @Service
 @Slf4j
 public class BrokerageService {
 
+    /**
+     * The constant numTries.
+     */
+    public static final int numTries = 3;
     private static final String EQUITY = "equity";
     private static final String INTRADAY = "intraday";
     private static final String FUTURES = "futures";
     private static final String OPTIONS = "options";
     private static final Map<String, List<String>> tabs;
     private static final ObjectPool<WebDriverObjectPoolData> webDrivers;
-    public static final int numTries = 3;
     private static boolean busy = false;
 
     static {
@@ -58,6 +64,17 @@ public class BrokerageService {
         throw new TickerException("Cannot find type for '" + type + "'. Valid options are -" + mapping);
     }
 
+    /**
+     * Gets zerodha brokerage.
+     *
+     * @param type     the type
+     * @param exchange the exchange
+     * @param buy      the buy
+     * @param sell     the sell
+     * @param quantity the quantity
+     * @param numTry   the num try
+     * @return the zerodha brokerage
+     */
     @Cacheable("brokerage")
     public Map<String, Double> getZerodhaBrokerage(String type, String exchange,
                                                    float buy, float sell, float quantity,
@@ -188,10 +205,20 @@ public class BrokerageService {
         return camelCase.substring(0, 1).toLowerCase() + camelCase.substring(1);
     }
 
+    /**
+     * Is busy boolean.
+     *
+     * @return the boolean
+     */
     public boolean isBusy() {
         return busy;
     }
 
+    /**
+     * Get zerodha webdriver pool size int [ ].
+     *
+     * @return the int [ ]
+     */
     public int[] getZerodhaWebdriverPoolSize() {
         return webDrivers.poolSize();
     }

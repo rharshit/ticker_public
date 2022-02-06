@@ -4,11 +4,19 @@ import com.zerodhatech.models.Trade;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
+/**
+ * The type Ticker trade.
+ */
 @Data
 @NoArgsConstructor
 public class TickerTrade extends Trade {
     private String appName;
 
+    /**
+     * Instantiates a new Ticker trade.
+     *
+     * @param other the other
+     */
     public TickerTrade(TickerTrade other) {
         this.appName = other.appName;
         this.tradeId = other.tradeId;

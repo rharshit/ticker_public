@@ -8,6 +8,9 @@ import org.springframework.web.bind.annotation.RestController;
 
 import static com.ticker.bbrsisafe.constants.BbRsiSafeConstants.BB_RSI_THREAD_COMP_NAME;
 
+/**
+ * The type Bb rsi safe controller.
+ */
 @RestController
 @RequestMapping("/")
 public class BbRsiSafeController extends StratController<BbRsiSafeService, BbRsiSafeThreadModel> {

@@ -3,9 +3,9 @@ package com.ticker.fetcher.service;
 import com.ticker.common.entity.exchangesymbol.ExchangeSymbolEntity;
 import com.ticker.common.exception.TickerException;
 import com.ticker.common.service.TickerThreadService;
-import com.ticker.fetcher.common.rx.FetcherThread;
 import com.ticker.fetcher.model.FetcherThreadModel;
 import com.ticker.fetcher.repository.FetcherAppRepository;
+import com.ticker.fetcher.rx.FetcherThread;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.scheduling.annotation.Scheduled;
@@ -13,12 +13,18 @@ import org.springframework.stereotype.Service;
 
 import java.util.Set;
 
-import static com.ticker.fetcher.common.constants.FetcherConstants.FETCHER_THREAD_COMP_NAME;
+import static com.ticker.fetcher.constants.FetcherConstants.FETCHER_THREAD_COMP_NAME;
 
+/**
+ * The type Ticker service.
+ */
 @Service
 @Slf4j
 public class TickerService extends TickerThreadService<FetcherThread, FetcherThreadModel> {
 
+    /**
+     * The Repository.
+     */
     @Autowired
     FetcherAppRepository repository;
 
@@ -54,8 +60,8 @@ public class TickerService extends TickerThreadService<FetcherThread, FetcherThr
     /**
      * Remove tracking for the ticker, given exchange and symbol for all apps
      *
-     * @param exchange
-     * @param symbol
+     * @param exchange the exchange
+     * @param symbol   the symbol
      */
     public void deleteTicker(String exchange, String symbol) {
         destroyThread(exchange, symbol);
@@ -65,9 +71,9 @@ public class TickerService extends TickerThreadService<FetcherThread, FetcherThr
     /**
      * Remove tracking for the ticker, given exchange and symbol for app
      *
-     * @param exchange
-     * @param symbol
-     * @param appName
+     * @param exchange the exchange
+     * @param symbol   the symbol
+     * @param appName  the app name
      */
     public void removeAppFromThread(String exchange, String symbol, String appName) {
         FetcherThread thread = getThread(exchange, symbol);
@@ -80,12 +86,15 @@ public class TickerService extends TickerThreadService<FetcherThread, FetcherThr
     /**
      * Remove tracking for the ticker, given the thread
      *
-     * @param thread
+     * @param thread the thread
      */
     public void deleteTicker(FetcherThread thread) {
         destroyThread(thread);
     }
 
+    /**
+     * Delete all tickers.
+     */
     public void deleteAllTickers() {
         Set<FetcherThread> threadMap = getThreadPool();
         for (FetcherThread threadName : threadMap) {
@@ -93,6 +102,9 @@ public class TickerService extends TickerThreadService<FetcherThread, FetcherThr
         }
     }
 
+    /**
+     * Process tickers.
+     */
     @Scheduled(fixedRate = 1000)
     public void processTickers() {
         Set<FetcherThread> pool = getThreadPool();
@@ -103,6 +115,12 @@ public class TickerService extends TickerThreadService<FetcherThread, FetcherThr
         }
     }
 
+    /**
+     * Refresh browser.
+     *
+     * @param exchange the exchange
+     * @param symbol   the symbol
+     */
     public void refreshBrowser(String exchange, String symbol) {
         FetcherThread thread = getThread(exchange, symbol);
         if (thread == null) {
@@ -111,6 +129,13 @@ public class TickerService extends TickerThreadService<FetcherThread, FetcherThr
         thread.refreshBrowser();
     }
 
+    /**
+     * Gets current.
+     *
+     * @param exchange the exchange
+     * @param symbol   the symbol
+     * @return the current
+     */
     public FetcherThreadModel getCurrent(String exchange, String symbol) {
         FetcherThread thread = getThread(exchange, symbol);
         if (thread == null) {
@@ -120,10 +145,26 @@ public class TickerService extends TickerThreadService<FetcherThread, FetcherThr
         return new FetcherThreadModel(thread);
     }
 
+    /**
+     * Gets all tickers.
+     *
+     * @return the all tickers
+     */
     public Iterable<ExchangeSymbolEntity> getAllTickers() {
         return exchangeSymbolRepository.findAll();
     }
 
+    /**
+     * Add ticker to db exchange symbol entity.
+     *
+     * @param exchange   the exchange
+     * @param symbol     the symbol
+     * @param tickerType the ticker type
+     * @param minQty     the min qty
+     * @param incQty     the inc qty
+     * @param lotSize    the lot size
+     * @return the exchange symbol entity
+     */
     public ExchangeSymbolEntity addTickerToDB(String exchange, String symbol, String tickerType, Integer minQty, Integer incQty, Integer lotSize) {
         exchange = exchange.toUpperCase();
         symbol = symbol.toUpperCase();
@@ -146,6 +187,11 @@ public class TickerService extends TickerThreadService<FetcherThread, FetcherThr
         return exchangeSymbolRepository.save(exchangeSymbolEntity);
     }
 
+    /**
+     * Get webdriver pool size int [ ].
+     *
+     * @return the int [ ]
+     */
     public int[] getWebdriverPoolSize() {
         return FetcherThread.getWebDrivers().poolSize();
     }

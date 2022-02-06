@@ -2,9 +2,9 @@ package com.ticker.fetcher.service;
 
 import com.ticker.common.exception.TickerException;
 import com.ticker.common.service.BaseService;
-import com.ticker.fetcher.common.rx.FetcherThread;
 import com.ticker.fetcher.model.FetcherRepoModel;
 import com.ticker.fetcher.repository.FetcherAppRepository;
+import com.ticker.fetcher.rx.FetcherThread;
 import lombok.extern.slf4j.Slf4j;
 import org.openqa.selenium.*;
 import org.openqa.selenium.interactions.Actions;
@@ -28,30 +28,33 @@ import java.util.stream.Collectors;
 
 import static com.ticker.common.util.Util.*;
 
+/**
+ * The type Fetcher service.
+ */
 @Service
 @Slf4j
 public class FetcherService extends BaseService {
 
+    private static final List<FetcherRepoModel> dataQueue = new ArrayList<>();
     @Autowired
     private TickerService appService;
-
     @Autowired
     private FetcherAppRepository repository;
-
     @Autowired
     @Qualifier("fetcherTaskExecutor")
     private Executor fetcherTaskExecutor;
-
     @Autowired
     @Qualifier("scheduledExecutor")
     private Executor scheduledExecutor;
-
     @Autowired
     @Qualifier("repoExecutor")
     private Executor repoExecutor;
 
-    private static final List<FetcherRepoModel> dataQueue = new ArrayList<>();
-
+    /**
+     * Gets executor details.
+     *
+     * @return the executor details
+     */
     public Map<String, Map<String, Integer>> getExecutorDetails() {
         Map<String, Map<String, Integer>> details = new HashMap<>();
         details.put("fetcherTaskExecutor", getExecutorDetails(fetcherTaskExecutor));
@@ -64,9 +67,9 @@ public class FetcherService extends BaseService {
     /**
      * Set setting for the charts that are loaded
      *
-     * @param fetcherThread
-     * @param iteration
-     * @param refresh
+     * @param fetcherThread the fetcher thread
+     * @param iteration     the iteration
+     * @param refresh       the refresh
      */
     public void setChartSettings(FetcherThread fetcherThread, int iteration, boolean refresh) {
         int iterationMultiplier = 200;
@@ -202,6 +205,9 @@ public class FetcherService extends BaseService {
         webDriver.findElement(By.id(header)).click();
     }
 
+    /**
+     * Do thread tasks.
+     */
     @Scheduled(fixedRate = 750)
     public void doThreadTasks() {
         List<FetcherThread> pool = appService.getCurrentTickerList();
@@ -223,6 +229,11 @@ public class FetcherService extends BaseService {
         }
     }
 
+    /**
+     * Do task.
+     *
+     * @param fetcherThread the fetcher thread
+     */
     public void doTask(FetcherThread fetcherThread) {
         if (!fetcherThread.isEnabled()) {
             log.info("Terminating fetch task: " + fetcherThread.getThreadName());
@@ -380,6 +391,9 @@ public class FetcherService extends BaseService {
         }
     }
 
+    /**
+     * Scheduled job.
+     */
     @Async("scheduledExecutor")
     @Scheduled(fixedRate = 850)
     public void scheduledJob() {
@@ -397,6 +411,11 @@ public class FetcherService extends BaseService {
         log.debug("Scheduled task ended: " + sNow);
     }
 
+    /**
+     * Create table.
+     *
+     * @param tableName the table name
+     */
     public void createTable(String tableName) {
         try {
             repository.addTable(tableName);

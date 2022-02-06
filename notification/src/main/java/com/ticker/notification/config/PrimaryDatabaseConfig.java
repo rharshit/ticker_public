@@ -10,6 +10,9 @@ import org.springframework.jdbc.core.JdbcTemplate;
 
 import javax.sql.DataSource;
 
+/**
+ * The type Primary database config.
+ */
 @Configuration
 public class PrimaryDatabaseConfig {
 
@@ -22,6 +25,11 @@ public class PrimaryDatabaseConfig {
     @Value("${spring.datasource.password}")
     private String password;
 
+    /**
+     * Gets data source.
+     *
+     * @return the data source
+     */
     @Primary
     @Bean
     public DataSource getDataSource() {
@@ -34,6 +42,11 @@ public class PrimaryDatabaseConfig {
         return new HikariDataSource(hikariConfig);
     }
 
+    /**
+     * Gets jdbc template.
+     *
+     * @return the jdbc template
+     */
     @Bean
     public JdbcTemplate getJdbcTemplate() {
         return new JdbcTemplate(getDataSource());

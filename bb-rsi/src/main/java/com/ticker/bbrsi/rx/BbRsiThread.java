@@ -12,6 +12,9 @@ import org.springframework.stereotype.Component;
 
 import static com.ticker.bbrsi.constants.BbRsiConstants.BB_RSI_THREAD_COMP_NAME;
 
+/**
+ * The type Bb rsi thread.
+ */
 @Getter
 @Setter
 @Slf4j
@@ -20,28 +23,27 @@ import static com.ticker.bbrsi.constants.BbRsiConstants.BB_RSI_THREAD_COMP_NAME;
 @NoArgsConstructor
 public class BbRsiThread extends StratThread<BbRsiService> {
 
-    public BbRsiThread(ExchangeSymbolEntity entity) {
-        super(entity);
-    }
-
     private long triggerWaveEndTime;
     private long tradeStartTime;
     private float tradeValue;
-
     private float targetValue = 0;
-
     private float peak;
     private float dip;
-
     private float rsiPrev;
     private long rsiSetTime;
-
     private int panicSell = 0;
     private int panicBuy = 0;
-
     private boolean safeState = true;
-
     private boolean goodToTrigger = false;
+
+    /**
+     * Instantiates a new Bb rsi thread.
+     *
+     * @param entity the entity
+     */
+    public BbRsiThread(ExchangeSymbolEntity entity) {
+        super(entity);
+    }
 
     @Override
     public void setRsi(float rsi) {
@@ -52,10 +54,20 @@ public class BbRsiThread extends StratThread<BbRsiService> {
         super.setRsi(rsi);
     }
 
+    /**
+     * Gets rsi diff.
+     *
+     * @return the rsi diff
+     */
     public float getRsiDiff() {
         return getRsi() - getRsiPrev();
     }
 
+    /**
+     * Sets peak.
+     *
+     * @param peak the peak
+     */
     public void setPeak(float peak) {
         if (this.peak == 0 || this.peak < peak) {
             log.debug(getThreadName() + " : peak changed from " + this.peak);
@@ -64,6 +76,11 @@ public class BbRsiThread extends StratThread<BbRsiService> {
         }
     }
 
+    /**
+     * Sets dip.
+     *
+     * @param dip the dip
+     */
     public void setDip(float dip) {
         if (this.dip == 0 || this.dip > dip) {
             log.debug(getThreadName() + " : dip changed from " + this.dip);

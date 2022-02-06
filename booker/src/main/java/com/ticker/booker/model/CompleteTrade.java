@@ -3,6 +3,9 @@ package com.ticker.booker.model;
 import com.ticker.common.model.TickerTrade;
 import lombok.Data;
 
+/**
+ * The type Complete trade.
+ */
 @Data
 public class CompleteTrade {
     private String appName;

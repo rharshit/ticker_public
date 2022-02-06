@@ -8,9 +8,19 @@ import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.context.request.WebRequest;
 import org.springframework.web.servlet.mvc.method.annotation.ResponseEntityExceptionHandler;
 
+/**
+ * The type Ticker exception handler.
+ */
 @ControllerAdvice
 public class TickerExceptionHandler extends ResponseEntityExceptionHandler {
 
+    /**
+     * Custom service exception response entity.
+     *
+     * @param e       the e
+     * @param request the request
+     * @return the response entity
+     */
     @ExceptionHandler(TickerException.class)
     public ResponseEntity<ResponseStatus> customServiceException(Exception e, WebRequest request) {
 

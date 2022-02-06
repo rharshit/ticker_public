@@ -12,6 +12,9 @@ import org.springframework.stereotype.Component;
 
 import static com.ticker.mwave.constants.MWaveConstants.MWAVE_THREAD_COMP_NAME;
 
+/**
+ * The type M wave thread.
+ */
 @Getter
 @Setter
 @Slf4j
@@ -20,6 +23,11 @@ import static com.ticker.mwave.constants.MWaveConstants.MWAVE_THREAD_COMP_NAME;
 @NoArgsConstructor
 public class MWaveThread extends StratThread<MWaveService> {
 
+    /**
+     * Instantiates a new M wave thread.
+     *
+     * @param entity the entity
+     */
     public MWaveThread(ExchangeSymbolEntity entity) {
         super(entity);
     }
