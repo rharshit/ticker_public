@@ -15,8 +15,8 @@ import org.springframework.scheduling.annotation.EnableScheduling;
 @SpringBootApplication(exclude = {DataSourceAutoConfiguration.class})
 public class FetcherApplication {
 
-	public static void main(String[] args) {
-		SpringApplication.run(FetcherApplication.class, args);
-	}
+    public static void main(String[] args) {
+        SpringApplication.run(FetcherApplication.class, args);
+    }
 
 }

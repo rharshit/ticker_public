@@ -32,25 +32,20 @@ import static com.ticker.common.util.Util.*;
 @Slf4j
 public class FetcherService extends BaseService {
 
+    private static final List<FetcherRepoModel> dataQueue = new ArrayList<>();
     @Autowired
     private TickerService appService;
-
     @Autowired
     private FetcherAppRepository repository;
-
     @Autowired
     @Qualifier("fetcherTaskExecutor")
     private Executor fetcherTaskExecutor;
-
     @Autowired
     @Qualifier("scheduledExecutor")
     private Executor scheduledExecutor;
-
     @Autowired
     @Qualifier("repoExecutor")
     private Executor repoExecutor;
-
-    private static final List<FetcherRepoModel> dataQueue = new ArrayList<>();
 
     public Map<String, Map<String, Integer>> getExecutorDetails() {
         Map<String, Map<String, Integer>> details = new HashMap<>();

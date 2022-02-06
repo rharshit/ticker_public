@@ -12,15 +12,15 @@ import org.springframework.scheduling.annotation.EnableScheduling;
 @EnableJpaRepositories(basePackages = {"com.ticker.common.entity.exchangesymbol"})
 @EntityScan(basePackages = {"com.ticker.common.entity.exchangesymbol"})
 @ComponentScan({
-		"com.ticker.common.entity.exchangesymbol",
-		"com.ticker.common.config",
-		"com.ticker.bbrsisafe"
+        "com.ticker.common.entity.exchangesymbol",
+        "com.ticker.common.config",
+        "com.ticker.bbrsisafe"
 })
 @SpringBootApplication(exclude = DataSourceAutoConfiguration.class)
 public class BbRsiSafeApplication {
 
-	public static void main(String[] args) {
-		SpringApplication.run(BbRsiSafeApplication.class, args);
-	}
+    public static void main(String[] args) {
+        SpringApplication.run(BbRsiSafeApplication.class, args);
+    }
 
 }

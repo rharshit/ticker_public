@@ -30,14 +30,12 @@ import static com.ticker.fetcher.constants.ProcedureConstants.ADD_TABLE;
 @Slf4j
 public class FetcherAppRepository {
 
+    private static final List<String> sqlQueue = new ArrayList<>();
     @Autowired
     private FetcherRepository fetcherRepository;
-
     @Autowired
     @Qualifier("repoExecutor")
     private Executor repoExecutor;
-
-    private static final List<String> sqlQueue = new ArrayList<>();
     private Connection fetcherConnection = null;
 
     public void addTable(String tableName) {

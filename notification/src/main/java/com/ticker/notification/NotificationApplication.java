@@ -15,8 +15,8 @@ import org.springframework.data.jpa.repository.config.EnableJpaRepositories;
 @SpringBootApplication(exclude = {DataSourceAutoConfiguration.class})
 public class NotificationApplication {
 
-	public static void main(String[] args) {
-		SpringApplication.run(NotificationApplication.class, args);
-	}
+    public static void main(String[] args) {
+        SpringApplication.run(NotificationApplication.class, args);
+    }
 
 }

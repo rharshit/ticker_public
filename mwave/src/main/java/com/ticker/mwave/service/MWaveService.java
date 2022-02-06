@@ -16,15 +16,15 @@ import static com.ticker.mwave.constants.MWaveConstants.MWAVE_THREAD_STATE_WAITI
 @Service
 public class MWaveService extends StratTickerService<MWaveThread, MWaveThreadModel> {
 
-    @Override
-    public MWaveThreadModel createTickerThreadModel(MWaveThread thread) {
-        return new MWaveThreadModel(thread);
-    }
-
     private static final Map<Integer, String> stateValueMap = new HashMap<Integer, String>() {{
         put(MWAVE_THREAD_STATE_STRAT_FAILED, "Thread failed");
         put(MWAVE_THREAD_STATE_WAITING_FOR_ACTION, "Waiting for action");
     }};
+
+    @Override
+    public MWaveThreadModel createTickerThreadModel(MWaveThread thread) {
+        return new MWaveThreadModel(thread);
+    }
 
     @Override
     public void doAction(MWaveThread thread) {

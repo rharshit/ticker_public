@@ -34,22 +34,17 @@ import static com.ticker.common.contants.TickerConstants.APPLICATION_BROKERAGE;
 @Service
 public class BookerService {
 
-    @Autowired
-    private RestTemplate restTemplate;
-
+    private static final List<TickerTrade> trades = new ArrayList<>();
+    private static final Pattern pattern = Pattern.compile("^(Sold|Bought) (\\d*) (F|I|E) of (.*:.*) at (\\d\\d\\d\\d\\/\\d\\d\\/\\d\\d \\d\\d:\\d\\d:\\d\\d) for (\\d*\\.\\d*$)");
+    private static final SimpleDateFormat sdf = new SimpleDateFormat("yyyy/MM/dd HH:mm:dd");
     private static KiteConnect kiteSdk;
     private static User user;
     private static String requestToken;
-
     private static String apiKey;
     private static String apiSecret;
     private static String userId;
-
-    private static final List<TickerTrade> trades = new ArrayList<>();
-
-    private static final Pattern pattern = Pattern.compile("^(Sold|Bought) (\\d*) (F|I|E) of (.*:.*) at (\\d\\d\\d\\d\\/\\d\\d\\/\\d\\d \\d\\d:\\d\\d:\\d\\d) for (\\d*\\.\\d*$)");
-    private static final SimpleDateFormat sdf = new SimpleDateFormat("yyyy/MM/dd HH:mm:dd");
-
+    @Autowired
+    private RestTemplate restTemplate;
 
     private static KiteConnect getKiteSdk() {
         if (kiteSdk == null) {
@@ -71,6 +66,23 @@ public class BookerService {
         user = getKiteSdk().generateSession(requestToken, apiSecret);
         getKiteSdk().setAccessToken(user.accessToken);
         getKiteSdk().setPublicToken(user.publicToken);
+    }
+
+    public static Map<String, Map<String, List<TickerTrade>>> getTrades() {
+        Map<String, Map<String, List<TickerTrade>>> tradeMap = new HashMap<>();
+        for (TickerTrade trade : trades) {
+            tradeMap.computeIfAbsent(trade.getAppName(), s -> new HashMap<>());
+            Map<String, List<TickerTrade>> appTradeMap = tradeMap.get(trade.getAppName());
+            String key = trade.tradingSymbol + " : " + trade.exchange;
+            appTradeMap.computeIfAbsent(key, s -> new ArrayList<>());
+            appTradeMap.get(key).add(trade);
+        }
+        for (Map<String, List<TickerTrade>> appTradeMap : tradeMap.values()) {
+            for (List<TickerTrade> tradeList : appTradeMap.values()) {
+                tradeList.sort(Comparator.comparing(o -> o.exchangeTimestamp));
+            }
+        }
+        return tradeMap;
     }
 
     @Autowired
@@ -110,23 +122,6 @@ public class BookerService {
                                     Integer quantity, String product, Float price, Float triggerPrice,
                                     Integer disclosedQuantity, String validity, String tag) {
         return null;
-    }
-
-    public static Map<String, Map<String, List<TickerTrade>>> getTrades() {
-        Map<String, Map<String, List<TickerTrade>>> tradeMap = new HashMap<>();
-        for (TickerTrade trade : trades) {
-            tradeMap.computeIfAbsent(trade.getAppName(), s -> new HashMap<>());
-            Map<String, List<TickerTrade>> appTradeMap = tradeMap.get(trade.getAppName());
-            String key = trade.tradingSymbol + " : " + trade.exchange;
-            appTradeMap.computeIfAbsent(key, s -> new ArrayList<>());
-            appTradeMap.get(key).add(trade);
-        }
-        for (Map<String, List<TickerTrade>> appTradeMap : tradeMap.values()) {
-            for (List<TickerTrade> tradeList : appTradeMap.values()) {
-                tradeList.sort(Comparator.comparing(o -> o.exchangeTimestamp));
-            }
-        }
-        return tradeMap;
     }
 
     public void populateLogs(String logs, String app) {

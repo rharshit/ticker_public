@@ -20,28 +20,22 @@ import static com.ticker.bbrsi.constants.BbRsiConstants.BB_RSI_THREAD_COMP_NAME;
 @NoArgsConstructor
 public class BbRsiThread extends StratThread<BbRsiService> {
 
-    public BbRsiThread(ExchangeSymbolEntity entity) {
-        super(entity);
-    }
-
     private long triggerWaveEndTime;
     private long tradeStartTime;
     private float tradeValue;
-
     private float targetValue = 0;
-
     private float peak;
     private float dip;
-
     private float rsiPrev;
     private long rsiSetTime;
-
     private int panicSell = 0;
     private int panicBuy = 0;
-
     private boolean safeState = true;
-
     private boolean goodToTrigger = false;
+
+    public BbRsiThread(ExchangeSymbolEntity entity) {
+        super(entity);
+    }
 
     @Override
     public void setRsi(float rsi) {

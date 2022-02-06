@@ -42,19 +42,25 @@ import static com.ticker.fetcher.constants.FetcherConstants.FETCHER_THREAD_COMP_
 @NoArgsConstructor
 public class FetcherThread extends TickerThread<TickerService> {
 
-    @Autowired
-    private FetcherAppRepository repository;
-
-    @Autowired
-    private FetcherService fetcherService;
-
+    public static final int RETRY_LIMIT = 10;
     private static final ObjectPool<WebDriverObjectPoolData> webDrivers;
 
-    private WebDriver webDriver;
+    static {
+        webDrivers = new ObjectPool<WebDriverObjectPoolData>(10, 20, 45, 5000, 60000) {
+            @Override
+            public WebDriverObjectPoolData createObject() {
+                return new WebDriverObjectPoolData();
+            }
+        };
+    }
 
     private final Object postInitLock = new Object();
+    @Autowired
+    private FetcherAppRepository repository;
+    @Autowired
+    private FetcherService fetcherService;
+    private WebDriver webDriver;
     private Set<String> fetcherApps = new HashSet<>();
-
     private float o;
     private float h;
     private float l;
@@ -66,18 +72,10 @@ public class FetcherThread extends TickerThread<TickerService> {
     private float tema;
     private float currentValue;
     private long updatedAt;
-
-    public static final int RETRY_LIMIT = 10;
-
     private boolean taskStarted = false;
 
-    static {
-        webDrivers = new ObjectPool<WebDriverObjectPoolData>(10, 20, 45, 5000, 60000) {
-            @Override
-            public WebDriverObjectPoolData createObject() {
-                return new WebDriverObjectPoolData();
-            }
-        };
+    public static ObjectPool<WebDriverObjectPoolData> getWebDrivers() {
+        return webDrivers;
     }
 
     public void setProperties(String... apps) {
@@ -100,10 +98,6 @@ public class FetcherThread extends TickerThread<TickerService> {
 
     public String getSymbol() {
         return entity.getSymbolId();
-    }
-
-    public static ObjectPool<WebDriverObjectPoolData> getWebDrivers() {
-        return webDrivers;
     }
 
     @Override

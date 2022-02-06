@@ -18,13 +18,13 @@ import static com.ticker.brokerage.constants.WebConstants.ZERODHA_BROKERAGE_URL;
 @Slf4j
 public class BrokerageService {
 
+    public static final int numTries = 3;
     private static final String EQUITY = "equity";
     private static final String INTRADAY = "intraday";
     private static final String FUTURES = "futures";
     private static final String OPTIONS = "options";
     private static final Map<String, List<String>> tabs;
     private static final ObjectPool<WebDriverObjectPoolData> webDrivers;
-    public static final int numTries = 3;
     private static boolean busy = false;
 
     static {

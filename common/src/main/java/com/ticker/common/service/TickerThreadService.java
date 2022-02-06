@@ -25,8 +25,6 @@ public abstract class TickerThreadService<T extends TickerThread, TM extends Tic
     @Autowired
     protected ExchangeSymbolRepository exchangeSymbolRepository;
 
-    public abstract void createThread(String exchange, String symbol, String... extras);
-
     {
         Runtime.getRuntime().addShutdownHook(new Thread() {
             @Override
@@ -40,6 +38,8 @@ public abstract class TickerThreadService<T extends TickerThread, TM extends Tic
             }
         });
     }
+
+    public abstract void createThread(String exchange, String symbol, String... extras);
 
     /**
      * Override the var arg method in your service

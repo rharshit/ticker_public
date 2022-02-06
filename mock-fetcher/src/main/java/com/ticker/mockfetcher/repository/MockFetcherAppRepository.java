@@ -22,10 +22,9 @@ import static com.ticker.mockfetcher.constants.ProcedureConstants.ADD_TABLE;
 @Slf4j
 public class MockFetcherAppRepository {
 
+    private final Connection fetcherConnection = null;
     @Autowired
     FetcherRepository fetcherRepository;
-
-    private final Connection fetcherConnection = null;
 
     public void addTable(String tableName) {
         try {

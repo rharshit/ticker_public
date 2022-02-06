@@ -9,8 +9,8 @@ import org.springframework.cache.annotation.EnableCaching;
 @SpringBootApplication(exclude = DataSourceAutoConfiguration.class)
 public class BrokerageApplication {
 
-	public static void main(String[] args) {
-		SpringApplication.run(BrokerageApplication.class, args);
-	}
+    public static void main(String[] args) {
+        SpringApplication.run(BrokerageApplication.class, args);
+    }
 
 }

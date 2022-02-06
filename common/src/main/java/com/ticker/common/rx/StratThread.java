@@ -19,9 +19,9 @@ import static com.ticker.common.util.Util.waitFor;
 @NoArgsConstructor
 public abstract class StratThread<S extends StratTickerService> extends TickerThread<S> {
 
+    Map<Long, Integer> stateTrace = new HashMap<>();
     private boolean fetching = false;
     private int currentState;
-
     private float o;
     private float h;
     private float l;
@@ -34,9 +34,6 @@ public abstract class StratThread<S extends StratTickerService> extends TickerTh
     private float currentValue;
     private long updatedAt;
     private String tickerType = "";
-
-    Map<Long, Integer> stateTrace = new HashMap<>();
-
     private float triggerStartValue;
     private long triggerStartTime;
     private int positionQty = 0;
