@@ -29,6 +29,8 @@ public abstract class Util {
 
     public static String getApplicationUrl(String application) {
         switch (application) {
+            case APPLICATION_HOME:
+                return "http://localhost:8080/";
             case APPLICATION_FETCHER:
                 return "http://localhost:8081/";
             case APPLICATION_BROKERAGE:
@@ -46,7 +48,7 @@ public abstract class Util {
 
     public static WebDriver getWebDriver(boolean headless) {
         WebDriver webDriver;
-        log.info("Initializing webdriver");
+        log.debug("Initializing webdriver");
         ChromeOptions options = new ChromeOptions();
         options.setHeadless(headless);
         options.addArguments("--window-size=1920,1080");
@@ -63,7 +65,7 @@ public abstract class Util {
         }
         log.debug("Using chrome driver: " + System.getProperty("webdriver.chrome.driver"));
         webDriver = new ChromeDriver(options);
-        log.info("Initialized webdriver");
+        log.debug("Initialized webdriver");
         return webDriver;
     }
 }

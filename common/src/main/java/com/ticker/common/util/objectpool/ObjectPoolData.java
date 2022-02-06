@@ -6,27 +6,30 @@ import java.util.Objects;
 
 
 @Data
-public class ObjectPoolData<D> {
-    private boolean valid = false;
+public abstract class ObjectPoolData<T> {
+    private boolean initializingObject;
+    private boolean valid;
     private boolean idle = true;
 
     private long lastUsed;
-    private D object;
+    private T object;
 
-
-    public ObjectPoolData(D object) {
-        this.object = object;
+    public ObjectPoolData() {
+        this.initializingObject = true;
+        this.object = createObject();
+        this.initializingObject = false;
         this.lastUsed = System.currentTimeMillis();
         this.valid = true;
     }
 
-    public void destroy(D object) {
+    public abstract T createObject();
 
-    }
+    public abstract void destroyObject(T object);
 
     public void destroy() {
-        this.object = null;
         this.valid = false;
+        destroyObject(this.object);
+        this.object = null;
     }
 
     @Override
@@ -40,5 +43,11 @@ public class ObjectPoolData<D> {
     @Override
     public int hashCode() {
         return Objects.hash(object);
+    }
+
+    public boolean equalsObject(Object o) {
+        if (this.getObject() == o) return true;
+        if (o == null || getObject().getClass() != o.getClass()) return false;
+        return Objects.equals(object, o);
     }
 }

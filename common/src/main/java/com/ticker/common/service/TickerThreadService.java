@@ -15,7 +15,7 @@ import java.util.concurrent.ConcurrentSkipListSet;
 
 @Slf4j
 @Service
-public abstract class TickerThreadService<T extends TickerThread, TM extends TickerThreadModel> {
+public abstract class TickerThreadService<T extends TickerThread, TM extends TickerThreadModel> extends BaseService {
 
     protected Set<T> threadPool;
 
@@ -26,6 +26,20 @@ public abstract class TickerThreadService<T extends TickerThread, TM extends Tic
     protected ExchangeSymbolRepository exchangeSymbolRepository;
 
     public abstract void createThread(String exchange, String symbol, String... extras);
+
+    {
+        Runtime.getRuntime().addShutdownHook(new Thread() {
+            @Override
+            public void run() {
+                super.run();
+                log.info("Thread pool - Shutdown initiated...");
+                for (T thread : getThreadPool()) {
+                    destroyThread(thread);
+                }
+                log.info("Thread pool - Shutdown completed.");
+            }
+        });
+    }
 
     /**
      * Override the var arg method in your service

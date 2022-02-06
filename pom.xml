@@ -11,6 +11,7 @@
 
 
     <modules>
+        <module>home</module>
         <module>fetcher</module>
         <module>mock-fetcher</module>
         <module>brokerage</module>
@@ -27,6 +28,7 @@
         <maven.compiler.source>1.8</maven.compiler.source>
         <maven.compiler.target>1.8</maven.compiler.target>
 
+        <ticker.home.version>0.0.1-SNAPSHOT</ticker.home.version>
         <ticker.fetcher.version>0.0.1-SNAPSHOT</ticker.fetcher.version>
         <ticker.mock-fetcher.version>0.0.1-SNAPSHOT</ticker.mock-fetcher.version>
         <ticker.brokerage.version>0.0.1-SNAPSHOT</ticker.brokerage.version>

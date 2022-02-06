@@ -145,4 +145,8 @@ public class TickerService extends TickerThreadService<FetcherThread, FetcherThr
         }
         return exchangeSymbolRepository.save(exchangeSymbolEntity);
     }
+
+    public int[] getWebdriverPoolSize() {
+        return FetcherThread.getWebDrivers().poolSize();
+    }
 }

@@ -3,6 +3,7 @@ package com.ticker.mockfetcher.controller;
 import com.ticker.common.entity.exchangesymbol.ExchangeSymbolEntity;
 import com.ticker.common.model.ResponseStatus;
 import com.ticker.mockfetcher.model.FetcherThreadModel;
+import com.ticker.mockfetcher.service.MockFetcherService;
 import com.ticker.mockfetcher.service.TickerService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
@@ -19,6 +20,10 @@ public class FetcherController {
 
     @Autowired
     private TickerService service;
+
+
+    @Autowired
+    private MockFetcherService mockFetcherService;
 
     /**
      * Check if the instance is mock
@@ -138,5 +143,11 @@ public class FetcherController {
     public ResponseEntity<ResponseStatus> deleteAllTickers() {
         service.deleteAllTickers();
         return new ResponseEntity<>(new ResponseStatus(), HttpStatus.OK);
+    }
+
+
+    @GetMapping("/executors")
+    public ResponseEntity<Map<String, Map<String, Integer>>> getExecutorDetails() {
+        return new ResponseEntity<>(mockFetcherService.getExecutorDetails(), HttpStatus.OK);
     }
 }

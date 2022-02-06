@@ -1,16 +1,16 @@
 package com.ticker.bbrsisafe.controller;
 
-import com.ticker.bbrsisafe.model.BbRsiThreadModel;
-import com.ticker.bbrsisafe.service.BbRsiService;
+import com.ticker.bbrsisafe.model.BbRsiSafeThreadModel;
+import com.ticker.bbrsisafe.service.BbRsiSafeService;
 import com.ticker.common.controller.StratController;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
-import static com.ticker.bbrsisafe.constants.BbRsiConstants.BB_RSI_THREAD_COMP_NAME;
+import static com.ticker.bbrsisafe.constants.BbRsiSafeConstants.BB_RSI_THREAD_COMP_NAME;
 
 @RestController
 @RequestMapping("/")
-public class BbRsiController extends StratController<BbRsiService, BbRsiThreadModel> {
+public class BbRsiSafeController extends StratController<BbRsiSafeService, BbRsiSafeThreadModel> {
 
     @Override
     public String getThreadCompName() {
