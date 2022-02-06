@@ -8,7 +8,6 @@ import org.springframework.context.annotation.ComponentScan;
 import org.springframework.data.jpa.repository.config.EnableJpaRepositories;
 
 
-@ComponentScan({"com.ticker.notification"})
 @EnableJpaRepositories(basePackages = {"com.ticker.common.entity.notification"})
 @EntityScan(basePackages = {"com.ticker.common.entity.notification"})
 @ComponentScan({"com.ticker.common.entity.notification", "com.ticker.notification"})

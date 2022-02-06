@@ -118,7 +118,7 @@ public abstract class StratTickerService<T extends StratThread, TM extends Strat
     public abstract void doAction(T thread);
 
     @Async
-    private void startFetching(T thread) {
+    public void startFetching(T thread) {
         try {
             String baseUrl = Util.getApplicationUrl(APPLICATION_FETCHER);
             Map<String, Object> params = new HashMap<>();
