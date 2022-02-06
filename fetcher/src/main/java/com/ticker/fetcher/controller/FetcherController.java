@@ -146,7 +146,7 @@ public class FetcherController {
     }
 
     @GetMapping("/pool/webdrivers")
-    public ResponseEntity<int[]> getZerodhaWebdriverPoolSize() {
+    public ResponseEntity<int[]> getWebdriverPoolSize() {
         return new ResponseEntity<>(service.getWebdriverPoolSize(), HttpStatus.OK);
     }
 
