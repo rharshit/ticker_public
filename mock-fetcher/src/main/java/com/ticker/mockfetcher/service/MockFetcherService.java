@@ -2,9 +2,9 @@ package com.ticker.mockfetcher.service;
 
 import com.ticker.common.exception.TickerException;
 import com.ticker.common.service.BaseService;
-import com.ticker.mockfetcher.common.rx.MockFetcherThread;
 import com.ticker.mockfetcher.model.MockFetcherRepoModel;
 import com.ticker.mockfetcher.repository.MockFetcherAppRepository;
+import com.ticker.mockfetcher.rx.MockFetcherThread;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;

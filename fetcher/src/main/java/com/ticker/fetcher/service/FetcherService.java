@@ -2,9 +2,9 @@ package com.ticker.fetcher.service;
 
 import com.ticker.common.exception.TickerException;
 import com.ticker.common.service.BaseService;
-import com.ticker.fetcher.common.rx.FetcherThread;
 import com.ticker.fetcher.model.FetcherRepoModel;
 import com.ticker.fetcher.repository.FetcherAppRepository;
+import com.ticker.fetcher.rx.FetcherThread;
 import lombok.extern.slf4j.Slf4j;
 import org.openqa.selenium.*;
 import org.openqa.selenium.interactions.Actions;

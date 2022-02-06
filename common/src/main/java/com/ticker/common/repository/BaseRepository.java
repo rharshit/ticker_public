@@ -73,7 +73,6 @@ public abstract class BaseRepository {
      * @param rowMapper
      * @param args
      * @return
-     * @throws java.lang.Exception
      */
     public List executeQuery(final String sqlQuery, final RowMapper rowMapper, final Object... args) {
         log.debug("sqlQuery : " + sqlQuery);
@@ -128,10 +127,10 @@ public abstract class BaseRepository {
     /**
      * Executes sql query.
      *
-     * @param <T>
      * @param sqlQuery
      * @param requiredType
      * @param args
+     * @param <T>
      * @return
      */
     public <T> T queryForObject(final String sqlQuery, Class<T> requiredType, final Object... args) {
@@ -147,10 +146,10 @@ public abstract class BaseRepository {
     /**
      * Executes the query and return the object provided in the rowmapper.
      *
-     * @param <T>
      * @param sqlQuery
      * @param rowMapper
      * @param args
+     * @param <T>
      * @return
      */
     public <T> T queryForObject(final String sqlQuery, RowMapper<T> rowMapper, final Object... args) {
@@ -197,9 +196,10 @@ public abstract class BaseRepository {
      * Executes the query and return the map of return value
      *
      * @param sqlQuery
+     * @param rowMapper
      * @param args
+     * @param <T>
      * @return
-     * @author RanganathPrasad
      */
     public <T> List<T> queryForList(final String sqlQuery, RowMapper<T> rowMapper, final Object... args) {
         try {

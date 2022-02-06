@@ -1,7 +1,6 @@
 package com.ticker.mockfetcher.repository;
 
 import com.ticker.common.exception.TickerException;
-import com.ticker.mockfetcher.common.repository.FetcherRepository;
 import com.ticker.mockfetcher.model.MockFetcherRepoModel;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -16,8 +15,8 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-import static com.ticker.mockfetcher.common.constants.DBConstants.TABLE_NAME;
-import static com.ticker.mockfetcher.common.constants.ProcedureConstants.ADD_TABLE;
+import static com.ticker.mockfetcher.constants.DBConstants.TABLE_NAME;
+import static com.ticker.mockfetcher.constants.ProcedureConstants.ADD_TABLE;
 
 @Repository
 @Slf4j

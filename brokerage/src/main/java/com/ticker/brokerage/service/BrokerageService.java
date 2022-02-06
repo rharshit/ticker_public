@@ -11,7 +11,7 @@ import org.springframework.stereotype.Service;
 
 import java.util.*;
 
-import static com.ticker.brokerage.common.constants.WebConstants.ZERODHA_BROKERAGE_URL;
+import static com.ticker.brokerage.constants.WebConstants.ZERODHA_BROKERAGE_URL;
 
 
 @Service

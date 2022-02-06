@@ -1,7 +1,6 @@
 package com.ticker.fetcher.repository;
 
 import com.ticker.common.exception.TickerException;
-import com.ticker.fetcher.common.repository.FetcherRepository;
 import com.ticker.fetcher.model.FetcherRepoModel;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -23,9 +22,9 @@ import java.util.List;
 import java.util.Map;
 import java.util.concurrent.Executor;
 
-import static com.ticker.fetcher.common.constants.DBConstants.TABLE_NAME;
-import static com.ticker.fetcher.common.constants.FetcherConstants.FETCHER_DATE_FORMAT_LOGGING;
-import static com.ticker.fetcher.common.constants.ProcedureConstants.ADD_TABLE;
+import static com.ticker.fetcher.constants.DBConstants.TABLE_NAME;
+import static com.ticker.fetcher.constants.FetcherConstants.FETCHER_DATE_FORMAT_LOGGING;
+import static com.ticker.fetcher.constants.ProcedureConstants.ADD_TABLE;
 
 @Repository
 @Slf4j

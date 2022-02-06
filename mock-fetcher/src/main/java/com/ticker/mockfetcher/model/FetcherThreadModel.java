@@ -1,7 +1,7 @@
 package com.ticker.mockfetcher.model;
 
 import com.ticker.common.model.TickerThreadModel;
-import com.ticker.mockfetcher.common.rx.MockFetcherThread;
+import com.ticker.mockfetcher.rx.MockFetcherThread;
 import lombok.NoArgsConstructor;
 
 import java.sql.Timestamp;
