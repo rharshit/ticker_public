@@ -594,11 +594,6 @@ public class BbRsiSafeService extends StratTickerService<BbRsiSafeThread, BbRsiS
             log.trace(thread.getThreadName() + " : LtEnd1");
             thread.setCurrentState(BB_RSI_SAFE_THREAD_STATE_LT_TRIGGER_END2);
             thread.setTriggerWaveEndTime(System.currentTimeMillis());
-        } else {
-            if (thread.getRsi() <= RSI_LOWER_LIMIT_REBOUND || thread.getTema() <= thread.getBbL()) {
-                log.trace(thread.getThreadName() + " : rebound");
-                thread.setCurrentState(BB_RSI_SAFE_THREAD_STATE_LT_TRIGGER_START);
-            }
         }
     }
 
@@ -672,11 +667,6 @@ public class BbRsiSafeService extends StratTickerService<BbRsiSafeThread, BbRsiS
             log.trace(thread.getThreadName() + " : UtEnd1");
             thread.setCurrentState(BB_RSI_SAFE_THREAD_STATE_UT_TRIGGER_END2);
             thread.setTriggerWaveEndTime(System.currentTimeMillis());
-        } else {
-            if (thread.getRsi() >= RSI_UPPER_LIMIT_REBOUND || thread.getTema() >= thread.getBbU()) {
-                log.trace(thread.getThreadName() + " : rebound");
-                thread.setCurrentState(BB_RSI_SAFE_THREAD_STATE_UT_TRIGGER_START);
-            }
         }
     }
 
