@@ -52,6 +52,11 @@ public class FetcherRepoModel {
         this.tema = tema;
     }
 
+    /**
+     * Instantiates a new Fetcher repo model.
+     *
+     * @param thread the thread
+     */
     public FetcherRepoModel(FetcherThread thread) {
         this.tableName = thread.getTableName();
         this.timestamp = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss").format(new Timestamp(System.currentTimeMillis()));

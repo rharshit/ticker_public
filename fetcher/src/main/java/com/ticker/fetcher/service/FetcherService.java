@@ -203,6 +203,12 @@ public class FetcherService extends BaseService {
         webDriver.findElement(By.id(header)).click();
     }
 
+    /**
+     * On message sent.
+     *
+     * @param thread             the thread
+     * @param webSocketFrameSent the web socket frame sent
+     */
     public void onSentMessage(FetcherThread thread, WebSocketFrameSent webSocketFrameSent) {
         String[] messages = webSocketFrameSent.getResponse().getPayloadData().split("~m~\\d*~m~");
         for (String message : messages) {
@@ -250,6 +256,12 @@ public class FetcherService extends BaseService {
         }
     }
 
+    /**
+     * On message received.
+     *
+     * @param thread                 the thread
+     * @param webSocketFrameReceived the web socket frame received
+     */
     public void onReceiveMessage(FetcherThread thread, WebSocketFrameReceived webSocketFrameReceived) {
         String[] messages = webSocketFrameReceived.getResponse().getPayloadData().split("~m~\\d*~m~");
         for (String message : messages) {
