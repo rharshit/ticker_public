@@ -210,50 +210,52 @@ public class FetcherService extends BaseService {
      * @param webSocketFrameSent the web socket frame sent
      */
     public void onSentMessage(FetcherThread thread, WebSocketFrameSent webSocketFrameSent) {
-        String[] messages = webSocketFrameSent.getResponse().getPayloadData().split("~m~\\d*~m~");
-        for (String message : messages) {
-            try {
-                JSONObject object = new JSONObject(message);
-                if (object.has("m") && "create_study".equals(object.getString("m")) && object.has("p")) {
-                    JSONArray array = object.getJSONArray("p");
-                    String series = "";
-                    String name = "";
-                    for (int i = 0; i < array.length(); i++) {
-                        String objString = array.get(i).toString();
-                        if (i == 1) {
-                            name = objString;
-                        }
-                        if (i == 3) {
-                            series = objString;
-                        }
-                        try {
-                            JSONObject jsonObject = new JSONObject(objString);
-                            if (jsonObject.has("pineId")) {
-                                String pineId = jsonObject.getString("pineId");
-                                switch (pineId) {
-                                    case "STD;Bollinger_Bands":
-                                        thread.setStudyBB(name);
-                                        thread.setStudySeries(series);
-                                        break;
-                                    case "STD;RSI":
-                                        thread.setStudyRSI(name);
-                                        thread.setStudySeries(series);
-                                        break;
-                                    case "STD;TEMA":
-                                        thread.setStudyTEMA(name);
-                                        thread.setStudySeries(series);
-                                        break;
-                                }
+        fetcherTaskExecutor.execute(() -> {
+            String[] messages = webSocketFrameSent.getResponse().getPayloadData().split("~m~\\d*~m~");
+            for (String message : messages) {
+                try {
+                    JSONObject object = new JSONObject(message);
+                    if (object.has("m") && "create_study".equals(object.getString("m")) && object.has("p")) {
+                        JSONArray array = object.getJSONArray("p");
+                        String series = "";
+                        String name = "";
+                        for (int i = 0; i < array.length(); i++) {
+                            String objString = array.get(i).toString();
+                            if (i == 1) {
+                                name = objString;
                             }
-                        } catch (Exception ignored) {
+                            if (i == 3) {
+                                series = objString;
+                            }
+                            try {
+                                JSONObject jsonObject = new JSONObject(objString);
+                                if (jsonObject.has("pineId")) {
+                                    String pineId = jsonObject.getString("pineId");
+                                    switch (pineId) {
+                                        case "STD;Bollinger_Bands":
+                                            thread.setStudyBB(name);
+                                            thread.setStudySeries(series);
+                                            break;
+                                        case "STD;RSI":
+                                            thread.setStudyRSI(name);
+                                            thread.setStudySeries(series);
+                                            break;
+                                        case "STD;TEMA":
+                                            thread.setStudyTEMA(name);
+                                            thread.setStudySeries(series);
+                                            break;
+                                    }
+                                }
+                            } catch (Exception ignored) {
 
+                            }
                         }
                     }
-                }
-            } catch (Exception ignored) {
+                } catch (Exception ignored) {
 
+                }
             }
-        }
+        });
     }
 
     /**
@@ -263,28 +265,30 @@ public class FetcherService extends BaseService {
      * @param webSocketFrameReceived the web socket frame received
      */
     public void onReceiveMessage(FetcherThread thread, WebSocketFrameReceived webSocketFrameReceived) {
-        String[] messages = webSocketFrameReceived.getResponse().getPayloadData().split("~m~\\d*~m~");
-        for (String message : messages) {
-            try {
-                JSONObject object = new JSONObject(message);
-                if (object.has("p")) {
-                    JSONArray array = object.getJSONArray("p");
-                    for (int i = 0; i < array.length(); i++) {
-                        try {
-                            String objString = array.get(i).toString();
-                            JSONObject jsonObject = new JSONObject(objString);
-                            if (jsonObject.has(thread.getStudySeries()) || jsonObject.has(thread.getStudyBB()) || jsonObject.has(thread.getStudyRSI()) || jsonObject.has(thread.getStudyTEMA())) {
-                                setVal(thread, jsonObject);
-                            }
-                        } catch (Exception ignored) {
+        fetcherTaskExecutor.execute(() -> {
+            String[] messages = webSocketFrameReceived.getResponse().getPayloadData().split("~m~\\d*~m~");
+            for (String message : messages) {
+                try {
+                    JSONObject object = new JSONObject(message);
+                    if (object.has("p")) {
+                        JSONArray array = object.getJSONArray("p");
+                        for (int i = 0; i < array.length(); i++) {
+                            try {
+                                String objString = array.get(i).toString();
+                                JSONObject jsonObject = new JSONObject(objString);
+                                if (jsonObject.has(thread.getStudySeries()) || jsonObject.has(thread.getStudyBB()) || jsonObject.has(thread.getStudyRSI()) || jsonObject.has(thread.getStudyTEMA())) {
+                                    setVal(thread, jsonObject);
+                                }
+                            } catch (Exception ignored) {
 
+                            }
                         }
                     }
-                }
-            } catch (Exception ignored) {
+                } catch (Exception ignored) {
 
+                }
             }
-        }
+        });
     }
 
     private void setVal(FetcherThread thread, JSONObject object) {
