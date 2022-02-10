@@ -290,6 +290,11 @@ public class FetcherThread extends TickerThread<TickerService> {
         return getTableName().replace(":", "_");
     }
 
+    /**
+     * Gets current value.
+     *
+     * @return the current value
+     */
     public float getCurrentValue() {
         return currentValue == 0 ? c : currentValue;
     }

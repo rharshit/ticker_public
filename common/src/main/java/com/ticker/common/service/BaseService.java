@@ -30,6 +30,7 @@ public class BaseService {
         details.put("ExecutorPoolSize", ((ThreadPoolTaskExecutor) taskExecutor).getThreadPoolExecutor().getPoolSize());
         details.put("LargestPoolSize", ((ThreadPoolTaskExecutor) taskExecutor).getThreadPoolExecutor().getLargestPoolSize());
         details.put("TaskCount", (int) ((ThreadPoolTaskExecutor) taskExecutor).getThreadPoolExecutor().getTaskCount());
+        details.put("QueueSize", ((ThreadPoolTaskExecutor) taskExecutor).getThreadPoolExecutor().getQueue().size());
         return details;
     }
 }

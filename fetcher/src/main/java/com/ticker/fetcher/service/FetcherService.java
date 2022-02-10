@@ -203,76 +203,92 @@ public class FetcherService extends BaseService {
         webDriver.findElement(By.id(header)).click();
     }
 
+    /**
+     * On message sent.
+     *
+     * @param thread             the thread
+     * @param webSocketFrameSent the web socket frame sent
+     */
     public void onSentMessage(FetcherThread thread, WebSocketFrameSent webSocketFrameSent) {
-        String[] messages = webSocketFrameSent.getResponse().getPayloadData().split("~m~\\d*~m~");
-        for (String message : messages) {
-            try {
-                JSONObject object = new JSONObject(message);
-                if (object.has("m") && "create_study".equals(object.getString("m")) && object.has("p")) {
-                    JSONArray array = object.getJSONArray("p");
-                    String series = "";
-                    String name = "";
-                    for (int i = 0; i < array.length(); i++) {
-                        String objString = array.get(i).toString();
-                        if (i == 1) {
-                            name = objString;
-                        }
-                        if (i == 3) {
-                            series = objString;
-                        }
-                        try {
-                            JSONObject jsonObject = new JSONObject(objString);
-                            if (jsonObject.has("pineId")) {
-                                String pineId = jsonObject.getString("pineId");
-                                switch (pineId) {
-                                    case "STD;Bollinger_Bands":
-                                        thread.setStudyBB(name);
-                                        thread.setStudySeries(series);
-                                        break;
-                                    case "STD;RSI":
-                                        thread.setStudyRSI(name);
-                                        thread.setStudySeries(series);
-                                        break;
-                                    case "STD;TEMA":
-                                        thread.setStudyTEMA(name);
-                                        thread.setStudySeries(series);
-                                        break;
-                                }
+        fetcherTaskExecutor.execute(() -> {
+            String[] messages = webSocketFrameSent.getResponse().getPayloadData().split("~m~\\d*~m~");
+            for (String message : messages) {
+                try {
+                    JSONObject object = new JSONObject(message);
+                    if (object.has("m") && "create_study".equals(object.getString("m")) && object.has("p")) {
+                        JSONArray array = object.getJSONArray("p");
+                        String series = "";
+                        String name = "";
+                        for (int i = 0; i < array.length(); i++) {
+                            String objString = array.get(i).toString();
+                            if (i == 1) {
+                                name = objString;
                             }
-                        } catch (Exception ignored) {
+                            if (i == 3) {
+                                series = objString;
+                            }
+                            try {
+                                JSONObject jsonObject = new JSONObject(objString);
+                                if (jsonObject.has("pineId")) {
+                                    String pineId = jsonObject.getString("pineId");
+                                    switch (pineId) {
+                                        case "STD;Bollinger_Bands":
+                                            thread.setStudyBB(name);
+                                            thread.setStudySeries(series);
+                                            break;
+                                        case "STD;RSI":
+                                            thread.setStudyRSI(name);
+                                            thread.setStudySeries(series);
+                                            break;
+                                        case "STD;TEMA":
+                                            thread.setStudyTEMA(name);
+                                            thread.setStudySeries(series);
+                                            break;
+                                    }
+                                }
+                            } catch (Exception ignored) {
 
+                            }
                         }
                     }
-                }
-            } catch (Exception ignored) {
+                } catch (Exception ignored) {
 
+                }
             }
-        }
+        });
     }
 
+    /**
+     * On message received.
+     *
+     * @param thread                 the thread
+     * @param webSocketFrameReceived the web socket frame received
+     */
     public void onReceiveMessage(FetcherThread thread, WebSocketFrameReceived webSocketFrameReceived) {
-        String[] messages = webSocketFrameReceived.getResponse().getPayloadData().split("~m~\\d*~m~");
-        for (String message : messages) {
-            try {
-                JSONObject object = new JSONObject(message);
-                if (object.has("p")) {
-                    JSONArray array = object.getJSONArray("p");
-                    for (int i = 0; i < array.length(); i++) {
-                        try {
-                            String objString = array.get(i).toString();
-                            JSONObject jsonObject = new JSONObject(objString);
-                            if (jsonObject.has(thread.getStudySeries()) || jsonObject.has(thread.getStudyBB()) || jsonObject.has(thread.getStudyRSI()) || jsonObject.has(thread.getStudyTEMA())) {
-                                setVal(thread, jsonObject);
-                            }
-                        } catch (Exception ignored) {
+        fetcherTaskExecutor.execute(() -> {
+            String[] messages = webSocketFrameReceived.getResponse().getPayloadData().split("~m~\\d*~m~");
+            for (String message : messages) {
+                try {
+                    JSONObject object = new JSONObject(message);
+                    if (object.has("p")) {
+                        JSONArray array = object.getJSONArray("p");
+                        for (int i = 0; i < array.length(); i++) {
+                            try {
+                                String objString = array.get(i).toString();
+                                JSONObject jsonObject = new JSONObject(objString);
+                                if (jsonObject.has(thread.getStudySeries()) || jsonObject.has(thread.getStudyBB()) || jsonObject.has(thread.getStudyRSI()) || jsonObject.has(thread.getStudyTEMA())) {
+                                    setVal(thread, jsonObject);
+                                }
+                            } catch (Exception ignored) {
 
+                            }
                         }
                     }
-                }
-            } catch (Exception ignored) {
+                } catch (Exception ignored) {
 
+                }
             }
-        }
+        });
     }
 
     private void setVal(FetcherThread thread, JSONObject object) {
@@ -342,22 +358,22 @@ public class FetcherService extends BaseService {
      * Scheduled job.
      */
     @Async("scheduledExecutor")
-    @Scheduled(fixedRate = 400)
+    @Scheduled(fixedDelay = 400)
     public void scheduledJob() {
         DateTimeFormatter dtf = DateTimeFormatter.ofPattern("yyyy/MM/dd HH:mm:ss");
         LocalDateTime now = LocalDateTime.now();
         String sNow = dtf.format(now);
-        log.debug("Scheduled task started: " + sNow);
+        log.trace("Scheduled task started: " + sNow);
         List<FetcherRepoModel> tempDataQueue;
         synchronized (dataQueue) {
             tempDataQueue = new ArrayList<>(dataQueue);
             dataQueue.clear();
         }
-        log.debug("Scheduled task populated: " + sNow);
-        log.debug("Data size: " + tempDataQueue.size());
+        log.trace("Scheduled task populated: " + sNow);
+        log.trace("Data size: " + tempDataQueue.size());
         repository.addToQueue(tempDataQueue, sNow);
-        log.debug("Scheduled task ended: " + sNow);
-        log.debug("");
+        log.trace("Scheduled task ended: " + sNow);
+        log.trace("");
     }
 
     /**

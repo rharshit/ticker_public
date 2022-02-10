@@ -5,6 +5,7 @@ import com.ticker.common.util.objectpool.ObjectPoolData;
 import lombok.extern.slf4j.Slf4j;
 import org.openqa.selenium.WebDriver;
 import org.openqa.selenium.chrome.ChromeDriver;
+import org.openqa.selenium.devtools.DevTools;
 
 /**
  * The type Web driver object pool data.
@@ -39,10 +40,13 @@ public class WebDriverObjectPoolData extends ObjectPoolData<WebDriver> {
     @Override
     public void destroyObject(WebDriver object) {
         try {
-            ((ChromeDriver) object).getDevTools().clearListeners();
-            ((ChromeDriver) object).getDevTools().disconnectSession();
+            DevTools devTools = ((ChromeDriver) object).getDevTools();
+            if (devTools != null) {
+                ((ChromeDriver) object).getDevTools().clearListeners();
+                ((ChromeDriver) object).getDevTools().disconnectSession();
+            }
         } catch (Exception e) {
-            log.error("Error while closing dev session: " + object, e);
+            log.error("Error while closing dev session: " + object);
         }
         try {
             object.quit();
