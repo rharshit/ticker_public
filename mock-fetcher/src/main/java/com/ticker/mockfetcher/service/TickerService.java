@@ -8,7 +8,6 @@ import com.ticker.mockfetcher.repository.MockFetcherAppRepository;
 import com.ticker.mockfetcher.rx.MockFetcherThread;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
 
 import java.util.Set;
@@ -84,19 +83,6 @@ public class TickerService extends TickerThreadService<MockFetcherThread, Fetche
         Set<MockFetcherThread> threadMap = getThreadPool();
         for (MockFetcherThread threadName : threadMap) {
             destroyThread(threadName);
-        }
-    }
-
-    /**
-     * Process tickers.
-     */
-    @Scheduled(fixedRate = 1000)
-    public void processTickers() {
-        Set<MockFetcherThread> pool = getThreadPool();
-        for (MockFetcherThread thread : pool) {
-            if (thread.isEnabled()) {
-                thread.removeUnwantedScreens();
-            }
         }
     }
 

@@ -1,5 +1,6 @@
 package com.ticker.fetcher.rx;
 
+import com.google.common.collect.ImmutableMap;
 import com.ticker.common.entity.exchangesymbol.ExchangeSymbolEntity;
 import com.ticker.common.exception.TickerException;
 import com.ticker.common.rx.TickerThread;
@@ -13,25 +14,24 @@ import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
 import lombok.extern.slf4j.Slf4j;
-import org.openqa.selenium.By;
 import org.openqa.selenium.WebDriver;
-import org.openqa.selenium.WebElement;
+import org.openqa.selenium.chrome.ChromeDriver;
+import org.openqa.selenium.devtools.Command;
+import org.openqa.selenium.devtools.DevTools;
+import org.openqa.selenium.devtools.v97.network.Network;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Scope;
 import org.springframework.stereotype.Component;
-import org.springframework.util.CollectionUtils;
-import org.springframework.util.StringUtils;
+import org.springframework.util.ObjectUtils;
 
 import java.util.Arrays;
 import java.util.HashSet;
-import java.util.List;
 import java.util.Set;
 import java.util.stream.Collectors;
 
 import static com.ticker.common.contants.WebConstants.TRADING_VIEW_BASE;
 import static com.ticker.common.contants.WebConstants.TRADING_VIEW_CHART;
-import static com.ticker.common.util.Util.WAIT_LONG;
-import static com.ticker.common.util.Util.waitFor;
+import static com.ticker.common.util.Util.*;
 import static com.ticker.fetcher.constants.FetcherConstants.FETCHER_THREAD_COMP_NAME;
 
 /**
@@ -66,6 +66,7 @@ public class FetcherThread extends TickerThread<TickerService> {
     @Autowired
     private FetcherService fetcherService;
     private WebDriver webDriver;
+    private DevTools devTools;
     private Set<String> fetcherApps = new HashSet<>();
     private float o;
     private float h;
@@ -79,6 +80,10 @@ public class FetcherThread extends TickerThread<TickerService> {
     private float currentValue;
     private long updatedAt;
     private boolean taskStarted = false;
+    private String studySeries;
+    private String studyBB;
+    private String studyRSI;
+    private String studyTEMA;
 
     /**
      * Gets web drivers.
@@ -159,6 +164,9 @@ public class FetcherThread extends TickerThread<TickerService> {
             }
         }
         log.debug(getThreadName() + ": Got webdriver");
+        devTools = ((ChromeDriver) webDriver).getDevTools();
+        devTools.createSessionIfThereIsNotOne();
+        devTools.send(new Command<>("Network.enable", ImmutableMap.of()));
     }
 
     @Override
@@ -189,13 +197,31 @@ public class FetcherThread extends TickerThread<TickerService> {
         }
 
         try {
+
             String url = TRADING_VIEW_BASE + TRADING_VIEW_CHART + getExchange() + ":" + getSymbol();
             if (refresh) {
                 getWebDriver().navigate().refresh();
             } else {
                 getWebDriver().get(url);
             }
+            devTools.clearListeners();
+            devTools.addListener(Network.webSocketFrameSent(), webSocketFrameSent -> fetcherService.onSentMessage(this, webSocketFrameSent));
             fetcherService.setChartSettings(this, iteration, refresh);
+            waitFor(WAIT_SHORT);
+            devTools.clearListeners();
+            devTools.addListener(Network.webSocketFrameReceived(), webSocketFrameReceived -> fetcherService.onReceiveMessage(this, webSocketFrameReceived));
+            log.info(getThreadName() + " :" +
+                    " getStudySeries(): " + getStudySeries() +
+                    " getStudyBB(): " + getStudyBB() +
+                    " getStudyRSI(): " + getStudyRSI() +
+                    " getStudyTEMA(): " + getStudyTEMA());
+            if (ObjectUtils.isEmpty(getStudySeries()) ||
+                    ObjectUtils.isEmpty(getStudyBB()) ||
+                    ObjectUtils.isEmpty(getStudyRSI()) ||
+                    ObjectUtils.isEmpty(getStudyTEMA())) {
+                throw new TickerException(getThreadName() + " : Error initializing study name");
+            }
+            setInitialized(true);
         } catch (Exception e) {
             if (refresh) {
                 log.warn("Error while refreshing " + getThreadName());
@@ -214,79 +240,6 @@ public class FetcherThread extends TickerThread<TickerService> {
                 log.error("Destorying " + getThreadName());
                 destroy();
             }
-        }
-    }
-
-    /**
-     * Remove ads and pop-ups
-     */
-    public void removeUnwantedScreens() {
-        try {
-            log.debug("Removing unwanted screens for " + getThreadName());
-            if (isEnabled() && isInitialized()) {
-                synchronized (postInitLock) {
-                    try {
-                        while (!CollectionUtils.isEmpty(
-                                getWebDriver().findElements(By.cssSelector("div[data-role='toast-container']"))
-                        )) {
-                            getWebDriver()
-                                    .findElement(By.cssSelector("div[data-role='toast-container']"))
-                                    .findElement(By.tagName("article"))
-                                    .findElement(By.tagName("button"))
-                                    .click();
-                        }
-                    } catch (Exception ignored) {
-                    }
-                    try {
-                        while (!CollectionUtils.isEmpty(
-                                getWebDriver().findElements(By.cssSelector("div[data-dialog-name='gopro']"))
-                        )) {
-                            List<WebElement> buttons = getWebDriver()
-                                    .findElement(By.cssSelector("div[data-dialog-name='gopro']"))
-                                    .findElements(By.tagName("button"));
-                            for (WebElement button : buttons) {
-                                String classes = button.getAttribute("class");
-                                if (!StringUtils.isEmpty(classes)) {
-                                    if (classes.contains("close")) {
-                                        button.click();
-                                        break;
-                                    }
-                                }
-                            }
-                        }
-                    } catch (Exception ignored) {
-                    }
-                    try {
-                        //indicator-properties-dialog
-                        List<WebElement> buttons = getWebDriver()
-                                .findElement(By.cssSelector("div[data-name='indicator-properties-dialog']"))
-                                .findElements(By.cssSelector("span[data-name='close']"));
-                        for (WebElement button : buttons) {
-                            button.click();
-                            break;
-                        }
-                    } catch (Exception ignore) {
-
-                    }
-                    try {
-                        //style="z-index: 150;"
-                        WebElement overlapManagerRoot = getWebDriver().findElement(By.id("overlap-manager-root"));
-                        List<WebElement> overlaps = overlapManagerRoot.findElements(By.tagName("div"));
-                        if (!CollectionUtils.isEmpty(overlaps)) {
-                            for (WebElement overlap : overlaps) {
-                                String text = overlap.getText();
-                                if (!StringUtils.isEmpty(text) && text.contains("Take your trading to the next level")) {
-                                    initialize(0, true);
-                                    break;
-                                }
-                            }
-                        }
-                    } catch (Exception ignored) {
-                    }
-                }
-            }
-        } catch (Exception e) {
-
         }
     }
 
@@ -337,13 +290,7 @@ public class FetcherThread extends TickerThread<TickerService> {
         return getTableName().replace(":", "_");
     }
 
-    /**
-     * Sets current value.
-     *
-     * @param currentValue the current value
-     */
-    public void setCurrentValue(float currentValue) {
-        this.currentValue = currentValue;
-        this.updatedAt = System.currentTimeMillis();
+    public float getCurrentValue() {
+        return currentValue == 0 ? c : currentValue;
     }
 }
