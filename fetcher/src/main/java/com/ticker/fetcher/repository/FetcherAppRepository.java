@@ -41,6 +41,7 @@ public class FetcherAppRepository {
     @Qualifier("repoExecutor")
     private Executor repoExecutor;
     private Connection fetcherConnection = null;
+    private boolean pushing = false;
 
     /**
      * Add table.
@@ -76,42 +77,50 @@ public class FetcherAppRepository {
     /**
      * Push data.
      */
-    @Scheduled(fixedDelay = 5000)
+    @Scheduled(fixedRate = 5000)
     public void pushData() {
-        repoExecutor.execute(() -> {
-            DateTimeFormatter dtf = DateTimeFormatter.ofPattern(FETCHER_DATE_FORMAT_LOGGING);
-            String now = dtf.format(LocalDateTime.now());
-            log.trace("pushData task started: " + now);
-            List<String> tempQueue;
-            synchronized (sqlQueue) {
-                tempQueue = new ArrayList<>(sqlQueue);
-                sqlQueue.clear();
-            }
-            long start = System.currentTimeMillis();
-            if (!CollectionUtils.isEmpty(tempQueue)) {
-                try (Connection connection = getFetcherConnection()) {
-                    Statement statement = connection.createStatement();
-                    log.debug("Pushing data, size: " + tempQueue.size());
-                    for (String sql : tempQueue) {
-                        log.trace(sql);
-                        statement.addBatch(sql);
-                    }
-                    statement.executeBatch();
-                    log.trace("Executed queries");
-                    log.trace("Data pushed");
-                } catch (SQLException e) {
-                    e.printStackTrace();
-                    log.error("Data not pushed");
-                    log.info("Adding sql data back to queue");
+        if (!pushing) {
+            pushing = true;
+            repoExecutor.execute(() -> {
+                try {
+                    DateTimeFormatter dtf = DateTimeFormatter.ofPattern(FETCHER_DATE_FORMAT_LOGGING);
+                    String now = dtf.format(LocalDateTime.now());
+                    log.trace("pushData task started: " + now);
+                    List<String> tempQueue;
                     synchronized (sqlQueue) {
-                        sqlQueue.addAll(tempQueue);
+                        tempQueue = new ArrayList<>(sqlQueue);
+                        sqlQueue.clear();
                     }
+                    long start = System.currentTimeMillis();
+                    if (!CollectionUtils.isEmpty(tempQueue)) {
+                        try (Connection connection = getFetcherConnection()) {
+                            Statement statement = connection.createStatement();
+                            log.debug("Pushing data, size: " + tempQueue.size());
+                            for (String sql : tempQueue) {
+                                log.trace(sql);
+                                statement.addBatch(sql);
+                            }
+                            statement.executeBatch();
+                            log.trace("Executed queries");
+                            log.trace("Data pushed");
+                        } catch (SQLException e) {
+                            e.printStackTrace();
+                            log.error("Data not pushed");
+                            log.info("Adding sql data back to queue");
+                            synchronized (sqlQueue) {
+                                sqlQueue.addAll(tempQueue);
+                            }
+                        }
+                    }
+                    long end = System.currentTimeMillis();
+                    log.debug("Pushing data to repo took " + (end - start) + "ms");
+                    log.debug("pushData task ended: " + now);
+                } catch (Exception ignore) {
+
                 }
-            }
-            long end = System.currentTimeMillis();
-            log.debug("Pushing data to repo took " + (end - start) + "ms");
-            log.debug("pushData task ended: " + now);
-        });
+                pushing = false;
+            });
+        }
     }
 
     /**
