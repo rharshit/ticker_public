@@ -166,13 +166,6 @@ public class MockFetcherThread extends TickerThread<TickerService> {
         }
     }
 
-    /**
-     * Remove ads and pop-ups
-     */
-    public void removeUnwantedScreens() {
-
-    }
-
     @Override
     public String toString() {
         return "FetcherThread{" +

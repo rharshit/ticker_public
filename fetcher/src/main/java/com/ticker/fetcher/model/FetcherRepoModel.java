@@ -1,5 +1,6 @@
 package com.ticker.fetcher.model;
 
+import com.ticker.fetcher.rx.FetcherThread;
 import lombok.Data;
 
 import java.sql.Timestamp;
@@ -49,6 +50,20 @@ public class FetcherRepoModel {
         this.bbL = bbL;
         this.rsi = rsi;
         this.tema = tema;
+    }
+
+    public FetcherRepoModel(FetcherThread thread) {
+        this.tableName = thread.getTableName();
+        this.timestamp = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss").format(new Timestamp(System.currentTimeMillis()));
+        this.o = thread.getO();
+        this.h = thread.getH();
+        this.l = thread.getL();
+        this.c = thread.getC();
+        this.bbU = thread.getBbU();
+        this.bbA = thread.getBbA();
+        this.bbL = thread.getBbL();
+        this.rsi = thread.getRsi();
+        this.tema = thread.getTema();
     }
 
     @Override

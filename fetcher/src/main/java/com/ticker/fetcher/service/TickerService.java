@@ -8,7 +8,6 @@ import com.ticker.fetcher.repository.FetcherAppRepository;
 import com.ticker.fetcher.rx.FetcherThread;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
 
 import java.util.Set;
@@ -99,19 +98,6 @@ public class TickerService extends TickerThreadService<FetcherThread, FetcherThr
         Set<FetcherThread> threadMap = getThreadPool();
         for (FetcherThread threadName : threadMap) {
             destroyThread(threadName);
-        }
-    }
-
-    /**
-     * Process tickers.
-     */
-    @Scheduled(fixedRate = 1000)
-    public void processTickers() {
-        Set<FetcherThread> pool = getThreadPool();
-        for (FetcherThread thread : pool) {
-            if (thread.isEnabled()) {
-                thread.removeUnwantedScreens();
-            }
         }
     }
 

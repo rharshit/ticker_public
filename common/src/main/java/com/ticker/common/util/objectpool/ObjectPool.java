@@ -72,7 +72,6 @@ public abstract class ObjectPool<D extends ObjectPoolData<?>> {
             }
         }
         return new int[]{idle, valid, pool.size(), initializing};
-//        log.info("Total:\t" + pool.size() + "\tIdle:\t" + idle + "\tValid:\t" + valid + "\tInvalid:\t" + invalid);
     }
 
     /**
