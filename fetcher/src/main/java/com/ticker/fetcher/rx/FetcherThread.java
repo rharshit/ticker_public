@@ -210,7 +210,7 @@ public class FetcherThread extends TickerThread<TickerService> {
             waitFor(WAIT_SHORT);
             devTools.clearListeners();
             devTools.addListener(Network.webSocketFrameReceived(), webSocketFrameReceived -> fetcherService.onReceiveMessage(this, webSocketFrameReceived));
-            log.info(getThreadName() + " :" +
+            log.debug(getThreadName() + " :" +
                     " getStudySeries(): " + getStudySeries() +
                     " getStudyBB(): " + getStudyBB() +
                     " getStudyRSI(): " + getStudyRSI() +
