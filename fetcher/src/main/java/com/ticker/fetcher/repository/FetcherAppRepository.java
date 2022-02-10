@@ -6,6 +6,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.jdbc.core.SqlParameter;
+import org.springframework.scheduling.annotation.Async;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Repository;
 import org.springframework.util.CollectionUtils;
@@ -75,31 +76,40 @@ public class FetcherAppRepository {
     /**
      * Push data.
      */
-    @Scheduled(fixedRate = 1000)
+    @Scheduled(fixedDelay = 5000)
     public void pushData() {
         repoExecutor.execute(() -> {
             DateTimeFormatter dtf = DateTimeFormatter.ofPattern(FETCHER_DATE_FORMAT_LOGGING);
             String now = dtf.format(LocalDateTime.now());
-            log.debug("pushData task started: " + now);
-            if (!CollectionUtils.isEmpty(sqlQueue)) {
+            log.trace("pushData task started: " + now);
+            List<String> tempQueue;
+            synchronized (sqlQueue) {
+                tempQueue = new ArrayList<>(sqlQueue);
+                sqlQueue.clear();
+            }
+            long start = System.currentTimeMillis();
+            if (!CollectionUtils.isEmpty(tempQueue)) {
                 try (Connection connection = getFetcherConnection()) {
                     Statement statement = connection.createStatement();
-                    synchronized (sqlQueue) {
-                        log.debug("Pushing data, size: " + sqlQueue.size());
-                        for (String sql : sqlQueue) {
-                            log.trace(sql);
-                            statement.addBatch(sql);
-                        }
-                        sqlQueue.clear();
+                    log.debug("Pushing data, size: " + tempQueue.size());
+                    for (String sql : tempQueue) {
+                        log.trace(sql);
+                        statement.addBatch(sql);
                     }
                     statement.executeBatch();
-                    log.debug("Executed queries");
-                    log.debug("Data pushed");
+                    log.trace("Executed queries");
+                    log.trace("Data pushed");
                 } catch (SQLException e) {
                     e.printStackTrace();
                     log.error("Data not pushed");
+                    log.info("Adding sql data back to queue");
+                    synchronized (sqlQueue) {
+                        sqlQueue.addAll(tempQueue);
+                    }
                 }
             }
+            long end = System.currentTimeMillis();
+            log.debug("Pushing data to repo took " + (end - start) + "ms");
             log.debug("pushData task ended: " + now);
         });
     }
@@ -110,9 +120,10 @@ public class FetcherAppRepository {
      * @param datas the datas
      * @param sNow  the s now
      */
+    @Async
     public void addToQueue(List<FetcherRepoModel> datas, String sNow) {
-        log.debug("addToQueue task started: " + sNow);
-        log.debug("Adding data, size: " + datas.size());
+        log.trace("addToQueue task started: " + sNow);
+        log.trace("Adding data, size: " + datas.size());
         if (!CollectionUtils.isEmpty(datas)) {
             log.debug("Initial data, size: " + sqlQueue.size());
             for (FetcherRepoModel data : datas) {
@@ -131,6 +142,6 @@ public class FetcherAppRepository {
             }
             log.debug("Data Added, size: " + sqlQueue.size());
         }
-        log.debug("addToQueue task ended: " + sNow);
+        log.trace("addToQueue task ended: " + sNow);
     }
 }

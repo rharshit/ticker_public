@@ -358,22 +358,22 @@ public class FetcherService extends BaseService {
      * Scheduled job.
      */
     @Async("scheduledExecutor")
-    @Scheduled(fixedRate = 400)
+    @Scheduled(fixedDelay = 400)
     public void scheduledJob() {
         DateTimeFormatter dtf = DateTimeFormatter.ofPattern("yyyy/MM/dd HH:mm:ss");
         LocalDateTime now = LocalDateTime.now();
         String sNow = dtf.format(now);
-        log.debug("Scheduled task started: " + sNow);
+        log.trace("Scheduled task started: " + sNow);
         List<FetcherRepoModel> tempDataQueue;
         synchronized (dataQueue) {
             tempDataQueue = new ArrayList<>(dataQueue);
             dataQueue.clear();
         }
-        log.debug("Scheduled task populated: " + sNow);
-        log.debug("Data size: " + tempDataQueue.size());
+        log.trace("Scheduled task populated: " + sNow);
+        log.trace("Data size: " + tempDataQueue.size());
         repository.addToQueue(tempDataQueue, sNow);
-        log.debug("Scheduled task ended: " + sNow);
-        log.debug("");
+        log.trace("Scheduled task ended: " + sNow);
+        log.trace("");
     }
 
     /**
