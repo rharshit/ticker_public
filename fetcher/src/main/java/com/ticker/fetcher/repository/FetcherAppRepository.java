@@ -125,22 +125,24 @@ public class FetcherAppRepository {
         log.trace("addToQueue task started: " + sNow);
         log.trace("Adding data, size: " + datas.size());
         if (!CollectionUtils.isEmpty(datas)) {
-            log.debug("Initial data, size: " + sqlQueue.size());
+            List<String> tempQueue = new ArrayList<>();
             for (FetcherRepoModel data : datas) {
-                synchronized (sqlQueue) {
-                    log.trace(data.toString());
-                    String deleteSql = "DELETE FROM " + data.getTableName() + " WHERE `timestamp`='" + data.getTimestamp() + "'";
-                    log.trace(deleteSql);
-                    sqlQueue.add(deleteSql);
-                    String insertSql = "INSERT INTO " + data.getTableName() + " (`timestamp`, O, H, L, C, BB_U, BB_A, BB_L, RSI, TEMA)" +
-                            "VALUES('" + data.getTimestamp() + "', " + data.getO() + ", " + data.getH() +
-                            ", " + data.getL() + ", " + data.getC() + ", " + data.getBbU() + ", " +
-                            data.getBbA() + ", " + data.getBbL() + ", " + data.getRsi() + ", " + data.getTema() + ")";
-                    log.trace(insertSql);
-                    sqlQueue.add(insertSql);
-                }
+                log.trace(data.toString());
+                String deleteSql = "DELETE FROM " + data.getTableName() + " WHERE `timestamp`='" + data.getTimestamp() + "'";
+                log.trace(deleteSql);
+                tempQueue.add(deleteSql);
+                String insertSql = "INSERT INTO " + data.getTableName() + " (`timestamp`, O, H, L, C, BB_U, BB_A, BB_L, RSI, TEMA)" +
+                        "VALUES('" + data.getTimestamp() + "', " + data.getO() + ", " + data.getH() +
+                        ", " + data.getL() + ", " + data.getC() + ", " + data.getBbU() + ", " +
+                        data.getBbA() + ", " + data.getBbL() + ", " + data.getRsi() + ", " + data.getTema() + ")";
+                log.trace(insertSql);
+                tempQueue.add(insertSql);
             }
-            log.debug("Data Added, size: " + sqlQueue.size());
+            synchronized (sqlQueue) {
+                log.debug("Initial data, size: " + sqlQueue.size());
+                sqlQueue.addAll(tempQueue);
+                log.debug("Data Added, size: " + sqlQueue.size());
+            }
         }
         log.trace("addToQueue task ended: " + sNow);
     }
