@@ -1,9 +1,9 @@
 package com.ticker.brokerage.service;
 
+import com.ticker.brokerage.objectpool.WebDriverObjectPoolData;
 import com.ticker.common.exception.TickerException;
 import com.ticker.common.util.Util;
 import com.ticker.common.util.objectpool.ObjectPool;
-import com.ticker.common.util.objectpool.impl.WebDriverObjectPoolData;
 import lombok.extern.slf4j.Slf4j;
 import org.openqa.selenium.*;
 import org.springframework.cache.annotation.Cacheable;
