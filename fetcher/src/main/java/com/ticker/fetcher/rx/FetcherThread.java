@@ -221,6 +221,7 @@ public class FetcherThread extends TickerThread<TickerService> {
                     ObjectUtils.isEmpty(getStudyTEMA())) {
                 throw new TickerException(getThreadName() + " : Error initializing study name");
             }
+            setUpdatedAt(0);
             setInitialized(true);
         } catch (Exception e) {
             if (refresh) {

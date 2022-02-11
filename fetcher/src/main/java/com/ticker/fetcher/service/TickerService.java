@@ -8,9 +8,13 @@ import com.ticker.fetcher.repository.FetcherAppRepository;
 import com.ticker.fetcher.rx.FetcherThread;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Qualifier;
+import org.springframework.scheduling.annotation.Async;
+import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
 
 import java.util.Set;
+import java.util.concurrent.Executor;
 
 import static com.ticker.fetcher.constants.FetcherConstants.FETCHER_THREAD_COMP_NAME;
 
@@ -31,6 +35,10 @@ public class TickerService extends TickerThreadService<FetcherThread, FetcherThr
     public FetcherThreadModel createTickerThreadModel(FetcherThread thread) {
         return new FetcherThreadModel(thread);
     }
+
+    @Autowired
+    @Qualifier("fetcherTaskExecutor")
+    private Executor fetcherTaskExecutor;
 
     /**
      * Add tracking for the ticker, given exchange and symbol for app
@@ -180,5 +188,21 @@ public class TickerService extends TickerThreadService<FetcherThread, FetcherThr
      */
     public int[] getWebdriverPoolSize() {
         return FetcherThread.getWebDrivers().poolSize();
+    }
+
+    /**
+     * Check for unresponsive tickers.
+     */
+    @Async("scheduledExecutor")
+    @Scheduled(fixedDelay = 2000)
+    public void checkUnresponsiveTickers() {
+        Set<FetcherThread> threadMap = getThreadPool();
+        long now = System.currentTimeMillis();
+        for (FetcherThread thread : threadMap) {
+            if (thread.getUpdatedAt() != 0 && now - thread.getUpdatedAt() > 60000 && thread.isInitialized() && thread.isEnabled()) {
+                log.info(thread.getThreadName() + " : not updated for " + (now - thread.getUpdatedAt()) + "ms");
+                fetcherTaskExecutor.execute(thread::refreshBrowser);
+            }
+        }
     }
 }
