@@ -182,15 +182,6 @@ public class TickerService extends TickerThreadService<FetcherThread, FetcherThr
     }
 
     /**
-     * Get webdriver pool size int [ ].
-     *
-     * @return the int [ ]
-     */
-    public int[] getWebdriverPoolSize() {
-        return FetcherThread.getWebDrivers().poolSize();
-    }
-
-    /**
      * Check for unresponsive tickers.
      */
     @Async("scheduledExecutor")

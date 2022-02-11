@@ -1,12 +1,8 @@
 package com.ticker.fetcher.rx;
 
-import com.google.common.collect.ImmutableMap;
 import com.ticker.common.entity.exchangesymbol.ExchangeSymbolEntity;
 import com.ticker.common.exception.TickerException;
 import com.ticker.common.rx.TickerThread;
-import com.ticker.common.util.Util;
-import com.ticker.common.util.objectpool.ObjectPool;
-import com.ticker.common.util.objectpool.impl.WebDriverObjectPoolData;
 import com.ticker.fetcher.repository.FetcherAppRepository;
 import com.ticker.fetcher.service.FetcherService;
 import com.ticker.fetcher.service.TickerService;
@@ -14,19 +10,26 @@ import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
 import lombok.extern.slf4j.Slf4j;
-import org.openqa.selenium.WebDriver;
-import org.openqa.selenium.chrome.ChromeDriver;
-import org.openqa.selenium.devtools.Command;
-import org.openqa.selenium.devtools.DevTools;
-import org.openqa.selenium.devtools.v97.network.Network;
+import org.java_websocket.client.WebSocketClient;
+import org.java_websocket.handshake.ServerHandshake;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Scope;
 import org.springframework.stereotype.Component;
 import org.springframework.util.ObjectUtils;
+import org.springframework.util.StringUtils;
 
+import java.io.BufferedReader;
+import java.io.IOException;
+import java.io.InputStreamReader;
+import java.net.HttpURLConnection;
+import java.net.URI;
+import java.net.URISyntaxException;
+import java.net.URL;
 import java.util.Arrays;
 import java.util.HashSet;
 import java.util.Set;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 
 import static com.ticker.common.contants.WebConstants.TRADING_VIEW_BASE;
@@ -49,24 +52,12 @@ public class FetcherThread extends TickerThread<TickerService> {
      * The constant RETRY_LIMIT.
      */
     public static final int RETRY_LIMIT = 10;
-    private static final ObjectPool<WebDriverObjectPoolData> webDrivers;
-
-    static {
-        webDrivers = new ObjectPool<WebDriverObjectPoolData>(10, 20, 45, 5000, 60000) {
-            @Override
-            public WebDriverObjectPoolData createObject() {
-                return new WebDriverObjectPoolData();
-            }
-        };
-    }
 
     private final Object postInitLock = new Object();
     @Autowired
     private FetcherAppRepository repository;
     @Autowired
     private FetcherService fetcherService;
-    private WebDriver webDriver;
-    private DevTools devTools;
     private Set<String> fetcherApps = new HashSet<>();
     private float o;
     private float h;
@@ -85,14 +76,7 @@ public class FetcherThread extends TickerThread<TickerService> {
     private String studyRSI;
     private String studyTEMA;
 
-    /**
-     * Gets web drivers.
-     *
-     * @return the web drivers
-     */
-    public static ObjectPool<WebDriverObjectPoolData> getWebDrivers() {
-        return webDrivers;
-    }
+    private WebSocketClient webSocketClient;
 
     /**
      * Sets properties.
@@ -123,8 +107,74 @@ public class FetcherThread extends TickerThread<TickerService> {
 
     @Override
     protected void initialize() {
-        initializeWebDriver();
+        try {
+            initializeWebSocket();
+        } catch (Exception e) {
+            log.info(getThreadName() + " : Error while initializing websocket", e);
+            throw new TickerException(getThreadName() + " : Error while initializing websocket");
+        }
         initializeTables();
+    }
+
+    private void initializeWebSocket() throws IOException, URISyntaxException {
+        FetcherThread thisThread = this;
+        webSocketClient = new WebSocketClient(new URI("wss://data.tradingview.com/socket.io/websocket?from=chart%2F&date=" + getBuildTime())) {
+            @Override
+            public void onOpen(ServerHandshake handshakedata) {
+                log.info(getThreadName() + " : Opened websocket");
+            }
+
+            @Override
+            public void onMessage(String message) {
+                fetcherService.onReceiveMessage(thisThread, message);
+            }
+
+            @Override
+            public void onClose(int code, String reason, boolean remote) {
+                log.info(getThreadName() + " : Closed websocket, reason - " + reason);
+            }
+
+            @Override
+            public void onError(Exception ex) {
+                log.error(getThreadName() + " : Error in websocket", ex);
+            }
+        };
+        webSocketClient.addHeader("Accept-Encoding", "gzip, deflate, br");
+        webSocketClient.addHeader("Accept-Language", "en-IN,en;q=0.9");
+        webSocketClient.addHeader("Cache-Control", "no-cache");
+        webSocketClient.addHeader("Connection", "Upgrade");
+        webSocketClient.addHeader("Host", "data.tradingview.com");
+        webSocketClient.addHeader("Origin", "https://in.tradingview.com");
+        webSocketClient.addHeader("Pragma", "no-cache");
+        webSocketClient.addHeader("Sec-WebSocket-Extensions", "client_max_window_bits");
+        webSocketClient.addHeader("Sec-WebSocket-Key", "rxPHgoX6myglC4x5XLaLtA==");
+        webSocketClient.addHeader("Sec-WebSocket-Version", "13");
+        webSocketClient.addHeader("Upgrade", "websocket");
+        webSocketClient.addHeader("User-Agent", "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/98.0.4758.80 Safari/537.36");
+        webSocketClient.connect();
+    }
+
+    private String getBuildTime() throws IOException {
+        URL url = new URL(TRADING_VIEW_BASE + TRADING_VIEW_CHART + getExchange() + ":" + getSymbol());
+        HttpURLConnection httpURLConnection = (HttpURLConnection) url.openConnection();
+        BufferedReader in = new BufferedReader(new InputStreamReader(httpURLConnection.getInputStream()));
+        String inputLine;
+        String buildTime = "";
+        while (StringUtils.isEmpty(buildTime) && (inputLine = in.readLine()) != null) {
+            try {
+                if (inputLine.contains("BUILD_TIME")) {
+                    inputLine = inputLine.trim();
+                    Pattern p = Pattern.compile("window\\.BUILD_TIME *= *\"(.*)\";");
+                    Matcher m = p.matcher(inputLine);
+                    if (m.matches()) {
+                        buildTime = m.group(1);
+                    }
+                }
+            } catch (Exception ignored) {
+
+            }
+        }
+        return buildTime;
     }
 
     private void initializeTables() {
@@ -141,34 +191,6 @@ public class FetcherThread extends TickerThread<TickerService> {
         return this.entity.getFinalTableName();
     }
 
-    /**
-     * Initialize web driver.
-     */
-    protected void initializeWebDriver() {
-        webDrivers.put(this.webDriver);
-
-        while (this.webDriver == null) {
-            log.debug(getThreadName() + ": Getting webdriver");
-            this.webDriver = (WebDriver) webDrivers.get();
-            if (this.webDriver != null) {
-                break;
-            }
-            try {
-                synchronized (webDrivers) {
-                    log.trace(getThreadName() + ": Wait started");
-                    webDrivers.wait(Util.WAIT_SHORT);
-                    log.trace(getThreadName() + ": Wait ended");
-                }
-            } catch (InterruptedException e) {
-                e.printStackTrace();
-            }
-        }
-        log.debug(getThreadName() + ": Got webdriver");
-        devTools = ((ChromeDriver) webDriver).getDevTools();
-        devTools.createSessionIfThereIsNotOne();
-        devTools.send(new Command<>("Network.enable", ImmutableMap.of()));
-    }
-
     @Override
     public void run() {
         initialize(0, false);
@@ -178,7 +200,6 @@ public class FetcherThread extends TickerThread<TickerService> {
             }
         }
 
-        webDrivers.put(this.webDriver);
         log.info("Terminated thread : " + getThreadName());
     }
 
@@ -198,18 +219,14 @@ public class FetcherThread extends TickerThread<TickerService> {
 
         try {
 
-            String url = TRADING_VIEW_BASE + TRADING_VIEW_CHART + getExchange() + ":" + getSymbol();
+            waitFor(WAIT_LONG);
             if (refresh) {
-                getWebDriver().navigate().refresh();
+//                getWebDriver().navigate().refresh();
             } else {
-                getWebDriver().get(url);
+//                getWebDriver().get(url);
             }
-            devTools.clearListeners();
-            devTools.addListener(Network.webSocketFrameSent(), webSocketFrameSent -> fetcherService.onSentMessage(this, webSocketFrameSent));
-            fetcherService.setChartSettings(this, iteration, refresh);
+//            fetcherService.setChartSettings(this, iteration, refresh);
             waitFor(WAIT_SHORT);
-            devTools.clearListeners();
-            devTools.addListener(Network.webSocketFrameReceived(), webSocketFrameReceived -> fetcherService.onReceiveMessage(this, webSocketFrameReceived));
             log.debug(getThreadName() + " :" +
                     " getStudySeries(): " + getStudySeries() +
                     " getStudyBB(): " + getStudyBB() +

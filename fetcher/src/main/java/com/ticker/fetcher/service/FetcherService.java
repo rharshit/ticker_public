@@ -8,15 +8,11 @@ import com.ticker.fetcher.rx.FetcherThread;
 import lombok.extern.slf4j.Slf4j;
 import org.json.JSONArray;
 import org.json.JSONObject;
-import org.openqa.selenium.*;
-import org.openqa.selenium.devtools.v97.network.model.WebSocketFrameReceived;
-import org.openqa.selenium.devtools.v97.network.model.WebSocketFrameSent;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.scheduling.annotation.Async;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
-import org.springframework.util.CollectionUtils;
 
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
@@ -25,8 +21,6 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.Executor;
-
-import static com.ticker.common.util.Util.*;
 
 /**
  * The type Fetcher service.
@@ -63,210 +57,16 @@ public class FetcherService extends BaseService {
         return details;
     }
 
-
-    /**
-     * Set setting for the charts that are loaded
-     *
-     * @param fetcherThread the fetcher thread
-     * @param iteration     the iteration
-     * @param refresh       the refresh
-     */
-    public void setChartSettings(FetcherThread fetcherThread, int iteration, boolean refresh) {
-        int iterationMultiplier = 200;
-        if (!refresh) {
-            // Chart style
-            waitTillLoad(fetcherThread.getWebDriver(), WAIT_SHORT + iteration * iterationMultiplier, 2);
-            configureMenuByValue(fetcherThread.getWebDriver(), "menu-inner", "header-toolbar-chart-styles", "ha");
-
-            // Chart interval
-            waitTillLoad(fetcherThread.getWebDriver(), WAIT_SHORT + iteration * iterationMultiplier, 2);
-            configureMenuByValue(fetcherThread.getWebDriver(), "menu-inner", "header-toolbar-intervals", "1");
-
-        }
-
-        // Indicators
-        setIndicators(fetcherThread.getWebDriver(), WAIT_SHORT + iteration * iterationMultiplier, "bb:STD;Bollinger_Bands", "rsi:STD;RSI", "tema:STD;TEMA");
-
-        if (refresh) {
-            log.info(fetcherThread.getExchange() + ":" + fetcherThread.getSymbol() + " - Refreshed");
-        } else {
-            log.info(fetcherThread.getExchange() + ":" + fetcherThread.getSymbol() + " - Initialized");
-        }
-    }
-
-    /**
-     * This method uses a lot extra processing and extra time
-     *
-     * @param webDriver
-     * @param time
-     * @param threshold
-     */
-    private void waitTillLoad(WebDriver webDriver, long time, int threshold) {
-        while (webDriver.findElements(By.cssSelector("div[role='progressbar']")).size() > threshold) {
-            waitFor(WAIT_SHORT);
-        }
-        waitFor(time);
-    }
-
-    private void setIndicators(WebDriver webDriver, long waitTime, String... indicators) {
-        waitTillLoad(webDriver, waitTime, 2);
-        WebElement chartStyle = webDriver.findElement(By.id("header-toolbar-indicators"));
-        chartStyle.click();
-        WebElement overLapManagerRoot = webDriver
-                .findElement(By.id("overlap-manager-root"));
-        while (CollectionUtils.isEmpty(overLapManagerRoot
-                .findElements(By.cssSelector("div[data-name='indicators-dialog']")))) ;
-        WebElement menuBox = overLapManagerRoot
-                .findElement(By.cssSelector("div[data-name='indicators-dialog']"));
-
-        for (String indicator : indicators) {
-            waitTillLoad(webDriver, waitTime, 2);
-            selectIndicator(indicator, menuBox, 0);
-        }
-        WebElement closeBtn = overLapManagerRoot
-                .findElement(By.cssSelector("span[data-name='close']"))
-                .findElement(By.tagName("svg"));
-        closeBtn.click();
-    }
-
-    private void selectIndicator(String indicator, WebElement menuBox, int iteration) {
-        int numRetries = 5;
-        log.debug("Selecting indicator " + indicator);
-        try {
-            String searchText = indicator.split(":")[0];
-            WebElement searchBox = menuBox.findElement(By.cssSelector("input[data-role='search']"));
-            waitFor(WAIT_SHORT);
-            searchBox.click();
-            if (Platform.getCurrent().is(Platform.MAC)) {
-                searchBox.sendKeys(Keys.COMMAND + "a");
-            } else {
-                searchBox.sendKeys(Keys.CONTROL + "a");
-            }
-            searchBox.sendKeys(searchText);
-            while (menuBox.findElement(By.cssSelector("div[data-role='dialog-content']")).findElements(By.cssSelector("div[data-role='list-item']")).size() <= 3)
-                ;
-            String indicatorId = indicator.split(":")[1];
-            menuBox.findElement(By.cssSelector("div[data-id='" + indicatorId + "']")).click();
-
-            searchBox.sendKeys(Keys.BACK_SPACE);
-            while (menuBox.findElement(By.cssSelector("div[data-role='dialog-content']")).findElements(By.cssSelector("div[data-role='list-item']")).size() <= 3)
-                ;
-        } catch (Exception e) {
-            iteration = iteration + 1;
-            log.debug("Iteration " + iteration + " failed");
-            if (iteration < numRetries) {
-                selectIndicator(indicator, menuBox, iteration);
-            } else {
-                log.error(e.getMessage());
-                throw new TickerException("Cannot select indicator " + indicator);
-            }
-        }
-        log.debug("Selected indicator " + indicator);
-    }
-
-    private void configureMenuByValue(WebDriver webDriver, String dataName, String header, String value) {
-        while (CollectionUtils.isEmpty(webDriver.findElements(By.id(header)))) ;
-        webDriver.findElement(By.id(header)).click();
-        waitFor(WAIT_MEDIUM);
-        WebElement menuBox = webDriver
-                .findElement(By.id("overlap-manager-root"))
-                .findElement(By.cssSelector("div[data-name='" + dataName + "']"));
-        WebElement valueElement = null;
-        do {
-            try {
-                while (CollectionUtils.isEmpty(menuBox.findElements(By.cssSelector("div[data-value='" + value + "']"))))
-                    ;
-                valueElement = menuBox.findElement(By.cssSelector("div[data-value='" + value + "']"));
-                valueElement.click();
-                valueElement = null;
-
-                webDriver.findElement(By.id(header)).click();
-                while (CollectionUtils.isEmpty(menuBox.findElements(By.cssSelector("div[data-value='" + value + "']"))))
-                    ;
-                valueElement = menuBox.findElement(By.cssSelector("div[data-value='" + value + "']"));
-            } catch (Exception e) {
-
-                if (valueElement != null) {
-                    log.error(valueElement.getCssValue("class"));
-                } else {
-
-                    if (e instanceof StaleElementReferenceException) {
-                        log.debug("valueElement: " + valueElement);
-                        log.debug("Error in configureMenuByValue", e);
-                    } else {
-                        log.error("valueElement: " + valueElement);
-                        log.error("Error in configureMenuByValue", e);
-                    }
-                }
-            }
-        } while (valueElement != null && !valueElement.getCssValue("class").contains("isActive"));
-        webDriver.findElement(By.id(header)).click();
-    }
-
-    /**
-     * On message sent.
-     *
-     * @param thread             the thread
-     * @param webSocketFrameSent the web socket frame sent
-     */
-    public void onSentMessage(FetcherThread thread, WebSocketFrameSent webSocketFrameSent) {
-        fetcherTaskExecutor.execute(() -> {
-            String[] messages = webSocketFrameSent.getResponse().getPayloadData().split("~m~\\d*~m~");
-            for (String message : messages) {
-                try {
-                    JSONObject object = new JSONObject(message);
-                    if (object.has("m") && "create_study".equals(object.getString("m")) && object.has("p")) {
-                        JSONArray array = object.getJSONArray("p");
-                        String series = "";
-                        String name = "";
-                        for (int i = 0; i < array.length(); i++) {
-                            String objString = array.get(i).toString();
-                            if (i == 1) {
-                                name = objString;
-                            }
-                            if (i == 3) {
-                                series = objString;
-                            }
-                            try {
-                                JSONObject jsonObject = new JSONObject(objString);
-                                if (jsonObject.has("pineId")) {
-                                    String pineId = jsonObject.getString("pineId");
-                                    switch (pineId) {
-                                        case "STD;Bollinger_Bands":
-                                            thread.setStudyBB(name);
-                                            thread.setStudySeries(series);
-                                            break;
-                                        case "STD;RSI":
-                                            thread.setStudyRSI(name);
-                                            thread.setStudySeries(series);
-                                            break;
-                                        case "STD;TEMA":
-                                            thread.setStudyTEMA(name);
-                                            thread.setStudySeries(series);
-                                            break;
-                                    }
-                                }
-                            } catch (Exception ignored) {
-
-                            }
-                        }
-                    }
-                } catch (Exception ignored) {
-
-                }
-            }
-        });
-    }
-
     /**
      * On message received.
      *
-     * @param thread                 the thread
-     * @param webSocketFrameReceived the web socket frame received
+     * @param thread the thread
+     * @param data   the data
      */
-    public void onReceiveMessage(FetcherThread thread, WebSocketFrameReceived webSocketFrameReceived) {
+    public void onReceiveMessage(FetcherThread thread, String data) {
+        log.info("Recv:\n" + data);
         fetcherTaskExecutor.execute(() -> {
-            String[] messages = webSocketFrameReceived.getResponse().getPayloadData().split("~m~\\d*~m~");
+            String[] messages = data.split("~m~\\d*~m~");
             for (String message : messages) {
                 try {
                     JSONObject object = new JSONObject(message);
