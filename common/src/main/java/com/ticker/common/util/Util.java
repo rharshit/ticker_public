@@ -1,14 +1,8 @@
 package com.ticker.common.util;
 
 import lombok.extern.slf4j.Slf4j;
-import org.openqa.selenium.Platform;
-import org.openqa.selenium.WebDriver;
-import org.openqa.selenium.chrome.ChromeDriver;
-import org.openqa.selenium.chrome.ChromeOptions;
-import org.openqa.selenium.remote.CapabilityType;
 
 import static com.ticker.common.contants.TickerConstants.*;
-import static org.openqa.selenium.UnexpectedAlertBehaviour.ACCEPT;
 
 /**
  * The type Util.
@@ -70,34 +64,5 @@ public abstract class Util {
             default:
                 return null;
         }
-    }
-
-    /**
-     * Gets web driver.
-     *
-     * @param headless the headless
-     * @return the web driver
-     */
-    public static WebDriver getWebDriver(boolean headless) {
-        WebDriver webDriver;
-        log.debug("Initializing webdriver");
-        ChromeOptions options = new ChromeOptions();
-        options.setHeadless(headless);
-        options.addArguments("--window-size=1920,1080");
-        options.addArguments("--disable-gpu");
-        options.addArguments("incognito");
-        options.setCapability(CapabilityType.UNEXPECTED_ALERT_BEHAVIOUR, ACCEPT);
-        options.setUnhandledPromptBehaviour(ACCEPT);
-        if (Platform.getCurrent().is(Platform.LINUX)) {
-            System.setProperty("webdriver.chrome.driver", "/usr/bin/chromedriver");
-            options.setBinary("/usr/bin/chromium-browser");
-        } else if (Platform.getCurrent().is(Platform.WINDOWS)) {
-            System.setProperty("webdriver.chrome.driver", "C:\\WebDriver\\bin\\chromedriver.exe");
-            options.setBinary("C:\\Program Files\\Google\\Chrome\\Application\\chrome.exe");
-        }
-        log.debug("Using chrome driver: " + System.getProperty("webdriver.chrome.driver"));
-        webDriver = new ChromeDriver(options);
-        log.debug("Initialized webdriver");
-        return webDriver;
     }
 }

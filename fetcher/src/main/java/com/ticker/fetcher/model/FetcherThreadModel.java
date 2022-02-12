@@ -140,4 +140,8 @@ public class FetcherThreadModel extends TickerThreadModel<FetcherThread> {
     public float getTema() {
         return thread.getTema();
     }
+
+    public long getLastPingAt() {
+        return thread.getLastPingAt();
+    }
 }

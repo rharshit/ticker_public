@@ -8,15 +8,12 @@ import com.ticker.fetcher.rx.FetcherThread;
 import lombok.extern.slf4j.Slf4j;
 import org.json.JSONArray;
 import org.json.JSONObject;
-import org.openqa.selenium.*;
-import org.openqa.selenium.devtools.v97.network.model.WebSocketFrameReceived;
-import org.openqa.selenium.devtools.v97.network.model.WebSocketFrameSent;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.scheduling.annotation.Async;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
-import org.springframework.util.CollectionUtils;
+import org.springframework.util.ObjectUtils;
 
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
@@ -25,8 +22,12 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.Executor;
+import java.util.regex.Pattern;
 
-import static com.ticker.common.util.Util.*;
+import static com.ticker.common.util.Util.WAIT_QUICK;
+import static com.ticker.common.util.Util.waitFor;
+import static com.ticker.fetcher.FetcherUtil.decodeMessage;
+import static com.ticker.fetcher.FetcherUtil.encodeMessage;
 
 /**
  * The type Fetcher service.
@@ -63,232 +64,57 @@ public class FetcherService extends BaseService {
         return details;
     }
 
-
-    /**
-     * Set setting for the charts that are loaded
-     *
-     * @param fetcherThread the fetcher thread
-     * @param iteration     the iteration
-     * @param refresh       the refresh
-     */
-    public void setChartSettings(FetcherThread fetcherThread, int iteration, boolean refresh) {
-        int iterationMultiplier = 200;
-        if (!refresh) {
-            // Chart style
-            waitTillLoad(fetcherThread.getWebDriver(), WAIT_SHORT + iteration * iterationMultiplier, 2);
-            configureMenuByValue(fetcherThread.getWebDriver(), "menu-inner", "header-toolbar-chart-styles", "ha");
-
-            // Chart interval
-            waitTillLoad(fetcherThread.getWebDriver(), WAIT_SHORT + iteration * iterationMultiplier, 2);
-            configureMenuByValue(fetcherThread.getWebDriver(), "menu-inner", "header-toolbar-intervals", "1");
-
-        }
-
-        // Indicators
-        setIndicators(fetcherThread.getWebDriver(), WAIT_SHORT + iteration * iterationMultiplier, "bb:STD;Bollinger_Bands", "rsi:STD;RSI", "tema:STD;TEMA");
-
-        if (refresh) {
-            log.info(fetcherThread.getExchange() + ":" + fetcherThread.getSymbol() + " - Refreshed");
-        } else {
-            log.info(fetcherThread.getExchange() + ":" + fetcherThread.getSymbol() + " - Initialized");
-        }
-    }
-
-    /**
-     * This method uses a lot extra processing and extra time
-     *
-     * @param webDriver
-     * @param time
-     * @param threshold
-     */
-    private void waitTillLoad(WebDriver webDriver, long time, int threshold) {
-        while (webDriver.findElements(By.cssSelector("div[role='progressbar']")).size() > threshold) {
-            waitFor(WAIT_SHORT);
-        }
-        waitFor(time);
-    }
-
-    private void setIndicators(WebDriver webDriver, long waitTime, String... indicators) {
-        waitTillLoad(webDriver, waitTime, 2);
-        WebElement chartStyle = webDriver.findElement(By.id("header-toolbar-indicators"));
-        chartStyle.click();
-        WebElement overLapManagerRoot = webDriver
-                .findElement(By.id("overlap-manager-root"));
-        while (CollectionUtils.isEmpty(overLapManagerRoot
-                .findElements(By.cssSelector("div[data-name='indicators-dialog']")))) ;
-        WebElement menuBox = overLapManagerRoot
-                .findElement(By.cssSelector("div[data-name='indicators-dialog']"));
-
-        for (String indicator : indicators) {
-            waitTillLoad(webDriver, waitTime, 2);
-            selectIndicator(indicator, menuBox, 0);
-        }
-        WebElement closeBtn = overLapManagerRoot
-                .findElement(By.cssSelector("span[data-name='close']"))
-                .findElement(By.tagName("svg"));
-        closeBtn.click();
-    }
-
-    private void selectIndicator(String indicator, WebElement menuBox, int iteration) {
-        int numRetries = 5;
-        log.debug("Selecting indicator " + indicator);
-        try {
-            String searchText = indicator.split(":")[0];
-            WebElement searchBox = menuBox.findElement(By.cssSelector("input[data-role='search']"));
-            waitFor(WAIT_SHORT);
-            searchBox.click();
-            if (Platform.getCurrent().is(Platform.MAC)) {
-                searchBox.sendKeys(Keys.COMMAND + "a");
-            } else {
-                searchBox.sendKeys(Keys.CONTROL + "a");
-            }
-            searchBox.sendKeys(searchText);
-            while (menuBox.findElement(By.cssSelector("div[data-role='dialog-content']")).findElements(By.cssSelector("div[data-role='list-item']")).size() <= 3)
-                ;
-            String indicatorId = indicator.split(":")[1];
-            menuBox.findElement(By.cssSelector("div[data-id='" + indicatorId + "']")).click();
-
-            searchBox.sendKeys(Keys.BACK_SPACE);
-            while (menuBox.findElement(By.cssSelector("div[data-role='dialog-content']")).findElements(By.cssSelector("div[data-role='list-item']")).size() <= 3)
-                ;
-        } catch (Exception e) {
-            iteration = iteration + 1;
-            log.debug("Iteration " + iteration + " failed");
-            if (iteration < numRetries) {
-                selectIndicator(indicator, menuBox, iteration);
-            } else {
-                log.error(e.getMessage());
-                throw new TickerException("Cannot select indicator " + indicator);
-            }
-        }
-        log.debug("Selected indicator " + indicator);
-    }
-
-    private void configureMenuByValue(WebDriver webDriver, String dataName, String header, String value) {
-        while (CollectionUtils.isEmpty(webDriver.findElements(By.id(header)))) ;
-        webDriver.findElement(By.id(header)).click();
-        waitFor(WAIT_MEDIUM);
-        WebElement menuBox = webDriver
-                .findElement(By.id("overlap-manager-root"))
-                .findElement(By.cssSelector("div[data-name='" + dataName + "']"));
-        WebElement valueElement = null;
-        do {
-            try {
-                while (CollectionUtils.isEmpty(menuBox.findElements(By.cssSelector("div[data-value='" + value + "']"))))
-                    ;
-                valueElement = menuBox.findElement(By.cssSelector("div[data-value='" + value + "']"));
-                valueElement.click();
-                valueElement = null;
-
-                webDriver.findElement(By.id(header)).click();
-                while (CollectionUtils.isEmpty(menuBox.findElements(By.cssSelector("div[data-value='" + value + "']"))))
-                    ;
-                valueElement = menuBox.findElement(By.cssSelector("div[data-value='" + value + "']"));
-            } catch (Exception e) {
-
-                if (valueElement != null) {
-                    log.error(valueElement.getCssValue("class"));
-                } else {
-
-                    if (e instanceof StaleElementReferenceException) {
-                        log.debug("valueElement: " + valueElement);
-                        log.debug("Error in configureMenuByValue", e);
-                    } else {
-                        log.error("valueElement: " + valueElement);
-                        log.error("Error in configureMenuByValue", e);
-                    }
-                }
-            }
-        } while (valueElement != null && !valueElement.getCssValue("class").contains("isActive"));
-        webDriver.findElement(By.id(header)).click();
-    }
-
-    /**
-     * On message sent.
-     *
-     * @param thread             the thread
-     * @param webSocketFrameSent the web socket frame sent
-     */
-    public void onSentMessage(FetcherThread thread, WebSocketFrameSent webSocketFrameSent) {
-        fetcherTaskExecutor.execute(() -> {
-            String[] messages = webSocketFrameSent.getResponse().getPayloadData().split("~m~\\d*~m~");
-            for (String message : messages) {
-                try {
-                    JSONObject object = new JSONObject(message);
-                    if (object.has("m") && "create_study".equals(object.getString("m")) && object.has("p")) {
-                        JSONArray array = object.getJSONArray("p");
-                        String series = "";
-                        String name = "";
-                        for (int i = 0; i < array.length(); i++) {
-                            String objString = array.get(i).toString();
-                            if (i == 1) {
-                                name = objString;
-                            }
-                            if (i == 3) {
-                                series = objString;
-                            }
-                            try {
-                                JSONObject jsonObject = new JSONObject(objString);
-                                if (jsonObject.has("pineId")) {
-                                    String pineId = jsonObject.getString("pineId");
-                                    switch (pineId) {
-                                        case "STD;Bollinger_Bands":
-                                            thread.setStudyBB(name);
-                                            thread.setStudySeries(series);
-                                            break;
-                                        case "STD;RSI":
-                                            thread.setStudyRSI(name);
-                                            thread.setStudySeries(series);
-                                            break;
-                                        case "STD;TEMA":
-                                            thread.setStudyTEMA(name);
-                                            thread.setStudySeries(series);
-                                            break;
-                                    }
-                                }
-                            } catch (Exception ignored) {
-
-                            }
-                        }
-                    }
-                } catch (Exception ignored) {
-
-                }
-            }
-        });
+    public void sendMessage(FetcherThread thread, String data) {
+        log.info(thread.getThreadName() + " : sending message\n" + data);
+        thread.getWebSocketClient().send(encodeMessage(data));
     }
 
     /**
      * On message received.
      *
-     * @param thread                 the thread
-     * @param webSocketFrameReceived the web socket frame received
+     * @param thread the thread
+     * @param data   the data
      */
-    public void onReceiveMessage(FetcherThread thread, WebSocketFrameReceived webSocketFrameReceived) {
+    public void onReceiveMessage(FetcherThread thread, String data) {
+        log.info("Recv:");
         fetcherTaskExecutor.execute(() -> {
-            String[] messages = webSocketFrameReceived.getResponse().getPayloadData().split("~m~\\d*~m~");
+            String[] messages = decodeMessage(data);
             for (String message : messages) {
+                log.info("\n" + message);
                 try {
-                    JSONObject object = new JSONObject(message);
-                    if (object.has("p")) {
-                        JSONArray array = object.getJSONArray("p");
-                        for (int i = 0; i < array.length(); i++) {
-                            try {
-                                String objString = array.get(i).toString();
-                                JSONObject jsonObject = new JSONObject(objString);
-                                if (jsonObject.has(thread.getStudySeries()) || jsonObject.has(thread.getStudyBB()) || jsonObject.has(thread.getStudyRSI()) || jsonObject.has(thread.getStudyTEMA())) {
-                                    setVal(thread, jsonObject);
-                                }
-                            } catch (Exception ignored) {
-
-                            }
-                        }
+                    if (Pattern.matches("~h~\\d*$", message)) {
+                        sendMessage(thread, message);
+                    } else {
+                        parseMessage(thread, message);
                     }
                 } catch (Exception ignored) {
 
                 }
             }
         });
+    }
+
+    private void parseMessage(FetcherThread thread, String message) {
+        JSONObject object = new JSONObject(message);
+        if (object.has("session_id")) {
+            thread.setSessionId(object.getString("session_id"));
+        } else if (object.has("p")) {
+            JSONArray array = object.getJSONArray("p");
+            for (int i = 0; i < array.length(); i++) {
+                try {
+                    String objString = array.get(i).toString();
+                    JSONObject jsonObject = new JSONObject(objString);
+                    if (jsonObject.has(thread.getStudySeries())
+                            || jsonObject.has(thread.getStudyBB())
+                            || jsonObject.has(thread.getStudyRSI())
+                            || jsonObject.has(thread.getStudyTEMA())) {
+                        setVal(thread, jsonObject);
+                    }
+                } catch (Exception ignored) {
+
+                }
+            }
+        }
     }
 
     private void setVal(FetcherThread thread, JSONObject object) {
@@ -322,7 +148,7 @@ public class FetcherService extends BaseService {
                     log.trace(thread.getThreadName() + " : Setting TEMA value");
                     thread.setTema(vals[1]);
                 }
-                thread.setUpdatedAt(System.currentTimeMillis());
+                thread.setUpdatedAt((long) ((float) vals[0]));
                 synchronized (dataQueue) {
                     dataQueue.add(new FetcherRepoModel(thread));
                 }
@@ -389,5 +215,42 @@ public class FetcherService extends BaseService {
         } catch (Exception e) {
             throw new TickerException("Error while crating table: " + tableName);
         }
+    }
+
+    public void handshake(FetcherThread thread) {
+        while (thread.isEnabled() && !thread.getWebSocketClient().isOpen()) {
+            waitFor(WAIT_QUICK);
+        }
+        if (thread.isEnabled()) {
+            sendMessage(thread, "{\"m\":\"set_auth_token\",\"p\":[\"unauthorized_user_token\"]}");
+            sendMessage(thread, "{\"m\":\"chart_create_session\",\"p\":[\"" + thread.getChartSession() + "\",\"\"]}");
+            sendMessage(thread, "{\"m\":\"quote_create_session\",\"p\":[\"" + thread.getQuoteSession() + "\"]}");
+            sendMessage(thread, "{\"m\":\"quote_set_fields\",\"p\":[\"" + thread.getQuoteSession() + "\",\"base-currency-logoid\",\"ch\",\"chp\",\"currency-logoid\",\"currency_code\",\"current_session\",\"description\",\"exchange\",\"format\",\"fractional\",\"is_tradable\",\"language\",\"local_description\",\"logoid\",\"lp\",\"lp_time\",\"minmov\",\"minmove2\",\"original_name\",\"pricescale\",\"pro_name\",\"short_name\",\"type\",\"update_mode\",\"volume\",\"rchp\",\"rtc\",\"country_code\",\"provider_id\"]}");
+            sendMessage(thread, "{\"m\":\"request_studies_metadata\",\"p\":[\"" + thread.getChartSession() + "\",\"metadata_1\"]}");
+            sendMessage(thread, "{\"m\":\"resolve_symbol\",\"p\":[\"" + thread.getChartSession() + "\",\"sds_sym_1\",\"={\\\"symbol\\\":\\\"" + thread.getExchange() + ":" + thread.getSymbol() + "\\\",\\\"adjustment\\\":\\\"splits\\\"}\"]}");
+            sendMessage(thread, "{\"m\":\"create_series\",\"p\":[\"" + thread.getChartSession() + "\",\"" + thread.getStudySeries() + "\",\"s1\",\"sds_sym_1\",\"D\",300,\"\"]}");
+            sendMessage(thread, "{\"m\":\"switch_timezone\",\"p\":[\"" + thread.getChartSession() + "\",\"Asia/Kolkata\"]}");
+            sendMessage(thread, "{\"m\":\"quote_create_session\",\"p\":[\"" + thread.getQuoteSessionTicker() + "\"]}");
+            sendMessage(thread, "{\"m\":\"quote_add_symbols\",\"p\":[\"" + thread.getQuoteSessionTicker() + "\",\"={\\\"symbol\\\":\\\"" + thread.getExchange() + ":" + thread.getSymbol() + "\\\",\\\"adjustment\\\":\\\"splits\\\"}\"]}");
+            sendMessage(thread, "{\"m\":\"create_study\",\"p\":[\"" + thread.getChartSession() + "\",\"st1\",\"st1\",\"" + thread.getStudySeries() + "\",\"Dividends@tv-basicstudies-149\",{}]}");
+            sendMessage(thread, "{\"m\":\"create_study\",\"p\":[\"" + thread.getChartSession() + "\",\"st2\",\"st1\",\"" + thread.getStudySeries() + "\",\"Splits@tv-basicstudies-149\",{}]}");
+            sendMessage(thread, "{\"m\":\"create_study\",\"p\":[\"" + thread.getChartSession() + "\",\"st3\",\"st1\",\"" + thread.getStudySeries() + "\",\"Earnings@tv-basicstudies-149\",{}]}");
+            sendMessage(thread, "{\"m\":\"quote_create_session\",\"p\":[\"" + thread.getQuoteSessionTickerNew() + "\"]}");
+            sendMessage(thread, "{\"m\":\"quote_add_symbols\",\"p\":[\"" + thread.getQuoteSessionTickerNew() + "\",\"" + thread.getExchange() + ":" + thread.getSymbol() + "\"]}");
+            sendMessage(thread, "{\"m\":\"quote_set_fields\",\"p\":[\"" + thread.getQuoteSessionTickerNew() + "\",\"base-currency-logoid\",\"ch\",\"chp\",\"currency-logoid\",\"currency_code\",\"current_session\",\"description\",\"exchange\",\"format\",\"fractional\",\"is_tradable\",\"language\",\"local_description\",\"logoid\",\"lp\",\"lp_time\",\"minmov\",\"minmove2\",\"original_name\",\"pricescale\",\"pro_name\",\"short_name\",\"type\",\"update_mode\",\"volume\"]}");
+
+            log.info("Sent messages");
+
+        }
+    }
+
+    public void addSession(FetcherThread thread) {
+        while (thread.isEnabled() && !thread.getWebSocketClient().isOpen()) {
+            waitFor(WAIT_QUICK);
+        }
+        while (ObjectUtils.isEmpty(thread.getSessionId())) {
+            waitFor(WAIT_QUICK);
+        }
+        log.info(thread.getThreadName() + " : Session set - " + thread.getSessionId());
     }
 }

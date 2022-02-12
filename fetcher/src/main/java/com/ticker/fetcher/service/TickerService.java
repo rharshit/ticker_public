@@ -182,15 +182,6 @@ public class TickerService extends TickerThreadService<FetcherThread, FetcherThr
     }
 
     /**
-     * Get webdriver pool size int [ ].
-     *
-     * @return the int [ ]
-     */
-    public int[] getWebdriverPoolSize() {
-        return FetcherThread.getWebDrivers().poolSize();
-    }
-
-    /**
      * Check for unresponsive tickers.
      */
     @Async("scheduledExecutor")
@@ -199,7 +190,7 @@ public class TickerService extends TickerThreadService<FetcherThread, FetcherThr
         Set<FetcherThread> threadMap = getThreadPool();
         long now = System.currentTimeMillis();
         for (FetcherThread thread : threadMap) {
-            if (thread.getUpdatedAt() != 0 && now - thread.getUpdatedAt() > 60000 && thread.isInitialized() && thread.isEnabled()) {
+            if (thread.getLastPingAt() != 0 && now - thread.getLastPingAt() > 60000 && thread.isInitialized() && thread.isEnabled()) {
                 log.info(thread.getThreadName() + " : not updated for " + (now - thread.getUpdatedAt()) + "ms");
                 fetcherTaskExecutor.execute(thread::refreshBrowser);
             }

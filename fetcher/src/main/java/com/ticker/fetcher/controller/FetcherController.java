@@ -156,16 +156,6 @@ public class FetcherController {
     }
 
     /**
-     * Gets webdriver pool size.
-     *
-     * @return the webdriver pool size
-     */
-    @GetMapping("/pool/webdrivers")
-    public ResponseEntity<int[]> getWebdriverPoolSize() {
-        return new ResponseEntity<>(service.getWebdriverPoolSize(), HttpStatus.OK);
-    }
-
-    /**
      * Gets executor details.
      *
      * @return the executor details
