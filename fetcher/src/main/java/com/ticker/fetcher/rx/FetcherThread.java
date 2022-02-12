@@ -11,7 +11,6 @@ import lombok.NoArgsConstructor;
 import lombok.Setter;
 import lombok.extern.slf4j.Slf4j;
 import org.java_websocket.client.WebSocketClient;
-import org.java_websocket.framing.CloseFrame;
 import org.java_websocket.handshake.ServerHandshake;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Scope;
@@ -38,6 +37,8 @@ import static com.ticker.common.contants.WebConstants.TRADING_VIEW_BASE;
 import static com.ticker.common.contants.WebConstants.TRADING_VIEW_CHART;
 import static com.ticker.common.util.Util.*;
 import static com.ticker.fetcher.constants.FetcherConstants.FETCHER_THREAD_COMP_NAME;
+import static org.java_websocket.framing.CloseFrame.GOING_AWAY;
+import static org.java_websocket.framing.CloseFrame.SERVICE_RESTART;
 
 /**
  * The type Fetcher thread.
@@ -121,9 +122,7 @@ public class FetcherThread extends TickerThread<TickerService> {
     }
 
     private void initializeWebSocket() throws IOException, URISyntaxException {
-        if (webSocketClient != null) {
-            webSocketClient.close(CloseFrame.SERVICE_RESTART, "Restarting Websocket");
-        }
+        closeWebsocketIfExists(SERVICE_RESTART, "Restarting Websocket");
         FetcherThread thisThread = this;
         webSocketClient = new WebSocketClient(new URI("wss://data.tradingview.com/socket.io/websocket?from=chart%2F&date=" + getBuildTime())) {
             @Override
@@ -243,7 +242,6 @@ public class FetcherThread extends TickerThread<TickerService> {
             setLastPingAt(0);
             setUpdatedAt(0);
             initializeWebSocket();
-            waitFor(WAIT_LONG);
             if (refresh) {
 //                getWebDriver().navigate().refresh();
             } else {
@@ -329,6 +327,24 @@ public class FetcherThread extends TickerThread<TickerService> {
             log.info("No apps fetching data");
             log.info("Terminating thread: " + getThreadName());
             terminateThread();
+        }
+    }
+
+    @Override
+    public void terminateThread() {
+        super.terminateThread();
+        closeWebsocketIfExists(GOING_AWAY, "Terminating thread");
+    }
+
+    private void closeWebsocketIfExists(int code, String reason) {
+        if (webSocketClient != null) {
+            log.info(getThreadName() + " : Closing websocket");
+            webSocketClient.close(code, reason);
+            while (webSocketClient.isOpen() || webSocketClient.isClosing() || !webSocketClient.isClosed()) {
+                waitFor(WAIT_QUICK);
+            }
+            webSocketClient = null;
+            log.info(getThreadName() + " : Websocket closed");
         }
     }
 
