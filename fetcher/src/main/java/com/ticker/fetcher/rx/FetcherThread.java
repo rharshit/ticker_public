@@ -89,6 +89,8 @@ public class FetcherThread extends TickerThread<TickerService> {
     private String quoteSessionTickerNew;
     private long lastPingAt = 0;
 
+    int retry = 0;
+
     /**
      * Sets properties.
      *
@@ -139,6 +141,9 @@ public class FetcherThread extends TickerThread<TickerService> {
             @Override
             public void onClose(int code, String reason, boolean remote) {
                 log.info(getThreadName() + " : Closed websocket, reason - " + reason);
+                if (isEnabled()) {
+                    refresh();
+                }
             }
 
             @Override
@@ -214,7 +219,7 @@ public class FetcherThread extends TickerThread<TickerService> {
 
     @Override
     public void run() {
-        initialize(0, false);
+        initialize(false);
         while (isEnabled()) {
             while (isEnabled() && isInitialized()) {
                 waitFor(WAIT_LONG);
@@ -230,7 +235,7 @@ public class FetcherThread extends TickerThread<TickerService> {
      * @param iteration the iteration
      * @param refresh   the refresh
      */
-    protected void initialize(int iteration, boolean refresh) {
+    protected void initialize(boolean refresh) {
         this.initialized = false;
         if (refresh) {
             log.info(getExchange() + ":" + getSymbol() + " - Refreshing");
@@ -273,8 +278,9 @@ public class FetcherThread extends TickerThread<TickerService> {
                 log.warn("Error while initializing " + getThreadName());
             }
 
-            if (iteration < RETRY_LIMIT && isEnabled()) {
-                initialize(iteration + 1, refresh);
+            if (retry < RETRY_LIMIT && isEnabled()) {
+                retry++;
+                initialize(refresh);
             } else {
                 if (refresh) {
                     log.error("Error while refreshing " + getThreadName(), e);
@@ -290,6 +296,7 @@ public class FetcherThread extends TickerThread<TickerService> {
         } else {
             log.info(getExchange() + ":" + getSymbol() + " - Initialized");
         }
+        retry = 0;
     }
 
     @Override
@@ -308,8 +315,8 @@ public class FetcherThread extends TickerThread<TickerService> {
     /**
      * Refresh browser.
      */
-    public void refreshBrowser() {
-        initialize(0, true);
+    public void refresh() {
+        initialize(true);
     }
 
     /**

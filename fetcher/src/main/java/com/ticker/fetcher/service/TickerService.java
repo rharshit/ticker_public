@@ -120,7 +120,7 @@ public class TickerService extends TickerThreadService<FetcherThread, FetcherThr
         if (thread == null) {
             return;
         }
-        thread.refreshBrowser();
+        thread.refresh();
     }
 
     /**
@@ -192,7 +192,7 @@ public class TickerService extends TickerThreadService<FetcherThread, FetcherThr
         for (FetcherThread thread : threadMap) {
             if (thread.getLastPingAt() != 0 && now - thread.getLastPingAt() > 60000 && thread.isInitialized() && thread.isEnabled()) {
                 log.info(thread.getThreadName() + " : not updated for " + (now - thread.getUpdatedAt()) + "ms");
-                fetcherTaskExecutor.execute(thread::refreshBrowser);
+                fetcherTaskExecutor.execute(thread::refresh);
             }
         }
     }
