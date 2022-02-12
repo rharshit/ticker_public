@@ -285,6 +285,11 @@ public class FetcherThread extends TickerThread<TickerService> {
                 destroy();
             }
         }
+        if (refresh) {
+            log.info(getExchange() + ":" + getSymbol() + " - Refreshed");
+        } else {
+            log.info(getExchange() + ":" + getSymbol() + " - Initialized");
+        }
     }
 
     @Override
