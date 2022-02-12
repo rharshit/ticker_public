@@ -81,39 +81,39 @@ public class FetcherService extends BaseService {
             String[] messages = decodeMessage(data);
             for (String message : messages) {
                 log.trace("\n" + message);
-                try {
-                    if (Pattern.matches("~h~\\d*$", message)) {
-                        sendMessage(thread, message);
-                    } else {
-                        parseMessage(thread, message);
-                    }
-                } catch (Exception ignored) {
-
+                if (Pattern.matches("~h~\\d*$", message)) {
+                    sendMessage(thread, message);
+                } else {
+                    fetcherTaskExecutor.execute(() -> parseMessage(thread, message));
                 }
             }
         });
     }
 
     private void parseMessage(FetcherThread thread, String message) {
-        JSONObject object = new JSONObject(message);
-        if (object.has("session_id")) {
-            thread.setSessionId(object.getString("session_id"));
-        } else if (object.has("p")) {
-            JSONArray array = object.getJSONArray("p");
-            for (int i = 0; i < array.length(); i++) {
-                try {
-                    String objString = array.get(i).toString();
-                    JSONObject jsonObject = new JSONObject(objString);
-                    if (jsonObject.has(thread.getStudySeries())
-                            || jsonObject.has(thread.getStudyBB())
-                            || jsonObject.has(thread.getStudyRSI())
-                            || jsonObject.has(thread.getStudyTEMA())) {
-                        setVal(thread, jsonObject);
-                    }
-                } catch (Exception ignored) {
+        try {
+            JSONObject object = new JSONObject(message);
+            if (object.has("session_id")) {
+                thread.setSessionId(object.getString("session_id"));
+            } else if (object.has("p")) {
+                JSONArray array = object.getJSONArray("p");
+                for (int i = 0; i < array.length(); i++) {
+                    try {
+                        String objString = array.get(i).toString();
+                        JSONObject jsonObject = new JSONObject(objString);
+                        if (jsonObject.has(thread.getStudySeries())
+                                || jsonObject.has(thread.getStudyBB())
+                                || jsonObject.has(thread.getStudyRSI())
+                                || jsonObject.has(thread.getStudyTEMA())) {
+                            setVal(thread, jsonObject);
+                        }
+                    } catch (Exception ignored) {
 
+                    }
                 }
             }
+        } catch (Exception ignore) {
+
         }
     }
 
