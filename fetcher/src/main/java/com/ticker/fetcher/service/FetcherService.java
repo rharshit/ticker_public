@@ -65,7 +65,7 @@ public class FetcherService extends BaseService {
     }
 
     public void sendMessage(FetcherThread thread, String data) {
-        log.info(thread.getThreadName() + " : sending message\n" + data);
+        log.trace(thread.getThreadName() + " : sending message\n" + data);
         thread.getWebSocketClient().send(encodeMessage(data));
     }
 
@@ -76,44 +76,44 @@ public class FetcherService extends BaseService {
      * @param data   the data
      */
     public void onReceiveMessage(FetcherThread thread, String data) {
-        log.info("Recv:");
+        log.trace("Recv:");
         fetcherTaskExecutor.execute(() -> {
             String[] messages = decodeMessage(data);
             for (String message : messages) {
-                log.info("\n" + message);
-                try {
-                    if (Pattern.matches("~h~\\d*$", message)) {
-                        sendMessage(thread, message);
-                    } else {
-                        parseMessage(thread, message);
-                    }
-                } catch (Exception ignored) {
-
+                log.trace("\n" + message);
+                if (Pattern.matches("~h~\\d*$", message)) {
+                    sendMessage(thread, message);
+                } else {
+                    fetcherTaskExecutor.execute(() -> parseMessage(thread, message));
                 }
             }
         });
     }
 
     private void parseMessage(FetcherThread thread, String message) {
-        JSONObject object = new JSONObject(message);
-        if (object.has("session_id")) {
-            thread.setSessionId(object.getString("session_id"));
-        } else if (object.has("p")) {
-            JSONArray array = object.getJSONArray("p");
-            for (int i = 0; i < array.length(); i++) {
-                try {
-                    String objString = array.get(i).toString();
-                    JSONObject jsonObject = new JSONObject(objString);
-                    if (jsonObject.has(thread.getStudySeries())
-                            || jsonObject.has(thread.getStudyBB())
-                            || jsonObject.has(thread.getStudyRSI())
-                            || jsonObject.has(thread.getStudyTEMA())) {
-                        setVal(thread, jsonObject);
-                    }
-                } catch (Exception ignored) {
+        try {
+            JSONObject object = new JSONObject(message);
+            if (object.has("session_id")) {
+                thread.setSessionId(object.getString("session_id"));
+            } else if (object.has("p")) {
+                JSONArray array = object.getJSONArray("p");
+                for (int i = 0; i < array.length(); i++) {
+                    try {
+                        String objString = array.get(i).toString();
+                        JSONObject jsonObject = new JSONObject(objString);
+                        if (jsonObject.has(thread.getStudySeries())
+                                || jsonObject.has(thread.getStudyBB())
+                                || jsonObject.has(thread.getStudyRSI())
+                                || jsonObject.has(thread.getStudyTEMA())) {
+                            setVal(thread, jsonObject);
+                        }
+                    } catch (Exception ignored) {
 
+                    }
                 }
             }
+        } catch (Exception ignore) {
+
         }
     }
 
@@ -148,7 +148,7 @@ public class FetcherService extends BaseService {
                     log.trace(thread.getThreadName() + " : Setting TEMA value");
                     thread.setTema(vals[1]);
                 }
-                thread.setUpdatedAt((long) ((float) vals[0]));
+                thread.setUpdatedAt((long) (vals[0] * 1000));
                 synchronized (dataQueue) {
                     dataQueue.add(new FetcherRepoModel(thread));
                 }
@@ -239,7 +239,7 @@ public class FetcherService extends BaseService {
             sendMessage(thread, "{\"m\":\"quote_add_symbols\",\"p\":[\"" + thread.getQuoteSessionTickerNew() + "\",\"" + thread.getExchange() + ":" + thread.getSymbol() + "\"]}");
             sendMessage(thread, "{\"m\":\"quote_set_fields\",\"p\":[\"" + thread.getQuoteSessionTickerNew() + "\",\"base-currency-logoid\",\"ch\",\"chp\",\"currency-logoid\",\"currency_code\",\"current_session\",\"description\",\"exchange\",\"format\",\"fractional\",\"is_tradable\",\"language\",\"local_description\",\"logoid\",\"lp\",\"lp_time\",\"minmov\",\"minmove2\",\"original_name\",\"pricescale\",\"pro_name\",\"short_name\",\"type\",\"update_mode\",\"volume\"]}");
 
-            log.info("Sent messages");
+            log.debug("Sent messages");
 
         }
     }
@@ -251,6 +251,6 @@ public class FetcherService extends BaseService {
         while (ObjectUtils.isEmpty(thread.getSessionId())) {
             waitFor(WAIT_QUICK);
         }
-        log.info(thread.getThreadName() + " : Session set - " + thread.getSessionId());
+        log.debug(thread.getThreadName() + " : Session set - " + thread.getSessionId());
     }
 }

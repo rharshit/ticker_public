@@ -220,7 +220,7 @@ public class FetcherThread extends TickerThread<TickerService> {
                 waitFor(WAIT_LONG);
             }
         }
-
+        destroy();
         log.info("Terminated thread : " + getThreadName());
     }
 
@@ -284,6 +284,11 @@ public class FetcherThread extends TickerThread<TickerService> {
                 log.error("Destorying " + getThreadName());
                 destroy();
             }
+        }
+        if (refresh) {
+            log.info(getExchange() + ":" + getSymbol() + " - Refreshed");
+        } else {
+            log.info(getExchange() + ":" + getSymbol() + " - Initialized");
         }
     }
 
