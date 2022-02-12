@@ -148,7 +148,7 @@ public class FetcherService extends BaseService {
                     log.trace(thread.getThreadName() + " : Setting TEMA value");
                     thread.setTema(vals[1]);
                 }
-                thread.setUpdatedAt((long) ((float) vals[0]));
+                thread.setUpdatedAt((long) (vals[0] * 1000));
                 synchronized (dataQueue) {
                     dataQueue.add(new FetcherRepoModel(thread));
                 }
