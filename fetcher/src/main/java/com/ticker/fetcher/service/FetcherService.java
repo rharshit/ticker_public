@@ -22,6 +22,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.Executor;
+import java.util.regex.Pattern;
 
 import static com.ticker.common.util.Util.WAIT_QUICK;
 import static com.ticker.common.util.Util.waitFor;
@@ -64,7 +65,7 @@ public class FetcherService extends BaseService {
     }
 
     public void sendMessage(FetcherThread thread, String data) {
-        log.trace(thread.getThreadName() + " : sending message\n" + data);
+        log.info(thread.getThreadName() + " : sending message\n" + data);
         thread.getWebSocketClient().send(encodeMessage(data));
     }
 

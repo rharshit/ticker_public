@@ -86,6 +86,7 @@ public class FetcherThread extends TickerThread<TickerService> {
     private String quoteSession;
     private String quoteSessionTicker;
     private String quoteSessionTickerNew;
+    private long lastPingAt = 0;
 
     /**
      * Sets properties.
@@ -132,6 +133,7 @@ public class FetcherThread extends TickerThread<TickerService> {
 
             @Override
             public void onMessage(String message) {
+                setLastPingAt(System.currentTimeMillis());
                 fetcherService.onReceiveMessage(thisThread, message);
             }
 
@@ -238,6 +240,7 @@ public class FetcherThread extends TickerThread<TickerService> {
         }
 
         try {
+            setLastPingAt(0);
             setUpdatedAt(0);
             initializeWebSocket();
             waitFor(WAIT_LONG);
