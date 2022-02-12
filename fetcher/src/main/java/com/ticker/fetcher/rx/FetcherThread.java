@@ -75,12 +75,12 @@ public class FetcherThread extends TickerThread<TickerService> {
     private long updatedAt;
     private boolean taskStarted = false;
     public int requestId = 0;
-    private String studyBB;
-    private String studyRSI;
-    private String studyTEMA;
+    private String studySeries = "sds_1";
+    private String studyBB = "st5";
+    private String studyRSI = "st6";
+    private String studyTEMA = "st7";
 
     private WebSocketClient webSocketClient;
-    private String studySeries = "sds_1";
     private String sessionId;
     private String clusterId;
     private String chartSession;
