@@ -220,7 +220,7 @@ public class FetcherThread extends TickerThread<TickerService> {
                 waitFor(WAIT_LONG);
             }
         }
-
+        destroy();
         log.info("Terminated thread : " + getThreadName());
     }
 
