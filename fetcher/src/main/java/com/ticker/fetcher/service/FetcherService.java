@@ -82,31 +82,39 @@ public class FetcherService extends BaseService {
             for (String message : messages) {
                 log.info("\n" + message);
                 try {
-                    JSONObject object = new JSONObject(message);
-                    if (object.has("session_id")) {
-                        thread.setSessionId(object.getString("session_id"));
-                    } else if (object.has("p")) {
-                        JSONArray array = object.getJSONArray("p");
-                        for (int i = 0; i < array.length(); i++) {
-                            try {
-                                String objString = array.get(i).toString();
-                                JSONObject jsonObject = new JSONObject(objString);
-                                if (jsonObject.has(thread.getStudySeries())
-                                        || jsonObject.has(thread.getStudyBB())
-                                        || jsonObject.has(thread.getStudyRSI())
-                                        || jsonObject.has(thread.getStudyTEMA())) {
-                                    setVal(thread, jsonObject);
-                                }
-                            } catch (Exception ignored) {
-
-                            }
-                        }
+                    if (Pattern.matches("~h~\\d*$", message)) {
+                        sendMessage(thread, message);
+                    } else {
+                        parseMessage(thread, message);
                     }
                 } catch (Exception ignored) {
 
                 }
             }
         });
+    }
+
+    private void parseMessage(FetcherThread thread, String message) {
+        JSONObject object = new JSONObject(message);
+        if (object.has("session_id")) {
+            thread.setSessionId(object.getString("session_id"));
+        } else if (object.has("p")) {
+            JSONArray array = object.getJSONArray("p");
+            for (int i = 0; i < array.length(); i++) {
+                try {
+                    String objString = array.get(i).toString();
+                    JSONObject jsonObject = new JSONObject(objString);
+                    if (jsonObject.has(thread.getStudySeries())
+                            || jsonObject.has(thread.getStudyBB())
+                            || jsonObject.has(thread.getStudyRSI())
+                            || jsonObject.has(thread.getStudyTEMA())) {
+                        setVal(thread, jsonObject);
+                    }
+                } catch (Exception ignored) {
+
+                }
+            }
+        }
     }
 
     private void setVal(FetcherThread thread, JSONObject object) {
