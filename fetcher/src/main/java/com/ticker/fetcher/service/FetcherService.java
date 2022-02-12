@@ -13,6 +13,7 @@ import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.scheduling.annotation.Async;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
+import org.springframework.util.ObjectUtils;
 
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
@@ -21,6 +22,11 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.Executor;
+
+import static com.ticker.common.util.Util.WAIT_QUICK;
+import static com.ticker.common.util.Util.waitFor;
+import static com.ticker.fetcher.FetcherUtil.decodeMessage;
+import static com.ticker.fetcher.FetcherUtil.encodeMessage;
 
 /**
  * The type Fetcher service.
@@ -57,6 +63,11 @@ public class FetcherService extends BaseService {
         return details;
     }
 
+    public void sendMessage(FetcherThread thread, String data) {
+        log.trace(thread.getThreadName() + " : sending message\n" + data);
+        thread.getWebSocketClient().send(encodeMessage(data));
+    }
+
     /**
      * On message received.
      *
@@ -64,19 +75,25 @@ public class FetcherService extends BaseService {
      * @param data   the data
      */
     public void onReceiveMessage(FetcherThread thread, String data) {
-        log.info("Recv:\n" + data);
+        log.info("Recv:");
         fetcherTaskExecutor.execute(() -> {
-            String[] messages = data.split("~m~\\d*~m~");
+            String[] messages = decodeMessage(data);
             for (String message : messages) {
+                log.info("\n" + message);
                 try {
                     JSONObject object = new JSONObject(message);
-                    if (object.has("p")) {
+                    if (object.has("session_id")) {
+                        thread.setSessionId(object.getString("session_id"));
+                    } else if (object.has("p")) {
                         JSONArray array = object.getJSONArray("p");
                         for (int i = 0; i < array.length(); i++) {
                             try {
                                 String objString = array.get(i).toString();
                                 JSONObject jsonObject = new JSONObject(objString);
-                                if (jsonObject.has(thread.getStudySeries()) || jsonObject.has(thread.getStudyBB()) || jsonObject.has(thread.getStudyRSI()) || jsonObject.has(thread.getStudyTEMA())) {
+                                if (jsonObject.has(thread.getStudySeries())
+                                        || jsonObject.has(thread.getStudyBB())
+                                        || jsonObject.has(thread.getStudyRSI())
+                                        || jsonObject.has(thread.getStudyTEMA())) {
                                     setVal(thread, jsonObject);
                                 }
                             } catch (Exception ignored) {
@@ -122,7 +139,7 @@ public class FetcherService extends BaseService {
                     log.trace(thread.getThreadName() + " : Setting TEMA value");
                     thread.setTema(vals[1]);
                 }
-                thread.setUpdatedAt(System.currentTimeMillis());
+                thread.setUpdatedAt((long) ((float) vals[0]));
                 synchronized (dataQueue) {
                     dataQueue.add(new FetcherRepoModel(thread));
                 }
@@ -189,5 +206,42 @@ public class FetcherService extends BaseService {
         } catch (Exception e) {
             throw new TickerException("Error while crating table: " + tableName);
         }
+    }
+
+    public void handshake(FetcherThread thread) {
+        while (thread.isEnabled() && !thread.getWebSocketClient().isOpen()) {
+            waitFor(WAIT_QUICK);
+        }
+        if (thread.isEnabled()) {
+            sendMessage(thread, "{\"m\":\"set_auth_token\",\"p\":[\"unauthorized_user_token\"]}");
+            sendMessage(thread, "{\"m\":\"chart_create_session\",\"p\":[\"" + thread.getChartSession() + "\",\"\"]}");
+            sendMessage(thread, "{\"m\":\"quote_create_session\",\"p\":[\"" + thread.getQuoteSession() + "\"]}");
+            sendMessage(thread, "{\"m\":\"quote_set_fields\",\"p\":[\"" + thread.getQuoteSession() + "\",\"base-currency-logoid\",\"ch\",\"chp\",\"currency-logoid\",\"currency_code\",\"current_session\",\"description\",\"exchange\",\"format\",\"fractional\",\"is_tradable\",\"language\",\"local_description\",\"logoid\",\"lp\",\"lp_time\",\"minmov\",\"minmove2\",\"original_name\",\"pricescale\",\"pro_name\",\"short_name\",\"type\",\"update_mode\",\"volume\",\"rchp\",\"rtc\",\"country_code\",\"provider_id\"]}");
+            sendMessage(thread, "{\"m\":\"request_studies_metadata\",\"p\":[\"" + thread.getChartSession() + "\",\"metadata_1\"]}");
+            sendMessage(thread, "{\"m\":\"resolve_symbol\",\"p\":[\"" + thread.getChartSession() + "\",\"sds_sym_1\",\"={\\\"symbol\\\":\\\"" + thread.getExchange() + ":" + thread.getSymbol() + "\\\",\\\"adjustment\\\":\\\"splits\\\"}\"]}");
+            sendMessage(thread, "{\"m\":\"create_series\",\"p\":[\"" + thread.getChartSession() + "\",\"" + thread.getStudySeries() + "\",\"s1\",\"sds_sym_1\",\"D\",300,\"\"]}");
+            sendMessage(thread, "{\"m\":\"switch_timezone\",\"p\":[\"" + thread.getChartSession() + "\",\"Asia/Kolkata\"]}");
+            sendMessage(thread, "{\"m\":\"quote_create_session\",\"p\":[\"" + thread.getQuoteSessionTicker() + "\"]}");
+            sendMessage(thread, "{\"m\":\"quote_add_symbols\",\"p\":[\"" + thread.getQuoteSessionTicker() + "\",\"={\\\"symbol\\\":\\\"" + thread.getExchange() + ":" + thread.getSymbol() + "\\\",\\\"adjustment\\\":\\\"splits\\\"}\"]}");
+            sendMessage(thread, "{\"m\":\"create_study\",\"p\":[\"" + thread.getChartSession() + "\",\"st1\",\"st1\",\"" + thread.getStudySeries() + "\",\"Dividends@tv-basicstudies-149\",{}]}");
+            sendMessage(thread, "{\"m\":\"create_study\",\"p\":[\"" + thread.getChartSession() + "\",\"st2\",\"st1\",\"" + thread.getStudySeries() + "\",\"Splits@tv-basicstudies-149\",{}]}");
+            sendMessage(thread, "{\"m\":\"create_study\",\"p\":[\"" + thread.getChartSession() + "\",\"st3\",\"st1\",\"" + thread.getStudySeries() + "\",\"Earnings@tv-basicstudies-149\",{}]}");
+            sendMessage(thread, "{\"m\":\"quote_create_session\",\"p\":[\"" + thread.getQuoteSessionTickerNew() + "\"]}");
+            sendMessage(thread, "{\"m\":\"quote_add_symbols\",\"p\":[\"" + thread.getQuoteSessionTickerNew() + "\",\"" + thread.getExchange() + ":" + thread.getSymbol() + "\"]}");
+            sendMessage(thread, "{\"m\":\"quote_set_fields\",\"p\":[\"" + thread.getQuoteSessionTickerNew() + "\",\"base-currency-logoid\",\"ch\",\"chp\",\"currency-logoid\",\"currency_code\",\"current_session\",\"description\",\"exchange\",\"format\",\"fractional\",\"is_tradable\",\"language\",\"local_description\",\"logoid\",\"lp\",\"lp_time\",\"minmov\",\"minmove2\",\"original_name\",\"pricescale\",\"pro_name\",\"short_name\",\"type\",\"update_mode\",\"volume\"]}");
+
+            log.info("Sent messages");
+
+        }
+    }
+
+    public void addSession(FetcherThread thread) {
+        while (thread.isEnabled() && !thread.getWebSocketClient().isOpen()) {
+            waitFor(WAIT_QUICK);
+        }
+        while (ObjectUtils.isEmpty(thread.getSessionId())) {
+            waitFor(WAIT_QUICK);
+        }
+        log.info(thread.getThreadName() + " : Session set - " + thread.getSessionId());
     }
 }

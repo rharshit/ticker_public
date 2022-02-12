@@ -11,6 +11,7 @@ import lombok.NoArgsConstructor;
 import lombok.Setter;
 import lombok.extern.slf4j.Slf4j;
 import org.java_websocket.client.WebSocketClient;
+import org.java_websocket.framing.CloseFrame;
 import org.java_websocket.handshake.ServerHandshake;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Scope;
@@ -27,6 +28,7 @@ import java.net.URISyntaxException;
 import java.net.URL;
 import java.util.Arrays;
 import java.util.HashSet;
+import java.util.Random;
 import java.util.Set;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
@@ -51,7 +53,7 @@ public class FetcherThread extends TickerThread<TickerService> {
     /**
      * The constant RETRY_LIMIT.
      */
-    public static final int RETRY_LIMIT = 10;
+    public static final int RETRY_LIMIT = 3;
 
     private final Object postInitLock = new Object();
     @Autowired
@@ -71,12 +73,19 @@ public class FetcherThread extends TickerThread<TickerService> {
     private float currentValue;
     private long updatedAt;
     private boolean taskStarted = false;
-    private String studySeries;
+    public int requestId = 0;
     private String studyBB;
     private String studyRSI;
     private String studyTEMA;
 
     private WebSocketClient webSocketClient;
+    private String studySeries = "sds_1";
+    private String sessionId;
+    private String clusterId;
+    private String chartSession;
+    private String quoteSession;
+    private String quoteSessionTicker;
+    private String quoteSessionTickerNew;
 
     /**
      * Sets properties.
@@ -107,16 +116,13 @@ public class FetcherThread extends TickerThread<TickerService> {
 
     @Override
     protected void initialize() {
-        try {
-            initializeWebSocket();
-        } catch (Exception e) {
-            log.info(getThreadName() + " : Error while initializing websocket", e);
-            throw new TickerException(getThreadName() + " : Error while initializing websocket");
-        }
         initializeTables();
     }
 
     private void initializeWebSocket() throws IOException, URISyntaxException {
+        if (webSocketClient != null) {
+            webSocketClient.close(CloseFrame.SERVICE_RESTART, "Restarting Websocket");
+        }
         FetcherThread thisThread = this;
         webSocketClient = new WebSocketClient(new URI("wss://data.tradingview.com/socket.io/websocket?from=chart%2F&date=" + getBuildTime())) {
             @Override
@@ -152,6 +158,20 @@ public class FetcherThread extends TickerThread<TickerService> {
         webSocketClient.addHeader("Upgrade", "websocket");
         webSocketClient.addHeader("User-Agent", "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/98.0.4758.80 Safari/537.36");
         webSocketClient.connect();
+
+        createSession();
+
+        setSessionId("");
+        setRequestId(0);
+        fetcherService.addSession(this);
+        fetcherService.handshake(this);
+    }
+
+    private void createSession() {
+        chartSession = "cs_" + createHash(12);
+        quoteSession = "qs_" + createHash(12);
+        quoteSessionTicker = "qs_" + createHash(12);
+        quoteSessionTickerNew = "qs_" + createHash(12);
     }
 
     private String getBuildTime() throws IOException {
@@ -218,7 +238,8 @@ public class FetcherThread extends TickerThread<TickerService> {
         }
 
         try {
-
+            setUpdatedAt(0);
+            initializeWebSocket();
             waitFor(WAIT_LONG);
             if (refresh) {
 //                getWebDriver().navigate().refresh();
@@ -236,9 +257,13 @@ public class FetcherThread extends TickerThread<TickerService> {
                     ObjectUtils.isEmpty(getStudyBB()) ||
                     ObjectUtils.isEmpty(getStudyRSI()) ||
                     ObjectUtils.isEmpty(getStudyTEMA())) {
-                throw new TickerException(getThreadName() + " : Error initializing study name");
+                log.error(getThreadName() + " :" +
+                        " getStudySeries(): " + getStudySeries() +
+                        " getStudyBB(): " + getStudyBB() +
+                        " getStudyRSI(): " + getStudyRSI() +
+                        " getStudyTEMA(): " + getStudyTEMA());
+//                throw new TickerException(getThreadName() + " : Error initializing study name");
             }
-            setUpdatedAt(0);
             setInitialized(true);
         } catch (Exception e) {
             if (refresh) {
@@ -315,5 +340,33 @@ public class FetcherThread extends TickerThread<TickerService> {
      */
     public float getCurrentValue() {
         return currentValue == 0 ? c : currentValue;
+    }
+
+    private String createHash(int len) {
+        StringBuilder hash = new StringBuilder();
+        Random rand = new Random();
+        for (int i = 0; i < len; i++) {
+            hash.append(getAlphaNumericChar(rand.nextInt(62)));
+        }
+        return hash.toString();
+    }
+
+    public char getAlphaNumericChar(int x) {
+        int add = 0;
+        if (x >= 0 && x <= 9) {
+            add = '0';
+        } else if (x >= 10 && x <= 35) {
+            add = 'A' - 10;
+        } else if (x >= 36 && x <= 61) {
+            add = 'a' - 36;
+        }
+        return (char) (x + add);
+    }
+
+    public void setSessionId(String sessionId) {
+        this.sessionId = sessionId;
+        Pattern p = Pattern.compile("window\\.BUILD_TIME *= *\"(.*)\";");
+        Matcher m = p.matcher(sessionId);
+        this.clusterId = m.matches() ? m.group(2) : "";
     }
 }
