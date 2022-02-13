@@ -51,6 +51,11 @@ public class FetcherService extends BaseService {
     @Qualifier("repoExecutor")
     private Executor repoExecutor;
 
+
+    static {
+        FetcherThread.getBuildTime();
+    }
+
     /**
      * Gets executor details.
      *

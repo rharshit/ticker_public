@@ -201,7 +201,7 @@ public class FetcherThread extends TickerThread<TickerService> {
         quoteSessionTickerNew = "qs_" + createHash(12);
     }
 
-    private String getBuildTime() {
+    public static String getBuildTime() {
         synchronized (FetcherThread.buildTime) {
             if (FetcherThread.buildTime != null && !FetcherThread.buildTime.isEmpty()) {
                 log.info("Returning buildTime");
@@ -209,7 +209,7 @@ public class FetcherThread extends TickerThread<TickerService> {
             }
             try {
                 log.info("Fetching and returning buildTime");
-                URL url = new URL(TRADING_VIEW_BASE + TRADING_VIEW_CHART + getExchange() + ":" + getSymbol());
+                URL url = new URL(TRADING_VIEW_BASE + TRADING_VIEW_CHART);
                 HttpURLConnection httpURLConnection = (HttpURLConnection) url.openConnection();
                 BufferedReader in = new BufferedReader(new InputStreamReader(httpURLConnection.getInputStream()));
                 String inputLine;
