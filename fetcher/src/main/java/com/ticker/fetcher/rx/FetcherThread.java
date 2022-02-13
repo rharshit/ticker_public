@@ -92,6 +92,12 @@ public class FetcherThread extends TickerThread<TickerService> {
 
     int retry = 0;
 
+    private static final Semaphore websocketFetcher;
+
+    static {
+        websocketFetcher = new Semaphore(5);
+    }
+
     /**
      * Sets properties.
      *
@@ -125,53 +131,66 @@ public class FetcherThread extends TickerThread<TickerService> {
     }
 
     private void initializeWebSocket() throws IOException, URISyntaxException {
-        closeWebsocketIfExists(SERVICE_RESTART, "Restarting Websocket");
-        FetcherThread thisThread = this;
-        webSocketClient = new WebSocketClient(new URI("wss://data.tradingview.com/socket.io/websocket?from=chart%2F&date=" + getBuildTime())) {
-            @Override
-            public void onOpen(ServerHandshake handshakedata) {
-                log.info(getThreadName() + " : Opened websocket");
-            }
-
-            @Override
-            public void onMessage(String message) {
-                setLastPingAt(System.currentTimeMillis());
-                fetcherService.onReceiveMessage(thisThread, message);
-            }
-
-            @Override
-            public void onClose(int code, String reason, boolean remote) {
-                log.info(getThreadName() + " : Closed websocket, reason - " + reason);
-                if (isEnabled()) {
-                    refresh();
+        try {
+            synchronized (this) {
+                while (!websocketFetcher.tryAcquire()) {
+                    this.wait(WAIT_QUICK);
                 }
+                closeWebsocketIfExists(SERVICE_RESTART, "Restarting Websocket");
+                FetcherThread thisThread = this;
+                webSocketClient = new WebSocketClient(new URI("wss://data.tradingview.com/socket.io/websocket?from=chart%2F&date=" + getBuildTime())) {
+                    @Override
+                    public void onOpen(ServerHandshake handshakedata) {
+                        log.info(getThreadName() + " : Opened websocket");
+                    }
+
+                    @Override
+                    public void onMessage(String message) {
+                        setLastPingAt(System.currentTimeMillis());
+                        fetcherService.onReceiveMessage(thisThread, message);
+                    }
+
+                    @Override
+                    public void onClose(int code, String reason, boolean remote) {
+                        log.info(getThreadName() + " : Closed websocket, reason - " + reason);
+                        if (isEnabled()) {
+                            refresh();
+                        }
+                    }
+
+                    @Override
+                    public void onError(Exception ex) {
+                        log.error(getThreadName() + " : Error in websocket", ex);
+                    }
+                };
+                webSocketClient.addHeader("Accept-Encoding", "gzip, deflate, br");
+                webSocketClient.addHeader("Accept-Language", "en-IN,en;q=0.9");
+                webSocketClient.addHeader("Cache-Control", "no-cache");
+                webSocketClient.addHeader("Connection", "Upgrade");
+                webSocketClient.addHeader("Host", "data.tradingview.com");
+                webSocketClient.addHeader("Origin", "https://in.tradingview.com");
+                webSocketClient.addHeader("Pragma", "no-cache");
+                webSocketClient.addHeader("Sec-WebSocket-Extensions", "client_max_window_bits");
+                webSocketClient.addHeader("Sec-WebSocket-Key", "rxPHgoX6myglC4x5XLaLtA==");
+                webSocketClient.addHeader("Sec-WebSocket-Version", "13");
+                webSocketClient.addHeader("Upgrade", "websocket");
+                webSocketClient.addHeader("User-Agent", "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/98.0.4758.80 Safari/537.36");
+                webSocketClient.connect();
+
+                createSession();
+
+                setSessionId("");
+                setRequestId(0);
+                fetcherService.addSession(this);
+                fetcherService.handshake(this);
             }
 
-            @Override
-            public void onError(Exception ex) {
-                log.error(getThreadName() + " : Error in websocket", ex);
-            }
-        };
-        webSocketClient.addHeader("Accept-Encoding", "gzip, deflate, br");
-        webSocketClient.addHeader("Accept-Language", "en-IN,en;q=0.9");
-        webSocketClient.addHeader("Cache-Control", "no-cache");
-        webSocketClient.addHeader("Connection", "Upgrade");
-        webSocketClient.addHeader("Host", "data.tradingview.com");
-        webSocketClient.addHeader("Origin", "https://in.tradingview.com");
-        webSocketClient.addHeader("Pragma", "no-cache");
-        webSocketClient.addHeader("Sec-WebSocket-Extensions", "client_max_window_bits");
-        webSocketClient.addHeader("Sec-WebSocket-Key", "rxPHgoX6myglC4x5XLaLtA==");
-        webSocketClient.addHeader("Sec-WebSocket-Version", "13");
-        webSocketClient.addHeader("Upgrade", "websocket");
-        webSocketClient.addHeader("User-Agent", "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/98.0.4758.80 Safari/537.36");
-        webSocketClient.connect();
+        } catch (Exception ignored) {
 
-        createSession();
+        } finally {
+            websocketFetcher.release();
+        }
 
-        setSessionId("");
-        setRequestId(0);
-        fetcherService.addSession(this);
-        fetcherService.handshake(this);
     }
 
     private void createSession() {
@@ -237,7 +256,7 @@ public class FetcherThread extends TickerThread<TickerService> {
      * @param refresh   the refresh
      */
     protected void initialize(boolean refresh) {
-        this.initialized = false;
+        setInitialized(false);
         if (refresh) {
             log.info(getExchange() + ":" + getSymbol() + " - Refreshing");
         } else {
@@ -288,7 +307,7 @@ public class FetcherThread extends TickerThread<TickerService> {
                 } else {
                     log.error("Error while initializing " + getThreadName(), e);
                 }
-                log.error("Destorying " + getThreadName());
+                log.error("Destroying: " + getThreadName());
                 destroy();
             }
         }

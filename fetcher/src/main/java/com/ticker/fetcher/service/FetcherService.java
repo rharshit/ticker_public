@@ -64,8 +64,12 @@ public class FetcherService extends BaseService {
     }
 
     public void sendMessage(FetcherThread thread, String data) {
-        log.debug(thread.getThreadName() + " : sending message\n" + data);
-        thread.getWebSocketClient().send(encodeMessage(data));
+        if (thread.getWebSocketClient().isOpen()) {
+            log.debug(thread.getThreadName() + " : sending message\n" + data);
+            thread.getWebSocketClient().send(encodeMessage(data));
+        } else {
+            log.warn(thread.getThreadName() + " : Cannot send message, websocket not open");
+        }
     }
 
     /**
