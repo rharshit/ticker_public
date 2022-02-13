@@ -378,13 +378,17 @@ public class FetcherThread extends TickerThread<TickerService> {
         setInitialized(false);
         if (webSocketClient != null) {
             log.info(getThreadName() + " : Closing websocket");
-            long start = System.currentTimeMillis();
-            webSocketClient.close(code, reason);
-            while (webSocketClient.isOpen() || webSocketClient.isClosing() || !webSocketClient.isClosed()) {
-                waitFor(WAIT_QUICK);
-                if (System.currentTimeMillis() - start >= 5000) {
-                    break;
+            try {
+                long start = System.currentTimeMillis();
+                webSocketClient.close(code, reason);
+                while (webSocketClient.isOpen() || webSocketClient.isClosing() || !webSocketClient.isClosed()) {
+                    waitFor(WAIT_QUICK);
+                    if (System.currentTimeMillis() - start >= 5000) {
+                        break;
+                    }
                 }
+            } catch (Exception ignored) {
+
             }
             webSocketClient = null;
             log.info(getThreadName() + " : Websocket closed");
