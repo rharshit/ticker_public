@@ -204,7 +204,7 @@ public class FetcherThread extends TickerThread<TickerService> {
     public static String getBuildTime() {
         synchronized (FetcherThread.buildTime) {
             if (FetcherThread.buildTime != null && !FetcherThread.buildTime.isEmpty()) {
-                log.info("Returning buildTime");
+                log.debug("Returning buildTime");
                 return FetcherThread.buildTime;
             }
             try {
