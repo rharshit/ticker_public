@@ -93,6 +93,7 @@ public class FetcherThread extends TickerThread<TickerService> {
     int retry = 0;
 
     private static final Semaphore websocketFetcher;
+    private static String buildTime = "";
 
     static {
         websocketFetcher = new Semaphore(5);
@@ -130,7 +131,7 @@ public class FetcherThread extends TickerThread<TickerService> {
         initializeTables();
     }
 
-    private void initializeWebSocket() throws IOException, URISyntaxException {
+    private void initializeWebSocket() {
         try {
             synchronized (this) {
                 while (!websocketFetcher.tryAcquire()) {
@@ -183,10 +184,12 @@ public class FetcherThread extends TickerThread<TickerService> {
                 setRequestId(0);
                 fetcherService.addSession(this);
                 fetcherService.handshake(this);
+
+                setInitialized(true);
             }
 
         } catch (Exception ignored) {
-
+            throw new TickerException(getThreadName() + " : Error while creating websocket");
         } finally {
             websocketFetcher.release();
         }
@@ -200,27 +203,39 @@ public class FetcherThread extends TickerThread<TickerService> {
         quoteSessionTickerNew = "qs_" + createHash(12);
     }
 
-    private String getBuildTime() throws IOException {
-        URL url = new URL(TRADING_VIEW_BASE + TRADING_VIEW_CHART + getExchange() + ":" + getSymbol());
-        HttpURLConnection httpURLConnection = (HttpURLConnection) url.openConnection();
-        BufferedReader in = new BufferedReader(new InputStreamReader(httpURLConnection.getInputStream()));
-        String inputLine;
-        String buildTime = "";
-        while (StringUtils.isEmpty(buildTime) && (inputLine = in.readLine()) != null) {
+    private String getBuildTime() {
+        synchronized (FetcherThread.buildTime) {
+            if (FetcherThread.buildTime != null && !FetcherThread.buildTime.isEmpty()) {
+                log.info("Returning buildTime");
+                return FetcherThread.buildTime;
+            }
             try {
-                if (inputLine.contains("BUILD_TIME")) {
-                    inputLine = inputLine.trim();
-                    Pattern p = Pattern.compile("window\\.BUILD_TIME *= *\"(.*)\";");
-                    Matcher m = p.matcher(inputLine);
-                    if (m.matches()) {
-                        buildTime = m.group(1);
+                log.info("Fetching and returning buildTime");
+                URL url = new URL(TRADING_VIEW_BASE + TRADING_VIEW_CHART + getExchange() + ":" + getSymbol());
+                HttpURLConnection httpURLConnection = (HttpURLConnection) url.openConnection();
+                BufferedReader in = new BufferedReader(new InputStreamReader(httpURLConnection.getInputStream()));
+                String inputLine;
+                String buildTime = "";
+                while (StringUtils.isEmpty(buildTime) && (inputLine = in.readLine()) != null) {
+                    try {
+                        if (inputLine.contains("BUILD_TIME")) {
+                            inputLine = inputLine.trim();
+                            Pattern p = Pattern.compile("window\\.BUILD_TIME *= *\"(.*)\";");
+                            Matcher m = p.matcher(inputLine);
+                            if (m.matches()) {
+                                buildTime = m.group(1);
+                            }
+                        }
+                    } catch (Exception ignored) {
+
                     }
                 }
-            } catch (Exception ignored) {
+                return (FetcherThread.buildTime = buildTime);
+            } catch (Exception e) {
 
             }
+            return null;
         }
-        return buildTime;
     }
 
     private void initializeTables() {
@@ -288,10 +303,10 @@ public class FetcherThread extends TickerThread<TickerService> {
                         " getStudyBB(): " + getStudyBB() +
                         " getStudyRSI(): " + getStudyRSI() +
                         " getStudyTEMA(): " + getStudyTEMA());
-//                throw new TickerException(getThreadName() + " : Error initializing study name");
+                throw new TickerException(getThreadName() + " : Error initializing study name");
             }
-            setInitialized(true);
         } catch (Exception e) {
+            setInitialized(false);
             if (refresh) {
                 log.warn("Error while refreshing " + getThreadName());
             } else {
