@@ -29,6 +29,7 @@ import java.util.Arrays;
 import java.util.HashSet;
 import java.util.Random;
 import java.util.Set;
+import java.util.concurrent.Semaphore;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
@@ -349,11 +350,16 @@ public class FetcherThread extends TickerThread<TickerService> {
     }
 
     private void closeWebsocketIfExists(int code, String reason) {
+        setInitialized(false);
         if (webSocketClient != null) {
             log.info(getThreadName() + " : Closing websocket");
+            long start = System.currentTimeMillis();
             webSocketClient.close(code, reason);
             while (webSocketClient.isOpen() || webSocketClient.isClosing() || !webSocketClient.isClosed()) {
                 waitFor(WAIT_QUICK);
+                if (System.currentTimeMillis() - start >= 5000) {
+                    break;
+                }
             }
             webSocketClient = null;
             log.info(getThreadName() + " : Websocket closed");
