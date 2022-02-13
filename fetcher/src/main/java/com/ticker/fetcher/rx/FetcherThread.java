@@ -19,11 +19,9 @@ import org.springframework.util.ObjectUtils;
 import org.springframework.util.StringUtils;
 
 import java.io.BufferedReader;
-import java.io.IOException;
 import java.io.InputStreamReader;
 import java.net.HttpURLConnection;
 import java.net.URI;
-import java.net.URISyntaxException;
 import java.net.URL;
 import java.util.Arrays;
 import java.util.HashSet;
@@ -282,13 +280,6 @@ public class FetcherThread extends TickerThread<TickerService> {
             setLastPingAt(0);
             setUpdatedAt(0);
             initializeWebSocket();
-            if (refresh) {
-//                getWebDriver().navigate().refresh();
-            } else {
-//                getWebDriver().get(url);
-            }
-//            fetcherService.setChartSettings(this, iteration, refresh);
-            waitFor(WAIT_SHORT);
             log.debug(getThreadName() + " :" +
                     " getStudySeries(): " + getStudySeries() +
                     " getStudyBB(): " + getStudyBB() +
