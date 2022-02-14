@@ -2,6 +2,7 @@ package com.ticker.booker.controller;
 
 import com.ticker.booker.model.TradeMap;
 import com.ticker.booker.service.BookerService;
+import com.ticker.common.controller.BaseController;
 import com.ticker.common.model.ResponseStatus;
 import com.ticker.common.model.TickerTrade;
 import com.zerodhatech.models.Margin;
@@ -19,7 +20,7 @@ import java.util.Optional;
  */
 @RestController
 @RequestMapping("/")
-public class BookerController {
+public class BookerController extends BaseController<BookerService> {
 
     @Autowired
     private BookerService service;

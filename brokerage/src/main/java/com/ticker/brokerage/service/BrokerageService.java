@@ -2,6 +2,7 @@ package com.ticker.brokerage.service;
 
 import com.ticker.brokerage.objectpool.WebDriverObjectPoolData;
 import com.ticker.common.exception.TickerException;
+import com.ticker.common.service.BaseService;
 import com.ticker.common.util.Util;
 import com.ticker.common.util.objectpool.ObjectPool;
 import lombok.extern.slf4j.Slf4j;
@@ -19,7 +20,7 @@ import static com.ticker.brokerage.constants.WebConstants.ZERODHA_BROKERAGE_URL;
  */
 @Service
 @Slf4j
-public class BrokerageService {
+public class BrokerageService extends BaseService {
 
     /**
      * The constant numTries.

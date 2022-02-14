@@ -6,6 +6,7 @@ import com.ticker.common.service.StratTickerService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -17,7 +18,8 @@ import java.util.Map;
  * @param <S>  the type parameter
  * @param <TM> the type parameter
  */
-public abstract class StratController<S extends StratTickerService, TM extends StratThreadModel> {
+@Controller
+public abstract class StratController<S extends StratTickerService, TM extends StratThreadModel> extends BaseController<S> {
 
     @Autowired
     private S service;
