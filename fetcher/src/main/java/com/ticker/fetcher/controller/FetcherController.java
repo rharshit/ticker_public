@@ -1,5 +1,6 @@
 package com.ticker.fetcher.controller;
 
+import com.ticker.common.controller.BaseController;
 import com.ticker.common.entity.exchangesymbol.ExchangeSymbolEntity;
 import com.ticker.common.model.ResponseStatus;
 import com.ticker.fetcher.model.FetcherThreadModel;
@@ -19,7 +20,7 @@ import java.util.Optional;
  */
 @RestController
 @RequestMapping("/")
-public class FetcherController {
+public class FetcherController extends BaseController<FetcherService> {
 
     @Autowired
     private TickerService service;

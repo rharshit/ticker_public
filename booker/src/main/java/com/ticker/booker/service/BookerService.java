@@ -4,6 +4,7 @@ import com.ticker.booker.model.CompleteTrade;
 import com.ticker.booker.model.TradeMap;
 import com.ticker.common.exception.TickerException;
 import com.ticker.common.model.TickerTrade;
+import com.ticker.common.service.BaseService;
 import com.ticker.common.util.Util;
 import com.zerodhatech.kiteconnect.KiteConnect;
 import com.zerodhatech.kiteconnect.kitehttp.SessionExpiryHook;
@@ -35,7 +36,7 @@ import static com.ticker.common.contants.TickerConstants.APPLICATION_BROKERAGE;
  */
 @Slf4j
 @Service
-public class BookerService {
+public class BookerService extends BaseService {
 
     private static final List<TickerTrade> trades = new ArrayList<>();
     private static final Pattern pattern = Pattern.compile("^(Sold|Bought) (\\d*) (F|I|E) of (.*:.*) at (\\d\\d\\d\\d\\/\\d\\d\\/\\d\\d \\d\\d:\\d\\d:\\d\\d) for (\\d*\\.\\d*$)");

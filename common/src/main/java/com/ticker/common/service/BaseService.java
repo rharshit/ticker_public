@@ -10,7 +10,7 @@ import java.util.concurrent.Executor;
 /**
  * The type Base service.
  */
-@Service
+@Service("BaseService")
 public class BaseService {
     /**
      * Gets executor details.
@@ -32,5 +32,13 @@ public class BaseService {
         details.put("TaskCount", (int) ((ThreadPoolTaskExecutor) taskExecutor).getThreadPoolExecutor().getTaskCount());
         details.put("QueueSize", ((ThreadPoolTaskExecutor) taskExecutor).getThreadPoolExecutor().getQueue().size());
         return details;
+    }
+
+    public Map<String, String> getMemoryStatistics() {
+        Map<String, String> stats = new HashMap<>();
+        stats.put("HeapSize", String.valueOf(Runtime.getRuntime().totalMemory()));
+        stats.put("HeapMaxSize", String.valueOf(Runtime.getRuntime().maxMemory()));
+        stats.put("HeapFreeSize", String.valueOf(Runtime.getRuntime().freeMemory()));
+        return stats;
     }
 }

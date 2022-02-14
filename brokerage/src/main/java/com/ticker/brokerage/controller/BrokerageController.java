@@ -1,6 +1,7 @@
 package com.ticker.brokerage.controller;
 
 import com.ticker.brokerage.service.BrokerageService;
+import com.ticker.common.controller.BaseController;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -13,7 +14,7 @@ import java.util.Map;
  */
 @RestController
 @RequestMapping("/")
-public class BrokerageController {
+public class BrokerageController extends BaseController<BrokerageService> {
 
     @Autowired
     private BrokerageService service;
