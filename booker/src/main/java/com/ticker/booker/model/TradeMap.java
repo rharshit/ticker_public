@@ -54,8 +54,6 @@ public class TradeMap extends HashMap<String, Object> {
                     for (Object obj : (List) entry.getValue()) {
                         if (obj instanceof CompleteTrade) {
                             pnlTmp += ((CompleteTrade) obj).getPnl();
-                        } else {
-                            int x = 1;
                         }
                     }
                 }
@@ -80,8 +78,6 @@ public class TradeMap extends HashMap<String, Object> {
                     for (Object obj : (List) entry.getValue()) {
                         if (obj instanceof CompleteTrade) {
                             taxTmp += ((CompleteTrade) obj).getTaxes();
-                        } else {
-                            int x = 1;
                         }
                     }
                 }

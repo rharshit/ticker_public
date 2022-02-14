@@ -3,6 +3,8 @@ package com.ticker.booker.model;
 import com.ticker.common.model.TickerTrade;
 import lombok.Data;
 
+import java.util.Date;
+
 /**
  * The type Complete trade.
  */
@@ -19,4 +21,10 @@ public class CompleteTrade {
     private Float pnl;
     private Float taxes;
     private boolean completed = false;
+
+    public Date getTimestamp() {
+        Date d1 = buy.exchangeTimestamp;
+        Date d2 = buy.exchangeTimestamp;
+        return d1.compareTo(d2) < 0 ? d1 : d2;
+    }
 }

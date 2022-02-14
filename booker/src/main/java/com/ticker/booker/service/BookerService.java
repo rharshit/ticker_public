@@ -1,6 +1,8 @@
 package com.ticker.booker.service;
 
 import com.ticker.booker.model.CompleteTrade;
+import com.ticker.booker.model.TotalTrade;
+import com.ticker.booker.model.TradeGraph;
 import com.ticker.booker.model.TradeMap;
 import com.ticker.common.exception.TickerException;
 import com.ticker.common.model.TickerTrade;
@@ -23,6 +25,7 @@ import java.io.IOException;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Paths;
+import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.util.*;
 import java.util.regex.Matcher;
@@ -39,6 +42,7 @@ import static com.ticker.common.contants.TickerConstants.APPLICATION_BROKERAGE;
 public class BookerService extends BaseService {
 
     private static final List<TickerTrade> trades = new ArrayList<>();
+    private static final List<CompleteTrade> completeTrades = new ArrayList<>();
     private static final Pattern pattern = Pattern.compile("^(Sold|Bought) (\\d*) (F|I|E) of (.*:.*) at (\\d\\d\\d\\d\\/\\d\\d\\/\\d\\d \\d\\d:\\d\\d:\\d\\d) for (\\d*\\.\\d*$)");
     private static final SimpleDateFormat sdf = new SimpleDateFormat("yyyy/MM/dd HH:mm:dd");
     private static KiteConnect kiteSdk;
@@ -235,22 +239,59 @@ public class BookerService extends BaseService {
      *
      * @return the total trade
      */
-    public TradeMap getTotalTrade() {
+    public TotalTrade getTotalTrade() {
+        TotalTrade totalTrade = new TotalTrade();
+        totalTrade.setTradeMap(getTradeMapObject());
+        totalTrade.setTradeGraph(getTradeGraph(5));
+        return totalTrade;
+    }
+
+    private TradeGraph getTradeGraph(int interval) {
+        TradeGraph tradeGraph = new TradeGraph();
+        String date = (new SimpleDateFormat("MMM dd yyyy ")).format(new Date(System.currentTimeMillis()));
+        SimpleDateFormat sdf = new SimpleDateFormat("MMM dd yyyy HH:mm");
+        float totalNetPnl = 0;
+        float totalTaxes = 0;
+        int i = 0;
+        for (int h = 9; h < 16 && i < completeTrades.size(); h++) {
+            for (int m = 0; m < 60 && i < completeTrades.size(); m += interval) {
+                String time = (h < 10 ? "0" + h : h) + ":" + (m < 10 ? "0" + m : m);
+                String dateTime = date + time;
+                try {
+                    long millis = sdf.parse(dateTime).getTime();
+                    while (i < completeTrades.size() && completeTrades.get(i).getTimestamp().getTime() < millis) {
+                        totalNetPnl += completeTrades.get(i).getPnl();
+                        totalTaxes += completeTrades.get(i).getTaxes();
+                        i++;
+                    }
+                } catch (ParseException e) {
+                    e.printStackTrace();
+                }
+                tradeGraph.getLabels().add(time);
+                tradeGraph.getPnl().add(totalNetPnl);
+                tradeGraph.getTaxes().add(totalTaxes);
+                tradeGraph.getNetPnl().add(totalNetPnl + totalTaxes);
+            }
+        }
+        return tradeGraph;
+    }
+
+    private TradeMap getTradeMapObject() {
         try {
-            log.info("Getting total trade");
+            log.info("Getting trade map");
             Map<String, Map<String, Map<String, Map<String, List<TickerTrade>>>>> tradeMap = getTradeMap();
             Map<String, Map<String, Map<String, Map<String, List<CompleteTrade>>>>> completeTradeMap = processTradeMap(tradeMap);
             TradeMap totalTrade = new TradeMap(completeTradeMap);
-            log.info("Got total trade");
+            log.info("Got trade map");
             return totalTrade;
         } catch (Exception e) {
             log.error("Error while getting trades", e);
             throw new TickerException(e.getMessage());
         }
-
     }
 
     private Map<String, Map<String, Map<String, Map<String, List<CompleteTrade>>>>> processTradeMap(Map<String, Map<String, Map<String, Map<String, List<TickerTrade>>>>> appMap) {
+        List<CompleteTrade> completeTradesTemp = new ArrayList<>();
         Map<String, Map<String, Map<String, Map<String, List<CompleteTrade>>>>> completeAppMap = new HashMap<>();
         for (Map.Entry<String, Map<String, Map<String, Map<String, List<TickerTrade>>>>> appEntry : appMap.entrySet()) {
             String appName = appEntry.getKey();
@@ -363,6 +404,7 @@ public class BookerService extends BaseService {
 
 
                             completeTradeList.add(completeTrade);
+                            completeTradesTemp.add(completeTrade);
                         }
                     }
                 }
@@ -409,6 +451,9 @@ public class BookerService extends BaseService {
                 e.printStackTrace();
             }
         }
+        completeTradesTemp.sort(Comparator.comparing(CompleteTrade::getTimestamp));
+        completeTrades.clear();
+        completeTrades.addAll(completeTradesTemp);
         return completeAppMap;
     }
 
@@ -453,7 +498,7 @@ public class BookerService extends BaseService {
         log.debug("Fetching brokerage");
         Map<String, Double> brokerage = getBrokerage(trade);
         log.debug("Fetched brokerage");
-        trade.setPnl(brokerage.get("pnl").floatValue());
+        trade.setPnl(brokerage.get("netPnl").floatValue());
         trade.setTaxes(brokerage.get("totalBrokerage").floatValue());
     }
 
