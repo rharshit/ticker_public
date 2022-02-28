@@ -11,4 +11,5 @@ public class TradeGraph {
     List<Float> pnl = new ArrayList<>();
     List<Float> netPnl = new ArrayList<>();
     List<Float> taxes = new ArrayList<>();
+    List<Integer> numTrades = new ArrayList<>();
 }
