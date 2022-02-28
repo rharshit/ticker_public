@@ -73,6 +73,7 @@ public class FetcherService extends BaseService {
         if (thread.getWebSocketClient().isOpen()) {
             log.debug(thread.getThreadName() + " : sending message\n" + data);
             thread.getWebSocketClient().send(encodeMessage(data));
+            waitFor(5);
         } else {
             log.warn(thread.getThreadName() + " : Cannot send message, websocket not open");
         }
@@ -246,8 +247,8 @@ public class FetcherService extends BaseService {
             sendMessage(thread, "{\"m\":\"create_study\",\"p\":[\"" + thread.getChartSession() + "\",\"st2\",\"st1\",\"" + thread.getStudySeries() + "\",\"Splits@tv-basicstudies-149\",{}]}");
             sendMessage(thread, "{\"m\":\"create_study\",\"p\":[\"" + thread.getChartSession() + "\",\"st3\",\"st1\",\"" + thread.getStudySeries() + "\",\"Earnings@tv-basicstudies-149\",{}]}");
             sendMessage(thread, "{\"m\":\"quote_create_session\",\"p\":[\"" + thread.getQuoteSessionTickerNew() + "\"]}");
-            sendMessage(thread, "{\"m\":\"quote_add_symbols\",\"p\":[\"" + thread.getQuoteSessionTickerNew() + "\",\"" + thread.getExchange() + ":" + thread.getSymbol() + "\"]}");
             sendMessage(thread, "{\"m\":\"quote_set_fields\",\"p\":[\"" + thread.getQuoteSessionTickerNew() + "\",\"base-currency-logoid\",\"ch\",\"chp\",\"currency-logoid\",\"currency_code\",\"current_session\",\"description\",\"exchange\",\"format\",\"fractional\",\"is_tradable\",\"language\",\"local_description\",\"logoid\",\"lp\",\"lp_time\",\"minmov\",\"minmove2\",\"original_name\",\"pricescale\",\"pro_name\",\"short_name\",\"type\",\"update_mode\",\"volume\"]}");
+            sendMessage(thread, "{\"m\":\"quote_add_symbols\",\"p\":[\"" + thread.getQuoteSessionTickerNew() + "\",\"" + thread.getExchange() + ":" + thread.getSymbol() + "\"]}");
             sendMessage(thread, "{\"m\":\"quote_fast_symbols\",\"p\":[\"" + thread.getQuoteSessionTicker() + "\",\"={\\\"symbol\\\":\\\"" + thread.getExchange() + ":" + thread.getSymbol() + "\\\",\\\"adjustment\\\":\\\"splits\\\"}\"]}");
             sendMessage(thread, "{\"m\":\"quote_remove_symbols\",\"p\":[\"" + thread.getQuoteSessionTicker() + "\",\"={\\\"symbol\\\":\\\"" + thread.getExchange() + ":" + thread.getSymbol() + "\\\",\\\"adjustment\\\":\\\"splits\\\"}\"]}");
             sendMessage(thread, "{\"m\":\"quote_add_symbols\",\"p\":[\"" + thread.getQuoteSessionTicker() + "\",\"={\\\"symbol\\\":\\\"" + thread.getExchange() + ":" + thread.getSymbol() + "\\\",\\\"currency-id\\\":\\\"INR\\\",\\\"adjustment\\\":\\\"splits\\\"}\"]}");
