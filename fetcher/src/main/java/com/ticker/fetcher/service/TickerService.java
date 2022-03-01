@@ -13,6 +13,8 @@ import org.springframework.scheduling.annotation.Async;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
 
+import java.sql.Timestamp;
+import java.text.SimpleDateFormat;
 import java.util.Set;
 import java.util.concurrent.Executor;
 
@@ -203,7 +205,7 @@ public class TickerService extends TickerThreadService<FetcherThread, FetcherThr
     @Async("repoExecutor")
     @Scheduled(cron = "5 0 0 ? * *")
     public void initializeTables() {
-        log.info("Initializing tables");
+        log.info("Initializing tables started at " + new SimpleDateFormat("yyyy-MM-dd HH:mm:ss").format(new Timestamp(System.currentTimeMillis())));
         Set<FetcherThread> threadMap = getThreadPool();
         long start = System.currentTimeMillis();
         for (FetcherThread thread : threadMap) {
