@@ -184,4 +184,48 @@ public class StratThreadModel<T extends StratThread> extends TickerThreadModel<T
         return this.thread.getStateTrace();
     }
 
+    /**
+     * Gets day o.
+     *
+     * @return the day o
+     */
+    public double getDayO() {
+        return thread.getDayO();
+    }
+
+    /**
+     * Gets day h.
+     *
+     * @return the day h
+     */
+    public double getDayH() {
+        return thread.getDayH();
+    }
+
+    /**
+     * Gets day l.
+     *
+     * @return the day l
+     */
+    public double getDayL() {
+        return thread.getDayL();
+    }
+
+    /**
+     * Gets day c.
+     *
+     * @return the day c
+     */
+    public double getDayC() {
+        return thread.getDayC();
+    }
+
+    /**
+     * Gets prev close.
+     *
+     * @return the prev close
+     */
+    public double getPrevClose() {
+        return thread.getPrevClose();
+    }
 }

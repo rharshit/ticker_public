@@ -196,4 +196,19 @@ public class TickerService extends TickerThreadService<FetcherThread, FetcherThr
             }
         }
     }
+
+    /**
+     * Initialize tables on new day
+     */
+    @Async("repoExecutor")
+    @Scheduled(cron = "5 0 0 ? * *")
+    public void initializeTables() {
+        log.info("Initializing tables");
+        Set<FetcherThread> threadMap = getThreadPool();
+        long start = System.currentTimeMillis();
+        for (FetcherThread thread : threadMap) {
+            thread.initializeTables();
+        }
+        log.info("Initialized tables in " + (System.currentTimeMillis() - start) + "ms");
+    }
 }
