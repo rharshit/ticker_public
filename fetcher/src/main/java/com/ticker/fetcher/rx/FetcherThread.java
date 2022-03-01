@@ -61,21 +61,21 @@ public class FetcherThread extends TickerThread<TickerService> {
     @Autowired
     private FetcherService fetcherService;
     private Set<String> fetcherApps = new HashSet<>();
-    private float o;
-    private float h;
-    private float l;
-    private float c;
-    private float bbU;
-    private float bbA;
-    private float bbL;
-    private float rsi;
-    private float tema;
-    private float dayO;
-    private float dayH;
-    private float dayL;
-    private float dayC;
-    private float prevClose;
-    private float currentValue;
+    private double o;
+    private double h;
+    private double l;
+    private double c;
+    private double bbU;
+    private double bbA;
+    private double bbL;
+    private double rsi;
+    private double tema;
+    private double dayO;
+    private double dayH;
+    private double dayL;
+    private double dayC;
+    private double prevClose;
+    private double currentValue;
     private long updatedAt;
     private boolean taskStarted = false;
     public int requestId = 0;
@@ -413,7 +413,7 @@ public class FetcherThread extends TickerThread<TickerService> {
      *
      * @return the current value
      */
-    public float getCurrentValue() {
+    public double getCurrentValue() {
         return currentValue == 0 ? c : currentValue;
     }
 

@@ -42,7 +42,7 @@ public class MockFetcherThreadModel extends TickerThreadModel<MockFetcherThread>
      *
      * @return the current value
      */
-    public float getCurrentValue() {
+    public double getCurrentValue() {
         return this.thread.getCurrentValue();
     }
 
@@ -69,7 +69,7 @@ public class MockFetcherThreadModel extends TickerThreadModel<MockFetcherThread>
      *
      * @return the o
      */
-    public float getO() {
+    public double getO() {
         return thread.getO();
     }
 
@@ -78,7 +78,7 @@ public class MockFetcherThreadModel extends TickerThreadModel<MockFetcherThread>
      *
      * @return the h
      */
-    public float getH() {
+    public double getH() {
         return thread.getH();
     }
 
@@ -87,7 +87,7 @@ public class MockFetcherThreadModel extends TickerThreadModel<MockFetcherThread>
      *
      * @return the l
      */
-    public float getL() {
+    public double getL() {
         return thread.getL();
     }
 
@@ -96,7 +96,7 @@ public class MockFetcherThreadModel extends TickerThreadModel<MockFetcherThread>
      *
      * @return the c
      */
-    public float getC() {
+    public double getC() {
         return thread.getC();
     }
 
@@ -105,7 +105,7 @@ public class MockFetcherThreadModel extends TickerThreadModel<MockFetcherThread>
      *
      * @return the bb u
      */
-    public float getBbU() {
+    public double getBbU() {
         return thread.getBbU();
     }
 
@@ -114,7 +114,7 @@ public class MockFetcherThreadModel extends TickerThreadModel<MockFetcherThread>
      *
      * @return the bb a
      */
-    public float getBbA() {
+    public double getBbA() {
         return thread.getBbA();
     }
 
@@ -123,7 +123,7 @@ public class MockFetcherThreadModel extends TickerThreadModel<MockFetcherThread>
      *
      * @return the bb l
      */
-    public float getBbL() {
+    public double getBbL() {
         return thread.getBbL();
     }
 
@@ -132,7 +132,7 @@ public class MockFetcherThreadModel extends TickerThreadModel<MockFetcherThread>
      *
      * @return the rsi
      */
-    public float getRsi() {
+    public double getRsi() {
         return thread.getRsi();
     }
 
@@ -141,7 +141,7 @@ public class MockFetcherThreadModel extends TickerThreadModel<MockFetcherThread>
      *
      * @return the tema
      */
-    public float getTema() {
+    public double getTema() {
         return thread.getTema();
     }
 
@@ -150,7 +150,7 @@ public class MockFetcherThreadModel extends TickerThreadModel<MockFetcherThread>
      *
      * @return the day o
      */
-    public float getDayO() {
+    public double getDayO() {
         return thread.getDayO();
     }
 
@@ -159,7 +159,7 @@ public class MockFetcherThreadModel extends TickerThreadModel<MockFetcherThread>
      *
      * @return the day h
      */
-    public float getDayH() {
+    public double getDayH() {
         return thread.getDayH();
     }
 
@@ -168,7 +168,7 @@ public class MockFetcherThreadModel extends TickerThreadModel<MockFetcherThread>
      *
      * @return the day l
      */
-    public float getDayL() {
+    public double getDayL() {
         return thread.getDayL();
     }
 
@@ -177,7 +177,7 @@ public class MockFetcherThreadModel extends TickerThreadModel<MockFetcherThread>
      *
      * @return the day c
      */
-    public float getDayC() {
+    public double getDayC() {
         return thread.getDayC();
     }
 
@@ -186,7 +186,7 @@ public class MockFetcherThreadModel extends TickerThreadModel<MockFetcherThread>
      *
      * @return the prev close
      */
-    public float getPrevClose() {
+    public double getPrevClose() {
         return thread.getPrevClose();
     }
 

@@ -13,20 +13,20 @@ import java.text.SimpleDateFormat;
 public class FetcherRepoModel {
     private final String tableName;
     private final String timestamp;
-    private final float o;
-    private final float h;
-    private final float l;
-    private final float c;
-    private final float bbU;
-    private final float bbA;
-    private final float bbL;
-    private final float rsi;
-    private final float tema;
-    private final float dayH;
-    private final float dayL;
-    private final float dayC;
-    private final float prevClose;
-    private final float dayO;
+    private final double o;
+    private final double h;
+    private final double l;
+    private final double c;
+    private final double bbU;
+    private final double bbA;
+    private final double bbL;
+    private final double rsi;
+    private final double tema;
+    private final double dayH;
+    private final double dayL;
+    private final double dayC;
+    private final double prevClose;
+    private final double dayO;
 
     /**
      * Instantiates a new Fetcher repo model.
@@ -48,7 +48,7 @@ public class FetcherRepoModel {
      * @param prevClose the prev close
      * @param dayO      the day open
      */
-    public FetcherRepoModel(String tableName, long timestamp, float o, float h, float l, float c, float bbU, float bbA, float bbL, float rsi, float tema, float dayH, float dayL, float dayC, float prevClose, float dayO) {
+    public FetcherRepoModel(String tableName, long timestamp, double o, double h, double l, double c, double bbU, double bbA, double bbL, double rsi, double tema, double dayH, double dayL, double dayC, double prevClose, double dayO) {
         this.tableName = tableName;
         this.timestamp = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss").format(new Timestamp(timestamp));
         this.o = o;

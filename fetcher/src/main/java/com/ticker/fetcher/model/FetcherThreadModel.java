@@ -38,7 +38,7 @@ public class FetcherThreadModel extends TickerThreadModel<FetcherThread> {
      *
      * @return the current value
      */
-    public float getCurrentValue() {
+    public double getCurrentValue() {
         return this.thread.getCurrentValue();
     }
 
@@ -65,7 +65,7 @@ public class FetcherThreadModel extends TickerThreadModel<FetcherThread> {
      *
      * @return the o
      */
-    public float getO() {
+    public double getO() {
         return thread.getO();
     }
 
@@ -74,7 +74,7 @@ public class FetcherThreadModel extends TickerThreadModel<FetcherThread> {
      *
      * @return the h
      */
-    public float getH() {
+    public double getH() {
         return thread.getH();
     }
 
@@ -83,7 +83,7 @@ public class FetcherThreadModel extends TickerThreadModel<FetcherThread> {
      *
      * @return the l
      */
-    public float getL() {
+    public double getL() {
         return thread.getL();
     }
 
@@ -92,7 +92,7 @@ public class FetcherThreadModel extends TickerThreadModel<FetcherThread> {
      *
      * @return the c
      */
-    public float getC() {
+    public double getC() {
         return thread.getC();
     }
 
@@ -101,7 +101,7 @@ public class FetcherThreadModel extends TickerThreadModel<FetcherThread> {
      *
      * @return the bb u
      */
-    public float getBbU() {
+    public double getBbU() {
         return thread.getBbU();
     }
 
@@ -110,7 +110,7 @@ public class FetcherThreadModel extends TickerThreadModel<FetcherThread> {
      *
      * @return the bb a
      */
-    public float getBbA() {
+    public double getBbA() {
         return thread.getBbA();
     }
 
@@ -119,7 +119,7 @@ public class FetcherThreadModel extends TickerThreadModel<FetcherThread> {
      *
      * @return the bb l
      */
-    public float getBbL() {
+    public double getBbL() {
         return thread.getBbL();
     }
 
@@ -128,7 +128,7 @@ public class FetcherThreadModel extends TickerThreadModel<FetcherThread> {
      *
      * @return the rsi
      */
-    public float getRsi() {
+    public double getRsi() {
         return thread.getRsi();
     }
 
@@ -137,7 +137,7 @@ public class FetcherThreadModel extends TickerThreadModel<FetcherThread> {
      *
      * @return the tema
      */
-    public float getTema() {
+    public double getTema() {
         return thread.getTema();
     }
 
@@ -155,7 +155,7 @@ public class FetcherThreadModel extends TickerThreadModel<FetcherThread> {
      *
      * @return the day o
      */
-    public float getDayO() {
+    public double getDayO() {
         return thread.getDayO();
     }
 
@@ -164,7 +164,7 @@ public class FetcherThreadModel extends TickerThreadModel<FetcherThread> {
      *
      * @return the day h
      */
-    public float getDayH() {
+    public double getDayH() {
         return thread.getDayH();
     }
 
@@ -173,7 +173,7 @@ public class FetcherThreadModel extends TickerThreadModel<FetcherThread> {
      *
      * @return the day l
      */
-    public float getDayL() {
+    public double getDayL() {
         return thread.getDayL();
     }
 
@@ -182,7 +182,7 @@ public class FetcherThreadModel extends TickerThreadModel<FetcherThread> {
      *
      * @return the day c
      */
-    public float getDayC() {
+    public double getDayC() {
         return thread.getDayC();
     }
 
@@ -191,7 +191,7 @@ public class FetcherThreadModel extends TickerThreadModel<FetcherThread> {
      *
      * @return the prev close
      */
-    public float getPrevClose() {
+    public double getPrevClose() {
         return thread.getPrevClose();
     }
 }
