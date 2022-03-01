@@ -250,7 +250,7 @@ public class FetcherThread extends TickerThread<TickerService> {
         }
     }
 
-    private void initializeTables() {
+    public void initializeTables() {
         String tableName = getTableName();
         fetcherService.createTable(tableName);
     }
