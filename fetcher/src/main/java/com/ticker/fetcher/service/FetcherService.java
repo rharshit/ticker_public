@@ -288,7 +288,11 @@ public class FetcherService extends BaseService {
      * @param thread the thread
      */
     public void handshake(FetcherThread thread) {
+        long startTime = System.currentTimeMillis();
         while (thread.isEnabled() && !thread.getWebSocketClient().isOpen()) {
+            if (System.currentTimeMillis() - startTime > 10000) {
+                throw new TickerException(thread.getThreadName() + " : Timeout while waiting for websocket to open");
+            }
             waitFor(WAIT_QUICK);
         }
         if (thread.isEnabled()) {
@@ -354,10 +358,18 @@ public class FetcherService extends BaseService {
      * @param thread the thread
      */
     public void addSession(FetcherThread thread) {
+        long startTime = System.currentTimeMillis();
         while (thread.isEnabled() && !thread.getWebSocketClient().isOpen()) {
+            if (System.currentTimeMillis() - startTime > 10000) {
+                throw new TickerException(thread.getThreadName() + " : Timeout while waiting for websocket to open");
+            }
             waitFor(WAIT_QUICK);
         }
+        startTime = System.currentTimeMillis();
         while (ObjectUtils.isEmpty(thread.getSessionId())) {
+            if (System.currentTimeMillis() - startTime > 10000) {
+                throw new TickerException(thread.getThreadName() + " : Timeout while waiting for Session ID");
+            }
             waitFor(WAIT_QUICK);
         }
         log.debug(thread.getThreadName() + " : Session set - " + thread.getSessionId());
