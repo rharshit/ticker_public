@@ -22,6 +22,11 @@ public class CompleteTrade {
     private Double taxes;
     private boolean completed = false;
 
+    /**
+     * Gets trade timestamp.
+     *
+     * @return the timestamp
+     */
     public Date getTimestamp() {
         Date d1 = buy.exchangeTimestamp;
         Date d2 = buy.exchangeTimestamp;

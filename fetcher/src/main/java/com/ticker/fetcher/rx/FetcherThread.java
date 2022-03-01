@@ -78,7 +78,7 @@ public class FetcherThread extends TickerThread<TickerService> {
     private double currentValue;
     private long updatedAt;
     private boolean taskStarted = false;
-    public int requestId = 0;
+    private int requestId = 0;
     private String studySeries = "sds_1";
     private String studyBB = "st5";
     private String studyRSI = "st6";
@@ -93,7 +93,7 @@ public class FetcherThread extends TickerThread<TickerService> {
     private String quoteSessionTickerNew;
     private long lastPingAt = 0;
 
-    int retry = 0;
+    private int retry = 0;
 
     private static final Semaphore websocketFetcher;
     private static String buildTime = "";
@@ -210,6 +210,11 @@ public class FetcherThread extends TickerThread<TickerService> {
         log.debug(getThreadName() + " : quoteSessionTickerNew - " + quoteSessionTickerNew);
     }
 
+    /**
+     * Gets build time for charts.
+     *
+     * @return the build time
+     */
     public static String getBuildTime() {
         synchronized (FetcherThread.buildTime) {
             if (FetcherThread.buildTime != null && !FetcherThread.buildTime.isEmpty()) {
@@ -274,8 +279,7 @@ public class FetcherThread extends TickerThread<TickerService> {
     /**
      * Initialize.
      *
-     * @param iteration the iteration
-     * @param refresh   the refresh
+     * @param refresh the refresh
      */
     protected void initialize(boolean refresh) {
         setInitialized(false);
@@ -426,6 +430,12 @@ public class FetcherThread extends TickerThread<TickerService> {
         return hash.toString();
     }
 
+    /**
+     * Gets alpha numeric char.
+     *
+     * @param x the x
+     * @return the alpha numeric char
+     */
     public char getAlphaNumericChar(int x) {
         int add = 0;
         if (x >= 0 && x <= 9) {
@@ -438,6 +448,11 @@ public class FetcherThread extends TickerThread<TickerService> {
         return (char) (x + add);
     }
 
+    /**
+     * Sets session id.
+     *
+     * @param sessionId the session id
+     */
     public void setSessionId(String sessionId) {
         this.sessionId = sessionId;
         Pattern p = Pattern.compile("window\\.BUILD_TIME *= *\"(.*)\";");

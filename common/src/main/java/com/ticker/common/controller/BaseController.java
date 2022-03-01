@@ -9,12 +9,22 @@ import org.springframework.web.bind.annotation.GetMapping;
 
 import java.util.Map;
 
+/**
+ * The type Base controller.
+ *
+ * @param <S> the type parameter
+ */
 @Controller
 public class BaseController<S extends BaseService> {
 
     @Autowired
     private S baseService;
 
+    /**
+     * Gets memory statistics.
+     *
+     * @return the memory statistics
+     */
     @GetMapping("memory-status")
     public ResponseEntity<Map<String, String>> getMemoryStatistics() {
         return new ResponseEntity<>(baseService.getMemoryStatistics(), HttpStatus.OK);

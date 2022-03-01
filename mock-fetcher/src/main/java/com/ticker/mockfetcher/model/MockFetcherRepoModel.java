@@ -43,6 +43,11 @@ public class MockFetcherRepoModel {
      * @param bbL       the bb l
      * @param rsi       the rsi
      * @param tema      the tema
+     * @param dayO      the day o
+     * @param dayH      the day h
+     * @param dayL      the day l
+     * @param dayC      the day c
+     * @param prevClose the prev close
      */
     public MockFetcherRepoModel(String tableName, long timestamp, double o, double h, double l, double c, double bbU, double bbA, double bbL, double rsi, double tema, double dayO, double dayH, double dayL, double dayC, double prevClose) {
         this.tableName = tableName;

@@ -34,6 +34,11 @@ public class BaseService {
         return details;
     }
 
+    /**
+     * Gets memory statistics.
+     *
+     * @return the memory statistics
+     */
     public Map<String, String> getMemoryStatistics() {
         Map<String, String> stats = new HashMap<>();
         stats.put("HeapSize", String.valueOf(Runtime.getRuntime().totalMemory()));

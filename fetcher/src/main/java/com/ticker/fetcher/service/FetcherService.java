@@ -69,6 +69,12 @@ public class FetcherService extends BaseService {
         return details;
     }
 
+    /**
+     * Send message.
+     *
+     * @param thread the thread
+     * @param data   the data
+     */
     public void sendMessage(FetcherThread thread, String data) {
         if (thread.getWebSocketClient().isOpen()) {
             log.debug(thread.getThreadName() + " : sending message\n" + data);
@@ -276,6 +282,11 @@ public class FetcherService extends BaseService {
         }
     }
 
+    /**
+     * Websocket handshake.
+     *
+     * @param thread the thread
+     */
     public void handshake(FetcherThread thread) {
         while (thread.isEnabled() && !thread.getWebSocketClient().isOpen()) {
             waitFor(WAIT_QUICK);
@@ -337,6 +348,11 @@ public class FetcherService extends BaseService {
         }
     }
 
+    /**
+     * Add session to the thread.
+     *
+     * @param thread the thread
+     */
     public void addSession(FetcherThread thread) {
         while (thread.isEnabled() && !thread.getWebSocketClient().isOpen()) {
             waitFor(WAIT_QUICK);
