@@ -77,7 +77,7 @@ public class BookerController extends BaseController<BookerService> {
     public Integer bookRegularOrder(@RequestParam String tradingSymbol, @RequestParam String exchange,
                                     @RequestParam String transactionType, @RequestParam String orderType,
                                     @RequestParam Integer quantity, @RequestParam String product,
-                                    @RequestParam Optional<Float> price, @RequestParam Optional<Float> triggerPrice,
+                                    @RequestParam Optional<Double> price, @RequestParam Optional<Double> triggerPrice,
                                     @RequestParam Optional<Integer> disclosedQuantity, @RequestParam String validity,
                                     @RequestParam Optional<String> tag) {
         return service.bookRegularOrder(tradingSymbol, exchange, transactionType, orderType, quantity, product,

@@ -125,36 +125,36 @@ public abstract class BbRsiSafeConstants {
     /**
      * The constant RSI_LOWER_LIMIT.
      */
-    public static final float RSI_LOWER_LIMIT = 25;
+    public static final double RSI_LOWER_LIMIT = 25;
     /**
      * The constant RSI_LOWER_LIMIT_REBOUND.
      */
-    public static final float RSI_LOWER_LIMIT_REBOUND = 40;
+    public static final double RSI_LOWER_LIMIT_REBOUND = 40;
     /**
      * The constant RSI_LOWER_LIMIT_PREMATURE_DIFF.
      */
-    public static final float RSI_LOWER_LIMIT_PREMATURE_DIFF = 7.5f;
+    public static final double RSI_LOWER_LIMIT_PREMATURE_DIFF = 7.5f;
     /**
      * The constant RSI_LOWER_LIMIT_PANIC_DIFF.
      */
-    public static final float RSI_LOWER_LIMIT_PANIC_DIFF = -10;
+    public static final double RSI_LOWER_LIMIT_PANIC_DIFF = -10;
 
     /**
      * The constant RSI_UPPER_LIMIT.
      */
-    public static final float RSI_UPPER_LIMIT = 75;
+    public static final double RSI_UPPER_LIMIT = 75;
     /**
      * The constant RSI_UPPER_LIMIT_REBOUND.
      */
-    public static final float RSI_UPPER_LIMIT_REBOUND = 60;
+    public static final double RSI_UPPER_LIMIT_REBOUND = 60;
     /**
      * The constant RSI_UPPER_LIMIT_PREMATURE_DIFF.
      */
-    public static final float RSI_UPPER_LIMIT_PREMATURE_DIFF = -7.5f;
+    public static final double RSI_UPPER_LIMIT_PREMATURE_DIFF = -7.5f;
     /**
      * The constant RSI_UPPER_LIMIT_PANIC_DIFF.
      */
-    public static final float RSI_UPPER_LIMIT_PANIC_DIFF = 10;
+    public static final double RSI_UPPER_LIMIT_PANIC_DIFF = 10;
 
     /**
      * The constant PANIC_TIME_OFF.

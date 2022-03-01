@@ -30,23 +30,23 @@ public abstract class StratThread<S extends StratTickerService> extends TickerTh
     Map<Long, Integer> stateTrace = new HashMap<>();
     private boolean fetching = false;
     private int currentState;
-    private float o;
-    private float h;
-    private float l;
-    private float c;
-    private float bbU;
-    private float bbA;
-    private float bbL;
-    private float rsi;
-    private float tema;
-    private float currentValue;
+    private double o;
+    private double h;
+    private double l;
+    private double c;
+    private double bbU;
+    private double bbA;
+    private double bbL;
+    private double rsi;
+    private double tema;
+    private double currentValue;
     private long updatedAt;
     private String tickerType = "";
-    private float triggerStartValue;
+    private double triggerStartValue;
     private long triggerStartTime;
     private int positionQty = 0;
 
-    private float targetThreshold;
+    private double targetThreshold;
     private boolean lowValue = false;
 
     /**
@@ -66,7 +66,7 @@ public abstract class StratThread<S extends StratTickerService> extends TickerTh
             while (!isFetching() && isEnabled()) {
                 waitFor(WAIT_LONG);
             }
-            setTargetThreshold(0.0006f * getCurrentValue());
+            setTargetThreshold(0.0006 * getCurrentValue());
             StratThread thisThread = this;
             Thread thread = new Thread(() -> service.setTargetThreshold(thisThread));
             thread.start();
@@ -106,16 +106,16 @@ public abstract class StratThread<S extends StratTickerService> extends TickerTh
     public void setFetchMetrics(Map<String, Object> ticker) {
         if ((Double) ticker.get("currentValue") != 0) {
             setFetching(true);
-            setCurrentValue(((Double) ticker.get("currentValue")).floatValue());
-            setO(((Double) ticker.get("o")).floatValue());
-            setH(((Double) ticker.get("h")).floatValue());
-            setL(((Double) ticker.get("l")).floatValue());
-            setC(((Double) ticker.get("c")).floatValue());
-            setBbU(((Double) ticker.get("bbU")).floatValue());
-            setBbA(((Double) ticker.get("bbA")).floatValue());
-            setBbL(((Double) ticker.get("bbL")).floatValue());
-            setRsi(((Double) ticker.get("rsi")).floatValue());
-            setTema(((Double) ticker.get("tema")).floatValue());
+            setCurrentValue((double) ticker.get("currentValue"));
+            setO((double) ticker.get("o"));
+            setH((double) ticker.get("h"));
+            setL((double) ticker.get("l"));
+            setC((double) ticker.get("c"));
+            setBbU((double) ticker.get("bbU"));
+            setBbA((double) ticker.get("bbA"));
+            setBbL((double) ticker.get("bbL"));
+            setRsi((double) ticker.get("rsi"));
+            setTema((double) ticker.get("tema"));
             if (getO() * getH() * getL() * getC() * getBbL() * getBbA() * getBbU() * getRsi() == 0) {
                 setFetching(false);
                 setCurrentValue(0);
@@ -200,7 +200,7 @@ public abstract class StratThread<S extends StratTickerService> extends TickerTh
      *
      * @param targetThreshold the target threshold
      */
-    public void setTargetThreshold(float targetThreshold) {
+    public void setTargetThreshold(double targetThreshold) {
         if (targetThreshold < 0.055f) {
             this.targetThreshold = 0.045f;
             this.lowValue = true;

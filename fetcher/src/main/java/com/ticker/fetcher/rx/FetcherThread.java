@@ -61,24 +61,24 @@ public class FetcherThread extends TickerThread<TickerService> {
     @Autowired
     private FetcherService fetcherService;
     private Set<String> fetcherApps = new HashSet<>();
-    private float o;
-    private float h;
-    private float l;
-    private float c;
-    private float bbU;
-    private float bbA;
-    private float bbL;
-    private float rsi;
-    private float tema;
-    private float dayO;
-    private float dayH;
-    private float dayL;
-    private float dayC;
-    private float prevClose;
-    private float currentValue;
+    private double o;
+    private double h;
+    private double l;
+    private double c;
+    private double bbU;
+    private double bbA;
+    private double bbL;
+    private double rsi;
+    private double tema;
+    private double dayO;
+    private double dayH;
+    private double dayL;
+    private double dayC;
+    private double prevClose;
+    private double currentValue;
     private long updatedAt;
     private boolean taskStarted = false;
-    public int requestId = 0;
+    private int requestId = 0;
     private String studySeries = "sds_1";
     private String studyBB = "st5";
     private String studyRSI = "st6";
@@ -93,7 +93,7 @@ public class FetcherThread extends TickerThread<TickerService> {
     private String quoteSessionTickerNew;
     private long lastPingAt = 0;
 
-    int retry = 0;
+    private int retry = 0;
 
     private static final Semaphore websocketFetcher;
     private static String buildTime = "";
@@ -210,6 +210,11 @@ public class FetcherThread extends TickerThread<TickerService> {
         log.debug(getThreadName() + " : quoteSessionTickerNew - " + quoteSessionTickerNew);
     }
 
+    /**
+     * Gets build time for charts.
+     *
+     * @return the build time
+     */
     public static String getBuildTime() {
         synchronized (FetcherThread.buildTime) {
             if (FetcherThread.buildTime != null && !FetcherThread.buildTime.isEmpty()) {
@@ -274,8 +279,7 @@ public class FetcherThread extends TickerThread<TickerService> {
     /**
      * Initialize.
      *
-     * @param iteration the iteration
-     * @param refresh   the refresh
+     * @param refresh the refresh
      */
     protected void initialize(boolean refresh) {
         setInitialized(false);
@@ -413,7 +417,7 @@ public class FetcherThread extends TickerThread<TickerService> {
      *
      * @return the current value
      */
-    public float getCurrentValue() {
+    public double getCurrentValue() {
         return currentValue == 0 ? c : currentValue;
     }
 
@@ -426,6 +430,12 @@ public class FetcherThread extends TickerThread<TickerService> {
         return hash.toString();
     }
 
+    /**
+     * Gets alpha numeric char.
+     *
+     * @param x the x
+     * @return the alpha numeric char
+     */
     public char getAlphaNumericChar(int x) {
         int add = 0;
         if (x >= 0 && x <= 9) {
@@ -438,6 +448,11 @@ public class FetcherThread extends TickerThread<TickerService> {
         return (char) (x + add);
     }
 
+    /**
+     * Sets session id.
+     *
+     * @param sessionId the session id
+     */
     public void setSessionId(String sessionId) {
         this.sessionId = sessionId;
         Pattern p = Pattern.compile("window\\.BUILD_TIME *= *\"(.*)\";");

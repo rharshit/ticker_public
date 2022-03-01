@@ -14,20 +14,20 @@ import java.text.SimpleDateFormat;
 public class MockFetcherRepoModel {
     private String tableName;
     private String timestamp;
-    private float o;
-    private float h;
-    private float l;
-    private float c;
-    private float bbU;
-    private float bbA;
-    private float bbL;
-    private float rsi;
-    private float tema;
-    private float dayO;
-    private float dayH;
-    private float dayL;
-    private float dayC;
-    private float prevClose;
+    private double o;
+    private double h;
+    private double l;
+    private double c;
+    private double bbU;
+    private double bbA;
+    private double bbL;
+    private double rsi;
+    private double tema;
+    private double dayO;
+    private double dayH;
+    private double dayL;
+    private double dayC;
+    private double prevClose;
 
     /**
      * Instantiates a new Mock fetcher repo model.
@@ -43,8 +43,13 @@ public class MockFetcherRepoModel {
      * @param bbL       the bb l
      * @param rsi       the rsi
      * @param tema      the tema
+     * @param dayO      the day o
+     * @param dayH      the day h
+     * @param dayL      the day l
+     * @param dayC      the day c
+     * @param prevClose the prev close
      */
-    public MockFetcherRepoModel(String tableName, long timestamp, float o, float h, float l, float c, float bbU, float bbA, float bbL, float rsi, float tema, float dayO, float dayH, float dayL, float dayC, float prevClose) {
+    public MockFetcherRepoModel(String tableName, long timestamp, double o, double h, double l, double c, double bbU, double bbA, double bbL, double rsi, double tema, double dayO, double dayH, double dayL, double dayC, double prevClose) {
         this.tableName = tableName;
         this.timestamp = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss").format(new Timestamp(timestamp));
         this.o = o;

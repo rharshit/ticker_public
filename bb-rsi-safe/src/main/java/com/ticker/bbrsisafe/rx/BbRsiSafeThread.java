@@ -25,12 +25,12 @@ public class BbRsiSafeThread extends StratThread<BbRsiSafeService> {
 
     private long triggerWaveEndTime;
     private long tradeStartTime;
-    private float tradeValue;
-    private float trailValue;
-    private float targetValue = 0;
-    private float peak;
-    private float dip;
-    private float rsiPrev;
+    private double tradeValue;
+    private double trailValue;
+    private double targetValue = 0;
+    private double peak;
+    private double dip;
+    private double rsiPrev;
     private long rsiSetTime;
     private int panicSell = 0;
     private int panicBuy = 0;
@@ -47,7 +47,7 @@ public class BbRsiSafeThread extends StratThread<BbRsiSafeService> {
     }
 
     @Override
-    public void setRsi(float rsi) {
+    public void setRsi(double rsi) {
         if (!service.isSameMinTrigger(rsiSetTime)) {
             rsiPrev = rsi;
             rsiSetTime = System.currentTimeMillis();
@@ -60,7 +60,7 @@ public class BbRsiSafeThread extends StratThread<BbRsiSafeService> {
      *
      * @return the rsi diff
      */
-    public float getRsiDiff() {
+    public double getRsiDiff() {
         return getRsi() - getRsiPrev();
     }
 
@@ -69,7 +69,7 @@ public class BbRsiSafeThread extends StratThread<BbRsiSafeService> {
      *
      * @param peak the peak
      */
-    public void setPeak(float peak) {
+    public void setPeak(double peak) {
         if (this.peak == 0 || this.peak < peak) {
             log.debug(getThreadName() + " : peak changed from " + this.peak);
             this.peak = peak;
@@ -82,7 +82,7 @@ public class BbRsiSafeThread extends StratThread<BbRsiSafeService> {
      *
      * @param dip the dip
      */
-    public void setDip(float dip) {
+    public void setDip(double dip) {
         if (this.dip == 0 || this.dip > dip) {
             log.debug(getThreadName() + " : dip changed from " + this.dip);
             this.dip = dip;

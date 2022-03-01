@@ -66,20 +66,20 @@ public class MockFetcherAppRepository {
             List<Map<String, Object>> result = fetcherRepository.queryForList(query);
             fetcherRepoModel.setTimestamp(new SimpleDateFormat("yyyy-MM-dd HH:mm:ss")
                     .format((Timestamp) result.get(0).get("timestamp")));
-            fetcherRepoModel.setO((Float) result.get(0).get("O"));
-            fetcherRepoModel.setH((Float) result.get(0).get("H"));
-            fetcherRepoModel.setL((Float) result.get(0).get("L"));
-            fetcherRepoModel.setC((Float) result.get(0).get("C"));
-            fetcherRepoModel.setBbU((Float) result.get(0).get("BB_U"));
-            fetcherRepoModel.setBbA((Float) result.get(0).get("BB_A"));
-            fetcherRepoModel.setBbL((Float) result.get(0).get("BB_L"));
-            fetcherRepoModel.setRsi((Float) result.get(0).get("RSI"));
-            fetcherRepoModel.setTema((Float) result.get(0).get("TEMA"));
-            fetcherRepoModel.setDayO((Float) result.get(0).get("DAY_O"));
-            fetcherRepoModel.setDayH((Float) result.get(0).get("DAY_H"));
-            fetcherRepoModel.setDayL((Float) result.get(0).get("DAY_L"));
-            fetcherRepoModel.setDayC((Float) result.get(0).get("DAY_C"));
-            fetcherRepoModel.setPrevClose((Float) result.get(0).get("PREV_CLOSE"));
+            fetcherRepoModel.setO((double) result.get(0).get("O"));
+            fetcherRepoModel.setH((double) result.get(0).get("H"));
+            fetcherRepoModel.setL((double) result.get(0).get("L"));
+            fetcherRepoModel.setC((double) result.get(0).get("C"));
+            fetcherRepoModel.setBbU((double) result.get(0).get("BB_U"));
+            fetcherRepoModel.setBbA((double) result.get(0).get("BB_A"));
+            fetcherRepoModel.setBbL((double) result.get(0).get("BB_L"));
+            fetcherRepoModel.setRsi((double) result.get(0).get("RSI"));
+            fetcherRepoModel.setTema((double) result.get(0).get("TEMA"));
+            fetcherRepoModel.setDayO((double) result.get(0).get("DAY_O"));
+            fetcherRepoModel.setDayH((double) result.get(0).get("DAY_H"));
+            fetcherRepoModel.setDayL((double) result.get(0).get("DAY_L"));
+            fetcherRepoModel.setDayC((double) result.get(0).get("DAY_C"));
+            fetcherRepoModel.setPrevClose((double) result.get(0).get("PREV_CLOSE"));
         } catch (IndexOutOfBoundsException e) {
             log.error("Cannot fetch from " + fetcherRepoModel.getTableName() + " for " + time);
         } catch (Exception e) {

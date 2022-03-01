@@ -32,9 +32,9 @@ public class BrokerageController extends BaseController<BrokerageService> {
     @GetMapping("/zerodha/{type}/{exchange}")
     public Map<String, Double> getZerodhaBrokerage(@PathVariable String type,
                                                    @PathVariable String exchange,
-                                                   @RequestParam float buy,
-                                                   @RequestParam float sell,
-                                                   @RequestParam float quantity) {
+                                                   @RequestParam double buy,
+                                                   @RequestParam double sell,
+                                                   @RequestParam double quantity) {
         return service.getZerodhaBrokerage(type, exchange, buy, sell, quantity, 0);
     }
 

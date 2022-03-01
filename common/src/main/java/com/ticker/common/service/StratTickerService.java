@@ -259,14 +259,14 @@ public abstract class StratTickerService<T extends StratThread, TM extends Strat
     }
 
     /**
-     * Buy float.
+     * Buy double.
      *
      * @param thread the thread
      * @param qty    the qty
-     * @return the float
+     * @return the double
      */
 // TODO
-    protected float buy(T thread, int qty) {
+    protected double buy(T thread, int qty) {
         waitFor(WAIT_LONG);
         log.info("Bought " + qty +
                 " " + thread.getTickerType() +
@@ -278,14 +278,14 @@ public abstract class StratTickerService<T extends StratThread, TM extends Strat
     }
 
     /**
-     * Sell float.
+     * Sell double.
      *
      * @param thread the thread
      * @param qty    the qty
-     * @return the float
+     * @return the double
      */
 // TODO
-    protected float sell(T thread, int qty) {
+    protected double sell(T thread, int qty) {
         waitFor(WAIT_LONG);
         log.info("Sold " + qty +
                 " " + thread.getTickerType() +
@@ -297,12 +297,12 @@ public abstract class StratTickerService<T extends StratThread, TM extends Strat
     }
 
     /**
-     * Square off float.
+     * Square off double.
      *
      * @param thread the thread
-     * @return the float
+     * @return the double
      */
-    protected float squareOff(T thread) {
+    protected double squareOff(T thread) {
         if (thread.getPositionQty() == 0) {
             log.warn(thread.getThreadName() + " : No positions to square-off");
         } else if (thread.getPositionQty() > 0) {
@@ -364,10 +364,10 @@ public abstract class StratTickerService<T extends StratThread, TM extends Strat
                     params.put("sell", thread.getCurrentValue());
                     params.put("quantity", thread.getEntity().getMinQty());
                     Map<String, Double> response = restTemplate.getForObject(url, Map.class, params);
-                    if (response.get("ptb").floatValue() == 0) {
+                    if (response.get("ptb").doubleValue() == 0) {
                         thread.setTargetThreshold(0.03f);
                     } else {
-                        thread.setTargetThreshold(3 * response.get("ptb").floatValue());
+                        thread.setTargetThreshold(3 * response.get("ptb").doubleValue());
                     }
                     thresholdSet = true;
                     log.info(thread.getThreadName() + " : Target threshold set");

@@ -69,6 +69,12 @@ public class FetcherService extends BaseService {
         return details;
     }
 
+    /**
+     * Send message.
+     *
+     * @param thread the thread
+     * @param data   the data
+     */
     public void sendMessage(FetcherThread thread, String data) {
         if (thread.getWebSocketClient().isOpen()) {
             log.debug(thread.getThreadName() + " : sending message\n" + data);
@@ -153,7 +159,7 @@ public class FetcherService extends BaseService {
         for (String key : object.keySet()) {
             log.trace("Key: " + key);
             try {
-                Float[] vals = null;
+                Double[] vals = null;
                 try {
                     vals = getVals(object.getJSONObject(key).getJSONArray("st"));
                 } catch (Exception ignored) {
@@ -185,19 +191,19 @@ public class FetcherService extends BaseService {
                     log.trace(thread.getThreadName() + " : Setting day values value");
                     JSONObject value = object.getJSONObject("v");
                     if (value.has("open_price")) {
-                        thread.setDayO(value.getFloat("open_price"));
+                        thread.setDayO(value.getDouble("open_price"));
                     }
                     if (value.has("high_price")) {
-                        thread.setDayH(value.getFloat("high_price"));
+                        thread.setDayH(value.getDouble("high_price"));
                     }
                     if (value.has("low_price")) {
-                        thread.setDayL(value.getFloat("low_price"));
+                        thread.setDayL(value.getDouble("low_price"));
                     }
                     if (value.has("lp")) {
-                        thread.setDayC(value.getFloat("lp"));
+                        thread.setDayC(value.getDouble("lp"));
                     }
                     if (value.has("prev_close_price")) {
-                        thread.setPrevClose(value.getFloat("prev_close_price"));
+                        thread.setPrevClose(value.getDouble("prev_close_price"));
                     }
                 }
                 thread.setUpdatedAt((long) (vals[0] * 1000));
@@ -211,7 +217,7 @@ public class FetcherService extends BaseService {
     }
 
 
-    private Float[] getVals(JSONArray arr) {
+    private Double[] getVals(JSONArray arr) {
         int maxIndex = 0;
         double maxTime = 0;
         for (int i = 0; i < arr.length(); i++) {
@@ -229,7 +235,14 @@ public class FetcherService extends BaseService {
         }
         JSONObject object = arr.getJSONObject(maxIndex);
         JSONArray vals = object.getJSONArray("v");
-        return vals.toList().stream().map(o -> Float.parseFloat(o.toString())).toArray(Float[]::new);
+        return vals.toList().stream().map(o -> {
+            if (o instanceof Double) {
+                return (Double) o;
+            } else if (o instanceof Integer) {
+                return Double.valueOf((Integer) o);
+            }
+            return 0.0;
+        }).toArray(Double[]::new);
     }
 
     /**
@@ -269,6 +282,11 @@ public class FetcherService extends BaseService {
         }
     }
 
+    /**
+     * Websocket handshake.
+     *
+     * @param thread the thread
+     */
     public void handshake(FetcherThread thread) {
         while (thread.isEnabled() && !thread.getWebSocketClient().isOpen()) {
             waitFor(WAIT_QUICK);
@@ -330,6 +348,11 @@ public class FetcherService extends BaseService {
         }
     }
 
+    /**
+     * Add session to the thread.
+     *
+     * @param thread the thread
+     */
     public void addSession(FetcherThread thread) {
         while (thread.isEnabled() && !thread.getWebSocketClient().isOpen()) {
             waitFor(WAIT_QUICK);

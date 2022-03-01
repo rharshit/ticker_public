@@ -18,10 +18,15 @@ public class CompleteTrade {
     private String product;
     private String tickerType;
     private Integer quantity;
-    private Float pnl;
-    private Float taxes;
+    private Double pnl;
+    private Double taxes;
     private boolean completed = false;
 
+    /**
+     * Gets trade timestamp.
+     *
+     * @return the timestamp
+     */
     public Date getTimestamp() {
         Date d1 = buy.exchangeTimestamp;
         Date d2 = buy.exchangeTimestamp;

@@ -41,21 +41,21 @@ public class MockFetcherThread extends TickerThread<TickerService> {
     private MockFetcherAppRepository repository;
     @Autowired
     private MockFetcherService fetcherService;
-    private float o;
-    private float h;
-    private float l;
-    private float c;
-    private float bbU;
-    private float bbA;
-    private float bbL;
-    private float rsi;
-    private float tema;
-    private float dayO;
-    private float dayH;
-    private float dayL;
-    private float dayC;
-    private float prevClose;
-    private float currentValue;
+    private double o;
+    private double h;
+    private double l;
+    private double c;
+    private double bbU;
+    private double bbA;
+    private double bbL;
+    private double rsi;
+    private double tema;
+    private double dayO;
+    private double dayH;
+    private double dayL;
+    private double dayC;
+    private double prevClose;
+    private double currentValue;
     private long updatedAt;
 
     private long startTime;
@@ -211,7 +211,7 @@ public class MockFetcherThread extends TickerThread<TickerService> {
      *
      * @param currentValue the current value
      */
-    public void setCurrentValue(float currentValue) {
+    public void setCurrentValue(double currentValue) {
         this.currentValue = currentValue;
         this.updatedAt = System.currentTimeMillis() + getDelta();
     }

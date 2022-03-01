@@ -75,21 +75,21 @@ public class MockFetcherService extends BaseService {
                 MockFetcherRepoModel mockFetcherRepoModel = new MockFetcherRepoModel();
                 mockFetcherRepoModel.setTableName(mockFetcherThread.getTableName());
                 repository.populateFetcherThreadModel(mockFetcherRepoModel, System.currentTimeMillis() + mockFetcherThread.getDelta());
-                float o = mockFetcherRepoModel.getO();
-                float h = mockFetcherRepoModel.getH();
-                float l = mockFetcherRepoModel.getL();
-                float c = mockFetcherRepoModel.getC();
-                float bbA = mockFetcherRepoModel.getBbA();
-                float bbU = mockFetcherRepoModel.getBbU();
-                float bbL = mockFetcherRepoModel.getBbL();
-                float rsi = mockFetcherRepoModel.getRsi();
-                float tema = mockFetcherRepoModel.getTema();
-                float dayO = mockFetcherRepoModel.getDayO();
-                float dayH = mockFetcherRepoModel.getDayH();
-                float dayL = mockFetcherRepoModel.getDayL();
-                float dayC = mockFetcherRepoModel.getDayC();
-                float prevClose = mockFetcherRepoModel.getPrevClose();
-                float valCheck = o * h * l * c * bbL * bbA * bbU * rsi * dayO * dayH * dayL * dayC * prevClose;
+                double o = mockFetcherRepoModel.getO();
+                double h = mockFetcherRepoModel.getH();
+                double l = mockFetcherRepoModel.getL();
+                double c = mockFetcherRepoModel.getC();
+                double bbA = mockFetcherRepoModel.getBbA();
+                double bbU = mockFetcherRepoModel.getBbU();
+                double bbL = mockFetcherRepoModel.getBbL();
+                double rsi = mockFetcherRepoModel.getRsi();
+                double tema = mockFetcherRepoModel.getTema();
+                double dayO = mockFetcherRepoModel.getDayO();
+                double dayH = mockFetcherRepoModel.getDayH();
+                double dayL = mockFetcherRepoModel.getDayL();
+                double dayC = mockFetcherRepoModel.getDayC();
+                double prevClose = mockFetcherRepoModel.getPrevClose();
+                double valCheck = o * h * l * c * bbL * bbA * bbU * rsi * dayO * dayH * dayL * dayC * prevClose;
                 if (valCheck == 0) {
                     log.error(mockFetcherThread.getThreadName() + " :\n" +
                             o + "," + h + "," + l + "," + c + "\n"

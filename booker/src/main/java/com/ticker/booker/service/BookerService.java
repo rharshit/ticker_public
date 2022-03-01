@@ -170,7 +170,7 @@ public class BookerService extends BaseService {
      * @return the integer
      */
     public Integer bookRegularOrder(String tradingSymbol, String exchange, String transactionType, String orderType,
-                                    Integer quantity, String product, Float price, Float triggerPrice,
+                                    Integer quantity, String product, Double price, Double triggerPrice,
                                     Integer disclosedQuantity, String validity, String tag) {
         return null;
     }
@@ -221,7 +221,7 @@ public class BookerService extends BaseService {
                         trade.fillTimestamp = new SimpleDateFormat("yyyy/MM/dd HH:mm:ss").parse(sDate);
                         trade.exchangeTimestamp = trade.fillTimestamp;
 
-                        trade.averagePrice = String.valueOf(Float.parseFloat(matcher.group(6)));
+                        trade.averagePrice = String.valueOf(Double.parseDouble(matcher.group(6)));
 
                         trades.add(trade);
                     }
@@ -250,8 +250,8 @@ public class BookerService extends BaseService {
         TradeGraph tradeGraph = new TradeGraph();
         String date = (new SimpleDateFormat("MMM dd yyyy ")).format(new Date(System.currentTimeMillis()));
         SimpleDateFormat sdf = new SimpleDateFormat("MMM dd yyyy HH:mm");
-        float totalNetPnl = 0;
-        float totalTaxes = 0;
+        double totalNetPnl = 0;
+        double totalTaxes = 0;
         int i = 0;
         for (int h = 9; h < 16 && i < completeTrades.size(); h++) {
             for (int m = 0; m < 60 && i < completeTrades.size(); m += interval) {
@@ -499,8 +499,8 @@ public class BookerService extends BaseService {
         log.debug("Fetching brokerage");
         Map<String, Double> brokerage = getBrokerage(trade);
         log.debug("Fetched brokerage");
-        trade.setPnl(brokerage.get("netPnl").floatValue());
-        trade.setTaxes(brokerage.get("totalBrokerage").floatValue());
+        trade.setPnl(brokerage.get("netPnl").doubleValue());
+        trade.setTaxes(brokerage.get("totalBrokerage").doubleValue());
     }
 
     /**
