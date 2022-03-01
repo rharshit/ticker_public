@@ -118,10 +118,7 @@ public class FetcherService extends BaseService {
                     try {
                         String objString = array.get(i).toString();
                         JSONObject jsonObject = new JSONObject(objString);
-                        if (jsonObject.has(thread.getStudySeries())
-                                || jsonObject.has(thread.getStudyBB())
-                                || jsonObject.has(thread.getStudyRSI())
-                                || jsonObject.has(thread.getStudyTEMA())) {
+                        if (hasInterestedValue(thread, jsonObject)) {
                             setVal(thread, jsonObject);
                         }
                     } catch (Exception ignored) {
@@ -134,18 +131,38 @@ public class FetcherService extends BaseService {
         }
     }
 
+    private boolean hasInterestedValue(FetcherThread thread, JSONObject jsonObject) {
+        if (jsonObject.has(thread.getStudySeries())
+                || jsonObject.has(thread.getStudyBB())
+                || jsonObject.has(thread.getStudyRSI())
+                || jsonObject.has(thread.getStudyTEMA())) {
+            return true;
+        }
+        if (jsonObject.has("v")) {
+            JSONObject value = jsonObject.getJSONObject("v");
+            return value.has("lp") ||
+                    value.has("open_price") ||
+                    value.has("high_price") ||
+                    value.has("low_price");
+        }
+        return false;
+    }
+
     private void setVal(FetcherThread thread, JSONObject object) {
         log.trace(thread.getThreadName() + " : Setting value");
         for (String key : object.keySet()) {
             log.trace("Key: " + key);
             try {
-                Float[] vals;
+                Float[] vals = null;
                 try {
                     vals = getVals(object.getJSONObject(key).getJSONArray("st"));
-
-                } catch (Exception e) {
-                    vals = getVals(object.getJSONObject(key).getJSONArray("s"));
-
+                } catch (Exception ignored) {
+                }
+                if (vals == null) {
+                    try {
+                        vals = getVals(object.getJSONObject(key).getJSONArray("s"));
+                    } catch (Exception ignored) {
+                    }
                 }
                 if (thread.getStudySeries().equals(key)) {
                     log.trace(thread.getThreadName() + " : Setting OHLC value");
@@ -164,6 +181,24 @@ public class FetcherService extends BaseService {
                 } else if (thread.getStudyTEMA().equals(key)) {
                     log.trace(thread.getThreadName() + " : Setting TEMA value");
                     thread.setTema(vals[1]);
+                } else if ("v".equals(key)) {
+                    log.trace(thread.getThreadName() + " : Setting day values value");
+                    JSONObject value = object.getJSONObject("v");
+                    if (value.has("open_price")) {
+                        thread.setDayO(value.getFloat("open_price"));
+                    }
+                    if (value.has("high_price")) {
+                        thread.setDayH(value.getFloat("high_price"));
+                    }
+                    if (value.has("low_price")) {
+                        thread.setDayL(value.getFloat("low_price"));
+                    }
+                    if (value.has("lp")) {
+                        thread.setDayC(value.getFloat("lp"));
+                    }
+                    if (value.has("prev_close_price")) {
+                        thread.setPrevClose(value.getFloat("prev_close_price"));
+                    }
                 }
                 thread.setUpdatedAt((long) (vals[0] * 1000));
                 synchronized (dataQueue) {
