@@ -2,7 +2,7 @@ package com.ticker.mockfetcher.controller;
 
 import com.ticker.common.entity.exchangesymbol.ExchangeSymbolEntity;
 import com.ticker.common.model.ResponseStatus;
-import com.ticker.mockfetcher.model.FetcherThreadModel;
+import com.ticker.mockfetcher.model.MockFetcherThreadModel;
 import com.ticker.mockfetcher.service.MockFetcherService;
 import com.ticker.mockfetcher.service.TickerService;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -56,7 +56,7 @@ public class FetcherController {
      * @return current value
      */
     @GetMapping("current")
-    public ResponseEntity<FetcherThreadModel> getCurrentValue(@RequestParam String exchange, @RequestParam String symbol) {
+    public ResponseEntity<MockFetcherThreadModel> getCurrentValue(@RequestParam String exchange, @RequestParam String symbol) {
         return new ResponseEntity<>(service.getCurrent(exchange, symbol), HttpStatus.OK);
     }
 
@@ -85,7 +85,7 @@ public class FetcherController {
      * @return current tickers
      */
     @GetMapping
-    public ResponseEntity<Map<String, List<FetcherThreadModel>>> getCurrentTickers() {
+    public ResponseEntity<Map<String, List<MockFetcherThreadModel>>> getCurrentTickers() {
         return new ResponseEntity<>(service.getCurrentTickers(), HttpStatus.OK);
     }
 

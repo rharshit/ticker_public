@@ -84,17 +84,24 @@ public class MockFetcherService extends BaseService {
                 float bbL = mockFetcherRepoModel.getBbL();
                 float rsi = mockFetcherRepoModel.getRsi();
                 float tema = mockFetcherRepoModel.getTema();
-                float valCheck = o * h * l * c * bbL * bbA * bbU * rsi;
+                float dayO = mockFetcherRepoModel.getDayO();
+                float dayH = mockFetcherRepoModel.getDayH();
+                float dayL = mockFetcherRepoModel.getDayL();
+                float dayC = mockFetcherRepoModel.getDayC();
+                float prevClose = mockFetcherRepoModel.getPrevClose();
+                float valCheck = o * h * l * c * bbL * bbA * bbU * rsi * dayO * dayH * dayL * dayC * prevClose;
                 if (valCheck == 0) {
                     log.error(mockFetcherThread.getThreadName() + " :\n" +
                             o + "," + h + "," + l + "," + c + "\n"
                             + bbL + "," + bbA + "," + bbU + "\n"
-                            + rsi + "," + tema);
+                            + rsi + "," + tema + "\n"
+                            + dayO + "," + dayH + "," + dayL + "," + dayC + "," + prevClose);
                 } else {
                     log.trace(mockFetcherThread.getThreadName() + " :\n" +
                             o + "," + h + "," + l + "," + c + "\n"
                             + bbL + "," + bbA + "," + bbU + "\n"
-                            + rsi + "," + tema);
+                            + rsi + "," + tema + "\n"
+                            + dayO + "," + dayH + "," + dayL + "," + dayC + "," + prevClose);
                     mockFetcherThread.setO(o);
                     mockFetcherThread.setH(h);
                     mockFetcherThread.setL(l);
@@ -104,6 +111,11 @@ public class MockFetcherService extends BaseService {
                     mockFetcherThread.setBbU(bbU);
                     mockFetcherThread.setRsi(rsi);
                     mockFetcherThread.setTema(tema);
+                    mockFetcherThread.setDayO(dayO);
+                    mockFetcherThread.setDayH(dayH);
+                    mockFetcherThread.setDayL(dayL);
+                    mockFetcherThread.setDayC(dayC);
+                    mockFetcherThread.setPrevClose(prevClose);
 
                     mockFetcherThread.setCurrentValue(c);
                 }

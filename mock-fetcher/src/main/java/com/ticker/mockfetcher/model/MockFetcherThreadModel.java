@@ -16,14 +16,14 @@ import static com.ticker.common.contants.WebConstants.TRADING_VIEW_CHART;
  * The type Fetcher thread model.
  */
 @NoArgsConstructor
-public class FetcherThreadModel extends TickerThreadModel<MockFetcherThread> {
+public class MockFetcherThreadModel extends TickerThreadModel<MockFetcherThread> {
 
     /**
      * Instantiates a new Fetcher thread model.
      *
      * @param thread the thread
      */
-    public FetcherThreadModel(MockFetcherThread thread) {
+    public MockFetcherThreadModel(MockFetcherThread thread) {
         super(thread);
     }
 
@@ -143,6 +143,51 @@ public class FetcherThreadModel extends TickerThreadModel<MockFetcherThread> {
      */
     public float getTema() {
         return thread.getTema();
+    }
+
+    /**
+     * Gets day o.
+     *
+     * @return the day o
+     */
+    public float getDayO() {
+        return thread.getDayO();
+    }
+
+    /**
+     * Gets day h.
+     *
+     * @return the day h
+     */
+    public float getDayH() {
+        return thread.getDayH();
+    }
+
+    /**
+     * Gets day l.
+     *
+     * @return the day l
+     */
+    public float getDayL() {
+        return thread.getDayL();
+    }
+
+    /**
+     * Gets day c.
+     *
+     * @return the day c
+     */
+    public float getDayC() {
+        return thread.getDayC();
+    }
+
+    /**
+     * Gets prev close.
+     *
+     * @return the prev close
+     */
+    public float getPrevClose() {
+        return thread.getPrevClose();
     }
 
     /**
