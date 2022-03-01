@@ -75,6 +75,11 @@ public class MockFetcherAppRepository {
             fetcherRepoModel.setBbL((Float) result.get(0).get("BB_L"));
             fetcherRepoModel.setRsi((Float) result.get(0).get("RSI"));
             fetcherRepoModel.setTema((Float) result.get(0).get("TEMA"));
+            fetcherRepoModel.setDayO((Float) result.get(0).get("DAY_O"));
+            fetcherRepoModel.setDayH((Float) result.get(0).get("DAY_H"));
+            fetcherRepoModel.setDayL((Float) result.get(0).get("DAY_L"));
+            fetcherRepoModel.setDayC((Float) result.get(0).get("DAY_C"));
+            fetcherRepoModel.setPrevClose((Float) result.get(0).get("PREV_CLOSE"));
         } catch (IndexOutOfBoundsException e) {
             log.error("Cannot fetch from " + fetcherRepoModel.getTableName() + " for " + time);
         } catch (Exception e) {

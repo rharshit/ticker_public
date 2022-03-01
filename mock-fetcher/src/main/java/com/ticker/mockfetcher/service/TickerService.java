@@ -3,7 +3,7 @@ package com.ticker.mockfetcher.service;
 import com.ticker.common.entity.exchangesymbol.ExchangeSymbolEntity;
 import com.ticker.common.exception.TickerException;
 import com.ticker.common.service.TickerThreadService;
-import com.ticker.mockfetcher.model.FetcherThreadModel;
+import com.ticker.mockfetcher.model.MockFetcherThreadModel;
 import com.ticker.mockfetcher.repository.MockFetcherAppRepository;
 import com.ticker.mockfetcher.rx.MockFetcherThread;
 import lombok.extern.slf4j.Slf4j;
@@ -19,7 +19,7 @@ import static com.ticker.mockfetcher.constants.FetcherConstants.MOCK_FETCHER_THR
  */
 @Service
 @Slf4j
-public class TickerService extends TickerThreadService<MockFetcherThread, FetcherThreadModel> {
+public class TickerService extends TickerThreadService<MockFetcherThread, MockFetcherThreadModel> {
 
     /**
      * The Repository.
@@ -28,8 +28,8 @@ public class TickerService extends TickerThreadService<MockFetcherThread, Fetche
     MockFetcherAppRepository repository;
 
     @Override
-    public FetcherThreadModel createTickerThreadModel(MockFetcherThread thread) {
-        return new FetcherThreadModel(thread);
+    public MockFetcherThreadModel createTickerThreadModel(MockFetcherThread thread) {
+        return new MockFetcherThreadModel(thread);
     }
 
     /**
@@ -107,13 +107,13 @@ public class TickerService extends TickerThreadService<MockFetcherThread, Fetche
      * @param symbol   the symbol
      * @return the current
      */
-    public FetcherThreadModel getCurrent(String exchange, String symbol) {
+    public MockFetcherThreadModel getCurrent(String exchange, String symbol) {
         MockFetcherThread thread = getThread(exchange, symbol);
         if (thread == null) {
             return null;
         }
 
-        return new FetcherThreadModel(thread);
+        return new MockFetcherThreadModel(thread);
     }
 
     /**
