@@ -21,7 +21,7 @@ public class BbRsiThreadModel extends StratThreadModel<BbRsiThread> {
      *
      * @return the dip
      */
-    public float getDip() {
+    public double getDip() {
         return thread.getDip();
     }
 
@@ -30,7 +30,7 @@ public class BbRsiThreadModel extends StratThreadModel<BbRsiThread> {
      *
      * @return the peak
      */
-    public float getPeak() {
+    public double getPeak() {
         return thread.getPeak();
     }
 

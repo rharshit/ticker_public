@@ -8,8 +8,8 @@ import java.util.List;
 @Data
 public class TradeGraph {
     List<String> labels = new ArrayList<>();
-    List<Float> pnl = new ArrayList<>();
-    List<Float> netPnl = new ArrayList<>();
-    List<Float> taxes = new ArrayList<>();
+    List<Double> pnl = new ArrayList<>();
+    List<Double> netPnl = new ArrayList<>();
+    List<Double> taxes = new ArrayList<>();
     List<Integer> numTrades = new ArrayList<>();
 }

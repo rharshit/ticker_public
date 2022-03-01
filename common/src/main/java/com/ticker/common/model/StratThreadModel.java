@@ -45,7 +45,7 @@ public class StratThreadModel<T extends StratThread> extends TickerThreadModel<T
      *
      * @return the current value
      */
-    public float getCurrentValue() {
+    public double getCurrentValue() {
         return this.thread.getCurrentValue();
     }
 
@@ -54,7 +54,7 @@ public class StratThreadModel<T extends StratThread> extends TickerThreadModel<T
      *
      * @return the o
      */
-    public float getO() {
+    public double getO() {
         return thread.getO();
     }
 
@@ -63,7 +63,7 @@ public class StratThreadModel<T extends StratThread> extends TickerThreadModel<T
      *
      * @return the h
      */
-    public float getH() {
+    public double getH() {
         return thread.getH();
     }
 
@@ -72,7 +72,7 @@ public class StratThreadModel<T extends StratThread> extends TickerThreadModel<T
      *
      * @return the l
      */
-    public float getL() {
+    public double getL() {
         return thread.getL();
     }
 
@@ -81,7 +81,7 @@ public class StratThreadModel<T extends StratThread> extends TickerThreadModel<T
      *
      * @return the c
      */
-    public float getC() {
+    public double getC() {
         return thread.getC();
     }
 
@@ -90,7 +90,7 @@ public class StratThreadModel<T extends StratThread> extends TickerThreadModel<T
      *
      * @return the bb u
      */
-    public float getBbU() {
+    public double getBbU() {
         return thread.getBbU();
     }
 
@@ -99,7 +99,7 @@ public class StratThreadModel<T extends StratThread> extends TickerThreadModel<T
      *
      * @return the bb a
      */
-    public float getBbA() {
+    public double getBbA() {
         return thread.getBbA();
     }
 
@@ -108,7 +108,7 @@ public class StratThreadModel<T extends StratThread> extends TickerThreadModel<T
      *
      * @return the bb l
      */
-    public float getBbL() {
+    public double getBbL() {
         return thread.getBbL();
     }
 
@@ -117,7 +117,7 @@ public class StratThreadModel<T extends StratThread> extends TickerThreadModel<T
      *
      * @return the rsi
      */
-    public float getRsi() {
+    public double getRsi() {
         return thread.getRsi();
     }
 
@@ -126,7 +126,7 @@ public class StratThreadModel<T extends StratThread> extends TickerThreadModel<T
      *
      * @return the tema
      */
-    public float getTema() {
+    public double getTema() {
         return thread.getTema();
     }
 
@@ -135,7 +135,7 @@ public class StratThreadModel<T extends StratThread> extends TickerThreadModel<T
      *
      * @return the position qty
      */
-    public float getPositionQty() {
+    public double getPositionQty() {
         return thread.getPositionQty();
     }
 
@@ -171,7 +171,7 @@ public class StratThreadModel<T extends StratThread> extends TickerThreadModel<T
      *
      * @return the target threshold
      */
-    public float getTargetThreshold() {
+    public double getTargetThreshold() {
         return this.thread.getTargetThreshold();
     }
 

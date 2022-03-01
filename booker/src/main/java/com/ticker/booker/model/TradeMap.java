@@ -19,8 +19,8 @@ public class TradeMap extends HashMap<String, Object> {
     @Autowired
     private BookerService bookerService;
 
-    private Float pnl;
-    private Float taxes;
+    private Double pnl;
+    private Double taxes;
 
     /**
      * Instantiates a new Trade map.
@@ -44,9 +44,9 @@ public class TradeMap extends HashMap<String, Object> {
      *
      * @return the pnl
      */
-    public Float getPnl() {
+    public Double getPnl() {
         if (pnl == null) {
-            float pnlTmp = 0;
+            double pnlTmp = 0;
             for (Entry<String, Object> entry : entrySet()) {
                 if (entry.getValue() instanceof TradeMap) {
                     pnlTmp += ((TradeMap) entry.getValue()).getPnl();
@@ -68,9 +68,9 @@ public class TradeMap extends HashMap<String, Object> {
      *
      * @return the taxes
      */
-    public Float getTaxes() {
+    public Double getTaxes() {
         if (taxes == null) {
-            float taxTmp = 0;
+            double taxTmp = 0;
             for (Entry<String, Object> entry : entrySet()) {
                 if (entry.getValue() instanceof TradeMap) {
                     taxTmp += ((TradeMap) entry.getValue()).getTaxes();

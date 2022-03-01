@@ -78,7 +78,7 @@ public class BrokerageService extends BaseService {
      */
     @Cacheable("brokerage")
     public Map<String, Double> getZerodhaBrokerage(String type, String exchange,
-                                                   float buy, float sell, float quantity,
+                                                   double buy, double sell, double quantity,
                                                    int numTry) {
         log.debug("start: " + exchange + " : " + buy + ", " + sell + ", " + quantity);
         long start = System.currentTimeMillis();
@@ -165,13 +165,13 @@ public class BrokerageService extends BaseService {
         return data;
     }
 
-    private void setTabValues(WebElement tabDiv, float buy, float sell, float quantity) {
+    private void setTabValues(WebElement tabDiv, double buy, double sell, double quantity) {
         List<WebElement> inputs = tabDiv.findElement(By.className("calc-inputs"))
                 .findElements(By.className("brokerage-calculator-input"));
         for (WebElement input : inputs) {
             WebElement weLabel = input.findElement(By.tagName("label"));
             String label = weLabel.getText();
-            float val = 0;
+            double val = 0;
             switch (label) {
                 case "BUY":
                     val = buy;

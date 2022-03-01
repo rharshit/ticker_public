@@ -18,8 +18,8 @@ public class CompleteTrade {
     private String product;
     private String tickerType;
     private Integer quantity;
-    private Float pnl;
-    private Float taxes;
+    private Double pnl;
+    private Double taxes;
     private boolean completed = false;
 
     public Date getTimestamp() {

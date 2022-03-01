@@ -21,7 +21,7 @@ public class BbRsiSafeThreadModel extends StratThreadModel<BbRsiSafeThread> {
      *
      * @return the dip
      */
-    public float getDip() {
+    public double getDip() {
         return thread.getDip();
     }
 
@@ -30,7 +30,7 @@ public class BbRsiSafeThreadModel extends StratThreadModel<BbRsiSafeThread> {
      *
      * @return the peak
      */
-    public float getPeak() {
+    public double getPeak() {
         return thread.getPeak();
     }
 
@@ -57,7 +57,7 @@ public class BbRsiSafeThreadModel extends StratThreadModel<BbRsiSafeThread> {
      *
      * @return the trade value
      */
-    public float getTradeValue() {
+    public double getTradeValue() {
         return thread.getTradeValue();
     }
 
@@ -66,7 +66,7 @@ public class BbRsiSafeThreadModel extends StratThreadModel<BbRsiSafeThread> {
      *
      * @return the trail value
      */
-    public float getTrailValue() {
+    public double getTrailValue() {
         return thread.getTrailValue();
     }
 }
