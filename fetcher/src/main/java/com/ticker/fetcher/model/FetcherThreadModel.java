@@ -141,7 +141,57 @@ public class FetcherThreadModel extends TickerThreadModel<FetcherThread> {
         return thread.getTema();
     }
 
+    /**
+     * Gets last ping at.
+     *
+     * @return the last ping at
+     */
     public long getLastPingAt() {
         return thread.getLastPingAt();
+    }
+
+    /**
+     * Gets day o.
+     *
+     * @return the day o
+     */
+    public float getDayO() {
+        return thread.getDayO();
+    }
+
+    /**
+     * Gets day h.
+     *
+     * @return the day h
+     */
+    public float getDayH() {
+        return thread.getDayH();
+    }
+
+    /**
+     * Gets day l.
+     *
+     * @return the day l
+     */
+    public float getDayL() {
+        return thread.getDayL();
+    }
+
+    /**
+     * Gets day c.
+     *
+     * @return the day c
+     */
+    public float getDayC() {
+        return thread.getDayC();
+    }
+
+    /**
+     * Gets prev close.
+     *
+     * @return the prev close
+     */
+    public float getPrevClose() {
+        return thread.getPrevClose();
     }
 }

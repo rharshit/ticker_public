@@ -70,6 +70,11 @@ public class FetcherThread extends TickerThread<TickerService> {
     private float bbL;
     private float rsi;
     private float tema;
+    private float dayH;
+    private float dayL;
+    private float dayC;
+    private float prevClose;
+    private float dayO;
     private float currentValue;
     private long updatedAt;
     private boolean taskStarted = false;
@@ -199,6 +204,10 @@ public class FetcherThread extends TickerThread<TickerService> {
         quoteSession = "qs_" + createHash(12);
         quoteSessionTicker = "qs_" + createHash(12);
         quoteSessionTickerNew = "qs_" + createHash(12);
+        log.debug(getThreadName() + " : chartSession - " + chartSession);
+        log.debug(getThreadName() + " : quoteSession - " + quoteSession);
+        log.debug(getThreadName() + " : quoteSessionTicker - " + quoteSessionTicker);
+        log.debug(getThreadName() + " : quoteSessionTickerNew - " + quoteSessionTickerNew);
     }
 
     public static String getBuildTime() {
