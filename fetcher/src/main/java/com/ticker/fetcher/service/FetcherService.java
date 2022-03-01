@@ -90,7 +90,14 @@ public class FetcherService extends BaseService {
         fetcherTaskExecutor.execute(() -> {
             String[] messages = decodeMessage(data);
             for (String message : messages) {
-                log.debug("\n" + message);
+                String parsedMessage = message;
+                try {
+                    JSONObject jsonObject = new JSONObject(message);
+                    parsedMessage = jsonObject.toString(2);
+                } catch (Exception e) {
+
+                }
+                log.debug("\n" + parsedMessage);
                 if (Pattern.matches("~h~\\d*$", message)) {
                     sendMessage(thread, message);
                 } else {
