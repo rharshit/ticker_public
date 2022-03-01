@@ -74,7 +74,7 @@ public class FetcherRepoModel {
      */
     public FetcherRepoModel(FetcherThread thread) {
         this.tableName = thread.getTableName();
-        this.timestamp = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss").format(new Timestamp(System.currentTimeMillis()));
+        this.timestamp = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss").format(new Timestamp(thread.getUpdatedAt()));
         this.o = thread.getO();
         this.h = thread.getH();
         this.l = thread.getL();
