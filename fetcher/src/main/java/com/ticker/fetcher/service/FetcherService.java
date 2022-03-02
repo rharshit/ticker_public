@@ -206,7 +206,9 @@ public class FetcherService extends BaseService {
                         thread.setPrevClose(value.getDouble("prev_close_price"));
                     }
                 }
-                thread.setUpdatedAt((long) (vals[0] * 1000));
+                if (vals != null) {
+                    thread.setUpdatedAt((long) (vals[0] * 1000));
+                }
                 synchronized (dataQueue) {
                     dataQueue.add(new FetcherRepoModel(thread));
                 }
