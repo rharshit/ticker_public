@@ -205,6 +205,9 @@ public class FetcherService extends BaseService {
                     if (value.has("prev_close_price")) {
                         thread.setPrevClose(value.getDouble("prev_close_price"));
                     }
+                    if (value.has("pointvalue")) {
+                        thread.setPointValue(value.getInt("pointvalue"));
+                    }
                 }
                 if (vals != null) {
                     thread.setUpdatedAt((long) (vals[0] * 1000));
@@ -375,5 +378,9 @@ public class FetcherService extends BaseService {
             waitFor(WAIT_QUICK);
         }
         log.debug(thread.getThreadName() + " : Session set - " + thread.getSessionId());
+    }
+
+    public void updatePointValue(FetcherThread thread) {
+        appService.updatePointValue(thread);
     }
 }

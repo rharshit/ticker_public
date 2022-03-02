@@ -1,6 +1,7 @@
 package com.ticker.fetcher.service;
 
 import com.ticker.common.entity.exchangesymbol.ExchangeSymbolEntity;
+import com.ticker.common.entity.exchangesymbol.ExchangeSymbolEntityPK;
 import com.ticker.common.exception.TickerException;
 import com.ticker.common.service.TickerThreadService;
 import com.ticker.fetcher.model.FetcherThreadModel;
@@ -212,5 +213,22 @@ public class TickerService extends TickerThreadService<FetcherThread, FetcherThr
             thread.initializeTables();
         }
         log.info("Initialized tables in " + (System.currentTimeMillis() - start) + "ms");
+    }
+
+    public void updatePointValue(FetcherThread thread) {
+        try {
+            ExchangeSymbolEntity exchangeSymbolEntity = exchangeSymbolRepository.findById(new ExchangeSymbolEntityPK(thread.getExchange(), thread.getSymbol())).orElse(null);
+            if (exchangeSymbolEntity != null) {
+                int pointValue = thread.getPointValue();
+                log.info(thread.getThreadName() + " : Updating point value from " + exchangeSymbolEntity.getLotSize() + " to " + pointValue);
+                exchangeSymbolEntity.setMinQty(pointValue);
+                exchangeSymbolEntity.setIncQty(pointValue);
+                exchangeSymbolEntity.setLotSize(pointValue);
+
+                exchangeSymbolRepository.save(exchangeSymbolEntity);
+                log.info(thread.getThreadName() + " : Point value updated");
+            }
+        } catch (Exception ignored) {
+        }
     }
 }

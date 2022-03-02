@@ -75,6 +75,7 @@ public class FetcherThread extends TickerThread<TickerService> {
     private double dayL;
     private double dayC;
     private double prevClose;
+    private int pointValue;
     private double currentValue;
     private long updatedAt;
     private boolean taskStarted = false;
@@ -119,6 +120,7 @@ public class FetcherThread extends TickerThread<TickerService> {
             throw new TickerException("No entity found for the given exchange and symbol");
         }
         this.entity = entity;
+        this.pointValue = entity.getLotSize() == null ? 0 : entity.getLotSize();
     }
 
     public String getExchange() {
@@ -316,7 +318,7 @@ public class FetcherThread extends TickerThread<TickerService> {
             } else {
                 log.warn("Error while initializing " + getThreadName());
             }
-
+            log.info(getThreadName() + " : Retries - " + retry);
             if (retry < RETRY_LIMIT && isEnabled()) {
                 retry++;
                 initialize(refresh);
@@ -446,6 +448,15 @@ public class FetcherThread extends TickerThread<TickerService> {
             add = 'a' - 36;
         }
         return (char) (x + add);
+    }
+
+    public void setPointValue(int pointValue) {
+        if (this.pointValue != pointValue) {
+            this.pointValue = pointValue;
+            if (pointValue > 1) {
+                fetcherService.updatePointValue(this);
+            }
+        }
     }
 
     /**
