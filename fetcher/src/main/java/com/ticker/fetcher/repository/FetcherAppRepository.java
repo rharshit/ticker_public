@@ -137,7 +137,7 @@ public class FetcherAppRepository {
             List<String> tempQueue = new ArrayList<>();
             for (FetcherRepoModel data : datas) {
                 if (data.getTimestamp().startsWith("1970-01-01")) {
-                    log.info(data.getTableName() + " : Skipping data due to invalid timestamp: " + data.getTimestamp());
+                    log.trace(data.getTableName() + " : Skipping data due to invalid timestamp: " + data.getTimestamp());
                     continue;
                 }
                 log.trace(data.toString());
