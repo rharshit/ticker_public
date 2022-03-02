@@ -45,6 +45,7 @@ public abstract class TickerThread<S extends TickerThreadService> extends Thread
 
     {
         setDaemon(true);
+        Runtime.getRuntime().addShutdownHook(new Thread(this::terminateThread));
     }
 
     /**
