@@ -147,7 +147,7 @@ public class FetcherThread extends TickerThread<TickerService> {
                 webSocketClient = new WebSocketClient(new URI("wss://data.tradingview.com/socket.io/websocket?from=chart%2F&date=" + getBuildTime())) {
                     @Override
                     public void onOpen(ServerHandshake handshakedata) {
-                        log.info(getThreadName() + " : Opened websocket");
+                        log.debug(getThreadName() + " : Opened websocket");
                     }
 
                     @Override
@@ -158,7 +158,7 @@ public class FetcherThread extends TickerThread<TickerService> {
 
                     @Override
                     public void onClose(int code, String reason, boolean remote) {
-                        log.info(getThreadName() + " : Closed websocket, reason - " + reason);
+                        log.debug(getThreadName() + " : Closed websocket, reason - " + reason);
                         if (isEnabled()) {
                             refresh();
                         }
@@ -392,7 +392,7 @@ public class FetcherThread extends TickerThread<TickerService> {
     private void closeWebsocketIfExists(int code, String reason) {
         setInitialized(false);
         if (webSocketClient != null) {
-            log.info(getThreadName() + " : Closing websocket");
+            log.debug(getThreadName() + " : Closing websocket");
             try {
                 long start = System.currentTimeMillis();
                 webSocketClient.close(code, reason);
@@ -406,7 +406,7 @@ public class FetcherThread extends TickerThread<TickerService> {
 
             }
             webSocketClient = null;
-            log.info(getThreadName() + " : Websocket closed");
+            log.debug(getThreadName() + " : Websocket closed");
         }
     }
 
