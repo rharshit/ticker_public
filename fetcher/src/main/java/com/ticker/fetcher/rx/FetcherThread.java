@@ -311,6 +311,12 @@ public class FetcherThread extends TickerThread<TickerService> {
                         " getStudyTEMA(): " + getStudyTEMA());
                 throw new TickerException(getThreadName() + " : Error initializing study name");
             }
+            if (refresh) {
+                log.info(getExchange() + ":" + getSymbol() + " - Refreshed");
+            } else {
+                log.info(getExchange() + ":" + getSymbol() + " - Initialized");
+            }
+            retry = 0;
         } catch (Exception e) {
             setInitialized(false);
             if (refresh) {
@@ -332,12 +338,6 @@ public class FetcherThread extends TickerThread<TickerService> {
                 destroy();
             }
         }
-        if (refresh) {
-            log.info(getExchange() + ":" + getSymbol() + " - Refreshed");
-        } else {
-            log.info(getExchange() + ":" + getSymbol() + " - Initialized");
-        }
-        retry = 0;
     }
 
     @Override
