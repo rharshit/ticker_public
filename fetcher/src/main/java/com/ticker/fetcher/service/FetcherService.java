@@ -76,7 +76,7 @@ public class FetcherService extends BaseService {
      * @param data   the data
      */
     public void sendMessage(FetcherThread thread, String data) {
-        if (thread.getWebSocketClient().isOpen()) {
+        if (thread.getWebSocketClient() != null && thread.getWebSocketClient().isOpen()) {
             log.debug(thread.getThreadName() + " : sending message\n" + data);
             thread.getWebSocketClient().send(encodeMessage(data));
             waitFor(5);
