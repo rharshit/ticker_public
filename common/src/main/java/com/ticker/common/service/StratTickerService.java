@@ -16,6 +16,7 @@ import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
 import org.springframework.web.client.RestTemplate;
 
+import java.text.SimpleDateFormat;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.Map;
@@ -278,7 +279,8 @@ public abstract class StratTickerService<T extends StratThread, TM extends Strat
                 " at " + DATE_TIME_FORMATTER_TIME_SECONDS.format(new Date(System.currentTimeMillis())) +
                 " for " + thread.getCurrentValue();
         log.info(tradeString);
-        Util.writeToFile("logs/trade-" + appName + ".log", tradeString);
+        String path = "logs/" + appName + "-trade" + (new SimpleDateFormat("-yyyy-MM-dd")).format(new Date(System.currentTimeMillis())) + ".log";
+        Util.writeToFile(path, tradeString, true);
         thread.setPositionQty(thread.getPositionQty() + qty);
         return thread.getCurrentValue();
     }
@@ -299,7 +301,8 @@ public abstract class StratTickerService<T extends StratThread, TM extends Strat
                 " at " + DATE_TIME_FORMATTER_TIME_SECONDS.format(new Date(System.currentTimeMillis())) +
                 " for " + thread.getCurrentValue();
         log.info(tradeString);
-        Util.writeToFile("logs/trade-" + appName + ".log", tradeString);
+        String path = "logs/" + appName + "-trade" + (new SimpleDateFormat("-yyyy-MM-dd")).format(new Date(System.currentTimeMillis())) + ".log";
+        Util.writeToFile(path, tradeString, true);
         thread.setPositionQty(thread.getPositionQty() - qty);
         return thread.getCurrentValue();
     }

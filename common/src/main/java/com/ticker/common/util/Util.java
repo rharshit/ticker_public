@@ -70,25 +70,28 @@ public abstract class Util {
         }
     }
 
-    public static void writeToFile(String path, String message) {
+    public static void writeToFile(String path, String message, boolean append) {
         try {
             createFile(path);
-            write(path, message);
+            write(path, message, append);
         } catch (Exception e) {
             log.debug("Error occurred while writing to file at path: " + path);
         }
     }
 
-    private static synchronized void write(String path, String message) {
-        try (FileWriter myWriter = new FileWriter(path)) {
+    private static synchronized void write(String path, String message, boolean append) {
+        try (FileWriter myWriter = new FileWriter(path, append)) {
             myWriter.write(message);
+            if (append) {
+                myWriter.write("\n");
+            }
         } catch (IOException e) {
             log.debug("Error while writing data");
         }
     }
 
-    private static void write(File file, String message) {
-        write(file.getPath(), message);
+    private static void write(File file, String message, boolean append) {
+        write(file.getPath(), message, append);
     }
 
     private static void createFile(String path) {
