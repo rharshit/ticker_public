@@ -45,6 +45,7 @@ public abstract class TickerThread<S extends TickerThreadService> extends Thread
 
     {
         setDaemon(true);
+        Runtime.getRuntime().addShutdownHook(new Thread(this::terminateThread));
     }
 
     /**
@@ -53,7 +54,7 @@ public abstract class TickerThread<S extends TickerThreadService> extends Thread
      * @param entity the entity
      */
     public TickerThread(ExchangeSymbolEntity entity) {
-        this.entity = entity;
+        setEntity(entity);
     }
 
     /**

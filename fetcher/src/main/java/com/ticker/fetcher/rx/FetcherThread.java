@@ -75,6 +75,7 @@ public class FetcherThread extends TickerThread<TickerService> {
     private double dayL;
     private double dayC;
     private double prevClose;
+    private int pointValue;
     private double currentValue;
     private long updatedAt;
     private boolean taskStarted = false;
@@ -119,6 +120,7 @@ public class FetcherThread extends TickerThread<TickerService> {
             throw new TickerException("No entity found for the given exchange and symbol");
         }
         this.entity = entity;
+        this.pointValue = entity.getLotSize() == null ? 0 : entity.getLotSize();
     }
 
     public String getExchange() {
@@ -145,7 +147,7 @@ public class FetcherThread extends TickerThread<TickerService> {
                 webSocketClient = new WebSocketClient(new URI("wss://data.tradingview.com/socket.io/websocket?from=chart%2F&date=" + getBuildTime())) {
                     @Override
                     public void onOpen(ServerHandshake handshakedata) {
-                        log.info(getThreadName() + " : Opened websocket");
+                        log.debug(getThreadName() + " : Opened websocket");
                     }
 
                     @Override
@@ -156,8 +158,8 @@ public class FetcherThread extends TickerThread<TickerService> {
 
                     @Override
                     public void onClose(int code, String reason, boolean remote) {
-                        log.info(getThreadName() + " : Closed websocket, reason - " + reason);
-                        if (isEnabled()) {
+                        log.debug(getThreadName() + " : Closed websocket, reason - " + reason);
+                        if (isEnabled() && isInitialized()) {
                             refresh();
                         }
                     }
@@ -250,7 +252,7 @@ public class FetcherThread extends TickerThread<TickerService> {
         }
     }
 
-    private void initializeTables() {
+    public void initializeTables() {
         String tableName = getTableName();
         fetcherService.createTable(tableName);
     }
@@ -309,6 +311,12 @@ public class FetcherThread extends TickerThread<TickerService> {
                         " getStudyTEMA(): " + getStudyTEMA());
                 throw new TickerException(getThreadName() + " : Error initializing study name");
             }
+            if (refresh) {
+                log.info(getExchange() + ":" + getSymbol() + " - Refreshed");
+            } else {
+                log.info(getExchange() + ":" + getSymbol() + " - Initialized");
+            }
+            retry = 0;
         } catch (Exception e) {
             setInitialized(false);
             if (refresh) {
@@ -316,7 +324,7 @@ public class FetcherThread extends TickerThread<TickerService> {
             } else {
                 log.warn("Error while initializing " + getThreadName());
             }
-
+            log.info(getThreadName() + " : Retries - " + retry);
             if (retry < RETRY_LIMIT && isEnabled()) {
                 retry++;
                 initialize(refresh);
@@ -330,12 +338,6 @@ public class FetcherThread extends TickerThread<TickerService> {
                 destroy();
             }
         }
-        if (refresh) {
-            log.info(getExchange() + ":" + getSymbol() + " - Refreshed");
-        } else {
-            log.info(getExchange() + ":" + getSymbol() + " - Initialized");
-        }
-        retry = 0;
     }
 
     @Override
@@ -390,7 +392,7 @@ public class FetcherThread extends TickerThread<TickerService> {
     private void closeWebsocketIfExists(int code, String reason) {
         setInitialized(false);
         if (webSocketClient != null) {
-            log.info(getThreadName() + " : Closing websocket");
+            log.debug(getThreadName() + " : Closing websocket");
             try {
                 long start = System.currentTimeMillis();
                 webSocketClient.close(code, reason);
@@ -404,7 +406,7 @@ public class FetcherThread extends TickerThread<TickerService> {
 
             }
             webSocketClient = null;
-            log.info(getThreadName() + " : Websocket closed");
+            log.debug(getThreadName() + " : Websocket closed");
         }
     }
 
@@ -446,6 +448,15 @@ public class FetcherThread extends TickerThread<TickerService> {
             add = 'a' - 36;
         }
         return (char) (x + add);
+    }
+
+    public void setPointValue(int pointValue) {
+        if (this.pointValue != pointValue) {
+            this.pointValue = pointValue;
+            if (pointValue > 1) {
+                fetcherService.updatePointValue(this);
+            }
+        }
     }
 
     /**

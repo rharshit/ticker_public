@@ -32,7 +32,7 @@ public abstract class Util {
      * @param time the time
      */
     public static void waitFor(long time) {
-        log.debug("Waiting for " + time + "ma");
+        log.debug("Waiting for " + time + "ms");
         try {
             Thread.sleep(time);
         } catch (InterruptedException e) {

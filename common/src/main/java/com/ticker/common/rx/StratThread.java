@@ -39,6 +39,11 @@ public abstract class StratThread<S extends StratTickerService> extends TickerTh
     private double bbL;
     private double rsi;
     private double tema;
+    private double dayO;
+    private double dayH;
+    private double dayL;
+    private double dayC;
+    private double prevClose;
     private double currentValue;
     private long updatedAt;
     private String tickerType = "";
@@ -116,7 +121,13 @@ public abstract class StratThread<S extends StratTickerService> extends TickerTh
             setBbL((double) ticker.get("bbL"));
             setRsi((double) ticker.get("rsi"));
             setTema((double) ticker.get("tema"));
-            if (getO() * getH() * getL() * getC() * getBbL() * getBbA() * getBbU() * getRsi() == 0) {
+            setDayO((double) ticker.get("dayO"));
+            setDayH((double) ticker.get("dayH"));
+            setDayL((double) ticker.get("dayL"));
+            setDayC((double) ticker.get("dayC"));
+            setPrevClose((double) ticker.get("prevClose"));
+            if (getO() * getH() * getL() * getC() * getBbL() * getBbA() * getBbU() * getRsi() * getTema()
+                    * getDayO() * getDayH() * getDayL() * getDayC() * getPrevClose() == 0) {
                 setFetching(false);
                 setCurrentValue(0);
             } else {
@@ -126,17 +137,23 @@ public abstract class StratThread<S extends StratTickerService> extends TickerTh
             setFetching(false);
             setCurrentValue(0);
         }
-        log.debug("");
-        log.debug(String.valueOf(getCurrentValue()));
-        log.debug("");
-        log.debug(String.valueOf(getO()));
-        log.debug(String.valueOf(getH()));
-        log.debug(String.valueOf(getL()));
-        log.debug(String.valueOf(getC()));
-        log.debug(String.valueOf(getBbL()));
-        log.debug(String.valueOf(getBbA()));
-        log.debug(String.valueOf(getBbU()));
-        log.debug(String.valueOf(getRsi()));
+        log.trace(getThreadName() + ":");
+        log.trace(getThreadName() + ":" + getCurrentValue());
+        log.trace(getThreadName() + ":");
+        log.trace(getThreadName() + ":" + getO());
+        log.trace(getThreadName() + ":" + getH());
+        log.trace(getThreadName() + ":" + getL());
+        log.trace(getThreadName() + ":" + getC());
+        log.trace(getThreadName() + ":" + getBbL());
+        log.trace(getThreadName() + ":" + getBbA());
+        log.trace(getThreadName() + ":" + getBbU());
+        log.trace(getThreadName() + ":" + getRsi());
+        log.trace(getThreadName() + ":" + getTema());
+        log.trace(getThreadName() + ":" + getDayO());
+        log.trace(getThreadName() + ":" + getDayH());
+        log.trace(getThreadName() + ":" + getDayL());
+        log.trace(getThreadName() + ":" + getDayC());
+        log.trace(getThreadName() + ":" + getPrevClose());
     }
 
     /**

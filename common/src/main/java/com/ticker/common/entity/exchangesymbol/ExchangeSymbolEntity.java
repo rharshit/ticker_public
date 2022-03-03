@@ -34,6 +34,7 @@ public class ExchangeSymbolEntity implements Serializable {
     private Integer minQty = 1;
     private Integer incQty = 1;
     private Integer lotSize = 1;
+    private String tags;
 
     /**
      * Instantiates a new Exchange symbol entity.

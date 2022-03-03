@@ -46,8 +46,8 @@ public abstract class StratTickerService<T extends StratThread, TM extends Strat
     private Executor stratTaskExecutor;
 
     @Autowired
-    @Qualifier("scheduledExecutor")
-    private Executor scheduledExecutor;
+    @Qualifier("fetcherExecutor")
+    private Executor fetcherExecutor;
 
     /**
      * @param exchange
@@ -72,6 +72,11 @@ public abstract class StratTickerService<T extends StratThread, TM extends Strat
 
             log.info(thread.getThreadName() + " : added thread");
             thread.start();
+            long startTime = System.currentTimeMillis();
+            while (!thread.isEnabled() && System.currentTimeMillis() - startTime <= 10000) {
+                waitFor(WAIT_SHORT);
+            }
+            checkFetchingForApp(thread);
         }
     }
 
@@ -88,37 +93,32 @@ public abstract class StratTickerService<T extends StratThread, TM extends Strat
         t.setTickerType(getFavourableTickerType(t));
     }
 
-    /**
-     * Check fetching for apps.
-     */
-    @Async("scheduledExecutor")
-    @Scheduled(fixedDelay = 300)
-    public void checkFetchingForApps() {
-        for (T thread : getCurrentTickerList()) {
-            checkFetchingForApp(thread);
-        }
-    }
-
     private void checkFetchingForApp(T thread) {
-        String baseUrl = Util.getApplicationUrl(APPLICATION_FETCHER);
-        String getCurrentTickerUrl = baseUrl + "current/";
         try {
-            Map<String, Object> params = new HashMap<>();
-            params.put("exchange", thread.getExchange());
-            params.put("symbol", thread.getSymbol());
-            Map<String, Object> ticker =
-                    restTemplate.getForObject(getCurrentTickerUrl,
-                            Map.class, params);
-            if (ticker == null) {
-                thread.setInitialized(false);
-                thread.setFetching(false);
-                thread.setCurrentValue(0);
-            } else {
-                thread.setFetchMetrics(ticker);
+            if (thread.isEnabled()) {
+                String baseUrl = Util.getApplicationUrl(APPLICATION_FETCHER);
+                String getCurrentTickerUrl = baseUrl + "current/";
+                Map<String, Object> params = new HashMap<>();
+                params.put("exchange", thread.getExchange());
+                params.put("symbol", thread.getSymbol());
+                Map<String, Object> ticker =
+                        restTemplate.getForObject(getCurrentTickerUrl,
+                                Map.class, params);
+                if (ticker == null) {
+                    thread.setInitialized(false);
+                    thread.setFetching(false);
+                    thread.setCurrentValue(0);
+                } else {
+                    thread.setFetchMetrics(ticker);
+                }
             }
         } catch (Exception e) {
             thread.setFetching(false);
             thread.setCurrentValue(0);
+        }
+        if (thread.isEnabled()) {
+            waitFor(WAIT_MEDIUM);
+            fetcherExecutor.execute(() -> checkFetchingForApp(thread));
         }
     }
 

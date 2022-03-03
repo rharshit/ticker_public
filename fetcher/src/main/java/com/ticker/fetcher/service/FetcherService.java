@@ -63,7 +63,7 @@ public class FetcherService extends BaseService {
      * @param data   the data
      */
     public void sendMessage(FetcherThread thread, String data) {
-        if (thread.getWebSocketClient().isOpen()) {
+        if (thread.getWebSocketClient() != null && thread.getWebSocketClient().isOpen()) {
             log.debug(thread.getThreadName() + " : sending message\n" + data);
             thread.getWebSocketClient().send(encodeMessage(data));
             waitFor(5);
@@ -192,8 +192,11 @@ public class FetcherService extends BaseService {
                     if (value.has("prev_close_price")) {
                         thread.setPrevClose(value.getDouble("prev_close_price"));
                     }
+                    if (value.has("pointvalue")) {
+                        thread.setPointValue(value.getInt("pointvalue"));
+                    }
                 }
-                thread.setUpdatedAt((long) (vals[0] * 1000));
+                thread.setUpdatedAt(System.currentTimeMillis());
                 synchronized (dataQueue) {
                     dataQueue.add(new FetcherRepoModel(thread));
                 }
@@ -275,7 +278,11 @@ public class FetcherService extends BaseService {
      * @param thread the thread
      */
     public void handshake(FetcherThread thread) {
+        long startTime = System.currentTimeMillis();
         while (thread.isEnabled() && !thread.getWebSocketClient().isOpen()) {
+            if (System.currentTimeMillis() - startTime > 10000) {
+                throw new TickerException(thread.getThreadName() + " : Timeout while waiting for websocket to open");
+            }
             waitFor(WAIT_QUICK);
         }
         if (thread.isEnabled()) {
@@ -341,13 +348,25 @@ public class FetcherService extends BaseService {
      * @param thread the thread
      */
     public void addSession(FetcherThread thread) {
+        long startTime = System.currentTimeMillis();
         while (thread.isEnabled() && !thread.getWebSocketClient().isOpen()) {
+            if (System.currentTimeMillis() - startTime > 10000) {
+                throw new TickerException(thread.getThreadName() + " : Timeout while waiting for websocket to open");
+            }
             waitFor(WAIT_QUICK);
         }
+        startTime = System.currentTimeMillis();
         while (ObjectUtils.isEmpty(thread.getSessionId())) {
+            if (System.currentTimeMillis() - startTime > 10000) {
+                throw new TickerException(thread.getThreadName() + " : Timeout while waiting for Session ID");
+            }
             waitFor(WAIT_QUICK);
         }
         log.debug(thread.getThreadName() + " : Session set - " + thread.getSessionId());
+    }
+
+    public void updatePointValue(FetcherThread thread) {
+        appService.updatePointValue(thread);
     }
 
     @Override

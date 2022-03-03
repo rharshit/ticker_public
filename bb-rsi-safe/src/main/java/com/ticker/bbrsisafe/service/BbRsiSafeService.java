@@ -181,7 +181,7 @@ public class BbRsiSafeService extends StratTickerService<BbRsiSafeThread, BbRsiS
             thread.setTradeStartTime(System.currentTimeMillis());
             if (thread.getRsi() >= RSI_UPPER_LIMIT_REBOUND) {
                 log.trace(thread.getThreadName() + " : rebound");
-                thread.setIntermediateState(BB_RSI_SAFE_THREAD_STATE_UT_WAIT_WAVE_REVENGE, BB_RSI_SAFE_THREAD_STATE_UT_TRIGGER_START);
+                thread.setStates(BB_RSI_SAFE_THREAD_STATE_UT_WAIT_WAVE_BOUGHT, BB_RSI_SAFE_THREAD_STATE_UT_WAIT_WAVE_REVENGE, BB_RSI_SAFE_THREAD_STATE_UT_TRIGGER_START);
             }
         } catch (Exception e) {
 
@@ -196,7 +196,7 @@ public class BbRsiSafeService extends StratTickerService<BbRsiSafeThread, BbRsiS
             thread.setTradeStartTime(System.currentTimeMillis());
             if (thread.getRsi() <= RSI_LOWER_LIMIT_REBOUND) {
                 log.trace(thread.getThreadName() + " : rebound");
-                thread.setIntermediateState(BB_RSI_SAFE_THREAD_STATE_LT_WAIT_WAVE_REVENGE, BB_RSI_SAFE_THREAD_STATE_LT_TRIGGER_START);
+                thread.setStates(BB_RSI_SAFE_THREAD_STATE_LT_WAIT_WAVE_SOLD, BB_RSI_SAFE_THREAD_STATE_LT_WAIT_WAVE_REVENGE, BB_RSI_SAFE_THREAD_STATE_LT_TRIGGER_START);
             }
         } catch (Exception e) {
 

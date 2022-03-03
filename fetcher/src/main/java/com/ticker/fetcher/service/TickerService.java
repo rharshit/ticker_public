@@ -1,6 +1,7 @@
 package com.ticker.fetcher.service;
 
 import com.ticker.common.entity.exchangesymbol.ExchangeSymbolEntity;
+import com.ticker.common.entity.exchangesymbol.ExchangeSymbolEntityPK;
 import com.ticker.common.exception.TickerException;
 import com.ticker.common.service.TickerThreadService;
 import com.ticker.fetcher.model.FetcherThreadModel;
@@ -13,6 +14,8 @@ import org.springframework.scheduling.annotation.Async;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
 
+import java.sql.Timestamp;
+import java.text.SimpleDateFormat;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Set;
@@ -202,6 +205,38 @@ public class TickerService extends TickerThreadService<FetcherThread, FetcherThr
                 log.info(thread.getThreadName() + " : not updated for " + (now - thread.getUpdatedAt()) + "ms");
                 fetcherTaskExecutor.execute(thread::refresh);
             }
+        }
+    }
+
+    /**
+     * Initialize tables on new day
+     */
+    @Async("repoExecutor")
+    @Scheduled(cron = "5 0 0 ? * *")
+    public void initializeTables() {
+        log.info("Initializing tables started at " + new SimpleDateFormat("yyyy-MM-dd HH:mm:ss").format(new Timestamp(System.currentTimeMillis())));
+        Set<FetcherThread> threadMap = getThreadPool();
+        long start = System.currentTimeMillis();
+        for (FetcherThread thread : threadMap) {
+            thread.initializeTables();
+        }
+        log.info("Initialized tables in " + (System.currentTimeMillis() - start) + "ms");
+    }
+
+    public void updatePointValue(FetcherThread thread) {
+        try {
+            ExchangeSymbolEntity exchangeSymbolEntity = exchangeSymbolRepository.findById(new ExchangeSymbolEntityPK(thread.getExchange(), thread.getSymbol())).orElse(null);
+            if (exchangeSymbolEntity != null) {
+                int pointValue = thread.getPointValue();
+                log.info(thread.getThreadName() + " : Updating point value from " + exchangeSymbolEntity.getLotSize() + " to " + pointValue);
+                exchangeSymbolEntity.setMinQty(pointValue);
+                exchangeSymbolEntity.setIncQty(pointValue);
+                exchangeSymbolEntity.setLotSize(pointValue);
+
+                exchangeSymbolRepository.save(exchangeSymbolEntity);
+                log.info(thread.getThreadName() + " : Point value updated");
+            }
+        } catch (Exception ignored) {
         }
     }
 

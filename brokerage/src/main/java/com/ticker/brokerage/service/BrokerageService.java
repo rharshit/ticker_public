@@ -103,7 +103,11 @@ public class BrokerageService extends BaseService {
         Map<String, Double> data = new HashMap<>();
         busy = true;
         WebDriver webDriver = null;
-        while (webDriver == null) {
+        long startTime = System.currentTimeMillis();
+        while (true) {
+            if (System.currentTimeMillis() - startTime > 100000) {
+                throw new TickerException("Error getting webdriver, closing");
+            }
             log.debug("Getting webdriver");
             webDriver = (WebDriver) webDrivers.get();
             if (webDriver != null) {
