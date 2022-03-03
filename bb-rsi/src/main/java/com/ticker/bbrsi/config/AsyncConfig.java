@@ -46,16 +46,16 @@ public class AsyncConfig implements AsyncConfigurer {
     }
 
     /**
-     * Gets scheduled repo executor.
+     * Gets scheduled executor.
      *
      * @return the scheduled repo executor
      */
     @Bean(name = "scheduledExecutor")
-    public Executor getScheduledRepoExecutor() {
+    public Executor getScheduledExecutor() {
         ThreadPoolTaskExecutor executor = new ThreadPoolTaskExecutor();
-        executor.setCorePoolSize(2);
-        executor.setMaxPoolSize(4);
-        executor.setQueueCapacity(4);
+        executor.setCorePoolSize(64);
+        executor.setMaxPoolSize(128);
+        executor.setQueueCapacity(32);
         executor.setThreadNamePrefix("schedExec-");
         executor.initialize();
         return executor;
