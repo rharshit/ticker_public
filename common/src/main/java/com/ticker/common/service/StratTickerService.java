@@ -46,8 +46,8 @@ public abstract class StratTickerService<T extends StratThread, TM extends Strat
     private Executor stratTaskExecutor;
 
     @Autowired
-    @Qualifier("scheduledExecutor")
-    private Executor scheduledExecutor;
+    @Qualifier("fetcherExecutor")
+    private Executor fetcherExecutor;
 
     /**
      * @param exchange
@@ -118,7 +118,7 @@ public abstract class StratTickerService<T extends StratThread, TM extends Strat
         }
         if (thread.isEnabled()) {
             waitFor(WAIT_MEDIUM);
-            scheduledExecutor.execute(() -> checkFetchingForApp(thread));
+            fetcherExecutor.execute(() -> checkFetchingForApp(thread));
         }
     }
 
