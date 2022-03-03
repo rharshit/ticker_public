@@ -186,46 +186,49 @@ public class BookerService extends BaseService {
         String[] lines = logs.split("\n");
         for (String line : lines) {
             try {
+                String val;
                 if (line.contains("StratTickerService")) {
-                    String val = line.split("StratTickerService", 2)[1].split(":", 2)[1].trim();
-                    Matcher matcher = pattern.matcher(val);
-                    if (matcher.find()) {
-                        TickerTrade trade = new TickerTrade();
-                        trade.setAppName(app == null ? "Booker" : app);
+                    val = line.split("StratTickerService", 2)[1].split(":", 2)[1].trim();
+                } else {
+                    val = line.trim();
+                }
+                Matcher matcher = pattern.matcher(val);
+                if (matcher.find()) {
+                    TickerTrade trade = new TickerTrade();
+                    trade.setAppName(app == null ? "Booker" : app);
 
-                        String transactionType = matcher.group(1);
-                        if ("Bought".equalsIgnoreCase(transactionType)) {
-                            trade.transactionType = "BUY";
-                        } else if ("Sold".equalsIgnoreCase(transactionType)) {
-                            trade.transactionType = "SELL";
-                        } else {
-                            new TickerException("Wrong transaction type: " + transactionType);
-                        }
-
-                        trade.quantity = String.valueOf(Integer.parseInt(matcher.group(2)));
-
-                        String product = matcher.group(3);
-                        if ("F".equalsIgnoreCase(product)) {
-                            trade.exchange = "NFO";
-                            trade.product = "MIS";
-                        } else if ("I".equalsIgnoreCase(product)) {
-                            trade.product = "MIS";
-                        } else if ("E".equalsIgnoreCase(product)) {
-                            trade.product = "CNC";
-                        }
-
-                        String exchangeSymbol = matcher.group(4);
-                        trade.exchange = !"NFO".equalsIgnoreCase(trade.exchange) ? exchangeSymbol.split(":")[0] : "NFO";
-                        trade.tradingSymbol = exchangeSymbol.split(":")[1];
-
-                        String sDate = matcher.group(5);
-                        trade.fillTimestamp = new SimpleDateFormat("yyyy/MM/dd HH:mm:ss").parse(sDate);
-                        trade.exchangeTimestamp = trade.fillTimestamp;
-
-                        trade.averagePrice = String.valueOf(Double.parseDouble(matcher.group(6)));
-
-                        trades.add(trade);
+                    String transactionType = matcher.group(1);
+                    if ("Bought".equalsIgnoreCase(transactionType)) {
+                        trade.transactionType = "BUY";
+                    } else if ("Sold".equalsIgnoreCase(transactionType)) {
+                        trade.transactionType = "SELL";
+                    } else {
+                        new TickerException("Wrong transaction type: " + transactionType);
                     }
+
+                    trade.quantity = String.valueOf(Integer.parseInt(matcher.group(2)));
+
+                    String product = matcher.group(3);
+                    if ("F".equalsIgnoreCase(product)) {
+                        trade.exchange = "NFO";
+                        trade.product = "MIS";
+                    } else if ("I".equalsIgnoreCase(product)) {
+                        trade.product = "MIS";
+                    } else if ("E".equalsIgnoreCase(product)) {
+                        trade.product = "CNC";
+                    }
+
+                    String exchangeSymbol = matcher.group(4);
+                    trade.exchange = !"NFO".equalsIgnoreCase(trade.exchange) ? exchangeSymbol.split(":")[0] : "NFO";
+                    trade.tradingSymbol = exchangeSymbol.split(":")[1];
+
+                    String sDate = matcher.group(5);
+                    trade.fillTimestamp = new SimpleDateFormat("yyyy/MM/dd HH:mm:ss").parse(sDate);
+                    trade.exchangeTimestamp = trade.fillTimestamp;
+
+                    trade.averagePrice = String.valueOf(Double.parseDouble(matcher.group(6)));
+
+                    trades.add(trade);
                 }
             } catch (Exception e) {
                 log.error(line);
