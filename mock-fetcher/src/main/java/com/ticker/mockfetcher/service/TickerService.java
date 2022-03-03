@@ -10,7 +10,10 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
+import java.util.HashMap;
+import java.util.Map;
 import java.util.Set;
+import java.util.concurrent.Executor;
 
 import static com.ticker.mockfetcher.constants.FetcherConstants.MOCK_FETCHER_THREAD_COMP_NAME;
 
@@ -156,5 +159,10 @@ public class TickerService extends TickerThreadService<MockFetcherThread, MockFe
             exchangeSymbolEntity.setLotSize(lotSize);
         }
         return exchangeSymbolRepository.save(exchangeSymbolEntity);
+    }
+
+    @Override
+    protected Map<String, Executor> getExecutorMap() {
+        return new HashMap<>();
     }
 }

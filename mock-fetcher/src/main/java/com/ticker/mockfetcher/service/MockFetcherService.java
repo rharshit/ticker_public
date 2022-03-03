@@ -169,4 +169,9 @@ public class MockFetcherService extends BaseService {
         details.put("fetcherTaskExecutor", getExecutorDetails(fetcherTaskExecutor));
         return details;
     }
+
+    @Override
+    protected Map<String, Executor> getExecutorMap() {
+        return new HashMap<>();
+    }
 }
