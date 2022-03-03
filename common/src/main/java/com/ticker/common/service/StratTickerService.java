@@ -391,7 +391,7 @@ public abstract class StratTickerService<T extends StratThread, TM extends Strat
     protected Map<String, Executor> getExecutorMap() {
         Map<String, Executor> executorMap = new HashMap<>();
         executorMap.put("StratTaskExecutor", stratTaskExecutor);
-        executorMap.put("ScheduledExecutor", scheduledExecutor);
+        executorMap.put("FetcherExecutor", fetcherExecutor);
         return executorMap;
     }
 }
