@@ -16,6 +16,7 @@ import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
 import org.springframework.web.client.RestTemplate;
 
+import java.text.SimpleDateFormat;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.Map;
@@ -272,11 +273,14 @@ public abstract class StratTickerService<T extends StratThread, TM extends Strat
 // TODO
     protected double buy(T thread, int qty) {
         waitFor(WAIT_LONG);
-        log.info("Bought " + qty +
+        String tradeString = "Bought " + qty +
                 " " + thread.getTickerType() +
                 " of " + thread.getExchange() + ":" + thread.getSymbol() +
                 " at " + DATE_TIME_FORMATTER_TIME_SECONDS.format(new Date(System.currentTimeMillis())) +
-                " for " + thread.getCurrentValue());
+                " for " + thread.getCurrentValue();
+        log.info(tradeString);
+        String path = "logs/" + appName + "-trade" + (new SimpleDateFormat("-yyyy-MM-dd")).format(new Date(System.currentTimeMillis())) + ".log";
+        Util.writeToFile(path, tradeString, true);
         thread.setPositionQty(thread.getPositionQty() + qty);
         return thread.getCurrentValue();
     }
@@ -291,11 +295,14 @@ public abstract class StratTickerService<T extends StratThread, TM extends Strat
 // TODO
     protected double sell(T thread, int qty) {
         waitFor(WAIT_LONG);
-        log.info("Sold " + qty +
+        String tradeString = "Sold " + qty +
                 " " + thread.getTickerType() +
                 " of " + thread.getExchange() + ":" + thread.getSymbol() +
                 " at " + DATE_TIME_FORMATTER_TIME_SECONDS.format(new Date(System.currentTimeMillis())) +
-                " for " + thread.getCurrentValue());
+                " for " + thread.getCurrentValue();
+        log.info(tradeString);
+        String path = "logs/" + appName + "-trade" + (new SimpleDateFormat("-yyyy-MM-dd")).format(new Date(System.currentTimeMillis())) + ".log";
+        Util.writeToFile(path, tradeString, true);
         thread.setPositionQty(thread.getPositionQty() - qty);
         return thread.getCurrentValue();
     }
