@@ -404,9 +404,12 @@ public class BookerService extends BaseService {
                             completeTrade.setQuantity(tradeQuantity);
                             completeTrade.setCompleted(true);
 
-
-                            completeTradeList.add(completeTrade);
-                            completeTradesTemp.add(completeTrade);
+                            if (validTrade(completeTrade)) {
+                                completeTradeList.add(completeTrade);
+                                completeTradesTemp.add(completeTrade);
+                            } else {
+                                log.info("Skipping invalid/incomplete trade");
+                            }
                         }
                     }
                 }
@@ -457,6 +460,22 @@ public class BookerService extends BaseService {
         completeTrades.clear();
         completeTrades.addAll(completeTradesTemp);
         return completeAppMap;
+    }
+
+    private boolean validTrade(CompleteTrade completeTrade) {
+        try {
+            if (completeTrade.getSell() == null
+                    || completeTrade.getSell().quantity == null
+                    || Integer.parseInt(completeTrade.getSell().quantity) == 0
+                    || completeTrade.getBuy() == null
+                    || completeTrade.getBuy().quantity == null
+                    || Integer.parseInt(completeTrade.getBuy().quantity) == 0) {
+                return false;
+            }
+        } catch (Exception e) {
+            return false;
+        }
+        return true;
     }
 
     private Map<String, Map<String, Map<String, Map<String, List<TickerTrade>>>>> getTradeMap() {
