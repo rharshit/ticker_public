@@ -159,7 +159,7 @@ public class FetcherThread extends TickerThread<TickerService> {
                     @Override
                     public void onClose(int code, String reason, boolean remote) {
                         log.debug(getThreadName() + " : Closed websocket, reason - " + reason);
-                        if (isEnabled()) {
+                        if (isEnabled() && isInitialized()) {
                             refresh();
                         }
                     }
