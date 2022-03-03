@@ -209,9 +209,7 @@ public class FetcherService extends BaseService {
                         thread.setPointValue(value.getInt("pointvalue"));
                     }
                 }
-                if (vals != null) {
-                    thread.setUpdatedAt((long) (vals[0] * 1000));
-                }
+                thread.setUpdatedAt(System.currentTimeMillis());
                 synchronized (dataQueue) {
                     dataQueue.add(new FetcherRepoModel(thread));
                 }
