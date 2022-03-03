@@ -45,6 +45,10 @@ public abstract class StratTickerService<T extends StratThread, TM extends Strat
     @Qualifier("stratTaskExecutor")
     private Executor stratTaskExecutor;
 
+    @Autowired
+    @Qualifier("scheduledExecutor")
+    private Executor scheduledExecutor;
+
     /**
      * @param exchange
      * @param symbol
@@ -381,5 +385,13 @@ public abstract class StratTickerService<T extends StratThread, TM extends Strat
         }
         thread.setTargetThreshold(0.0006f * thread.getCurrentValue());
         log.warn(thread.getThreadName() + " : Cannot fetch actual target threshold, using default");
+    }
+
+    @Override
+    protected Map<String, Executor> getExecutorMap() {
+        Map<String, Executor> executorMap = new HashMap<>();
+        executorMap.put("StratTaskExecutor", stratTaskExecutor);
+        executorMap.put("ScheduledExecutor", scheduledExecutor);
+        return executorMap;
     }
 }

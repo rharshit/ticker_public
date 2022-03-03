@@ -25,9 +25,6 @@ public class FetcherController extends BaseController<FetcherService> {
     @Autowired
     private TickerService service;
 
-    @Autowired
-    private FetcherService fetcherService;
-
     /**
      * Check if the instance is mock
      *
@@ -154,15 +151,5 @@ public class FetcherController extends BaseController<FetcherService> {
     public ResponseEntity<ResponseStatus> deleteAllTickers() {
         service.deleteAllTickers();
         return new ResponseEntity<>(new ResponseStatus(), HttpStatus.OK);
-    }
-
-    /**
-     * Gets executor details.
-     *
-     * @return the executor details
-     */
-    @GetMapping("/executors")
-    public ResponseEntity<Map<String, Map<String, Integer>>> getExecutorDetails() {
-        return new ResponseEntity<>(fetcherService.getExecutorDetails(), HttpStatus.OK);
     }
 }

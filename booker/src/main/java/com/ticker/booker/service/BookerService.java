@@ -28,6 +28,7 @@ import java.nio.file.Paths;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.util.*;
+import java.util.concurrent.Executor;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -573,5 +574,10 @@ public class BookerService extends BaseService {
      */
     public void deleteLogs() {
         trades.clear();
+    }
+
+    @Override
+    protected Map<String, Executor> getExecutorMap() {
+        return new HashMap<>();
     }
 }

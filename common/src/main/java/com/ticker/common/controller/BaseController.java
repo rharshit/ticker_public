@@ -29,4 +29,14 @@ public class BaseController<S extends BaseService> {
     public ResponseEntity<Map<String, String>> getMemoryStatistics() {
         return new ResponseEntity<>(baseService.getMemoryStatistics(), HttpStatus.OK);
     }
+
+    /**
+     * Gets executor details.
+     *
+     * @return the executor details
+     */
+    @GetMapping("/executors")
+    public ResponseEntity<Map<String, Map<String, Integer>>> getExecutorDetails() {
+        return new ResponseEntity<>(baseService.getExecutorDetailMap(), HttpStatus.OK);
+    }
 }

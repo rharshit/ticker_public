@@ -13,6 +13,8 @@ import org.springframework.scheduling.annotation.Async;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
 
+import java.util.HashMap;
+import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.Executor;
 
@@ -39,6 +41,12 @@ public class TickerService extends TickerThreadService<FetcherThread, FetcherThr
     @Autowired
     @Qualifier("fetcherTaskExecutor")
     private Executor fetcherTaskExecutor;
+    @Autowired
+    @Qualifier("scheduledExecutor")
+    private Executor scheduledExecutor;
+    @Autowired
+    @Qualifier("repoExecutor")
+    private Executor repoExecutor;
 
     /**
      * Add tracking for the ticker, given exchange and symbol for app
@@ -195,5 +203,14 @@ public class TickerService extends TickerThreadService<FetcherThread, FetcherThr
                 fetcherTaskExecutor.execute(thread::refresh);
             }
         }
+    }
+
+    @Override
+    protected Map<String, Executor> getExecutorMap() {
+        Map<String, Executor> executorMap = new HashMap<>();
+        executorMap.put("FetcherTaskExecutor", fetcherTaskExecutor);
+        executorMap.put("ScheduledExecutor", scheduledExecutor);
+        executorMap.put("RepoExecutor", repoExecutor);
+        return executorMap;
     }
 }
