@@ -57,19 +57,6 @@ public class FetcherService extends BaseService {
     }
 
     /**
-     * Gets executor details.
-     *
-     * @return the executor details
-     */
-    public Map<String, Map<String, Integer>> getExecutorDetails() {
-        Map<String, Map<String, Integer>> details = new HashMap<>();
-        details.put("fetcherTaskExecutor", getExecutorDetails(fetcherTaskExecutor));
-        details.put("scheduledExecutor", getExecutorDetails(scheduledExecutor));
-        details.put("repoExecutor", getExecutorDetails(repoExecutor));
-        return details;
-    }
-
-    /**
      * Send message.
      *
      * @param thread the thread
@@ -380,5 +367,14 @@ public class FetcherService extends BaseService {
 
     public void updatePointValue(FetcherThread thread) {
         appService.updatePointValue(thread);
+    }
+
+    @Override
+    protected Map<String, Executor> getExecutorMap() {
+        Map<String, Executor> executorMap = new HashMap<>();
+        executorMap.put("FetcherTaskExecutor", fetcherTaskExecutor);
+        executorMap.put("ScheduledExecutor", scheduledExecutor);
+        executorMap.put("RepoExecutor", repoExecutor);
+        return executorMap;
     }
 }

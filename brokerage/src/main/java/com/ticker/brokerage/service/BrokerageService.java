@@ -11,6 +11,7 @@ import org.springframework.cache.annotation.Cacheable;
 import org.springframework.stereotype.Service;
 
 import java.util.*;
+import java.util.concurrent.Executor;
 
 import static com.ticker.brokerage.constants.WebConstants.ZERODHA_BROKERAGE_URL;
 
@@ -226,5 +227,10 @@ public class BrokerageService extends BaseService {
      */
     public int[] getZerodhaWebdriverPoolSize() {
         return webDrivers.poolSize();
+    }
+
+    @Override
+    protected Map<String, Executor> getExecutorMap() {
+        return new HashMap<>();
     }
 }

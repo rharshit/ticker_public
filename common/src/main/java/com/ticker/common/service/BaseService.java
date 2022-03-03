@@ -11,7 +11,18 @@ import java.util.concurrent.Executor;
  * The type Base service.
  */
 @Service("BaseService")
-public class BaseService {
+public abstract class BaseService {
+
+    public Map<String, Map<String, Integer>> getExecutorDetailMap() {
+        Map<String, Map<String, Integer>> details = new HashMap<>();
+        for (Map.Entry<String, Executor> executor : getExecutorMap().entrySet()) {
+            details.put(executor.getKey(), getExecutorDetails(executor.getValue()));
+        }
+        return details;
+    }
+
+    protected abstract Map<String, Executor> getExecutorMap();
+
     /**
      * Gets executor details.
      *
