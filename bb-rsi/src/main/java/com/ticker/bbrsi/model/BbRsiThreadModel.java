@@ -40,7 +40,7 @@ public class BbRsiThreadModel extends StratThreadModel<BbRsiThread> {
      * @return the boolean
      */
     public boolean isSafeState() {
-        return thread.isSafeState();
+        return thread.getPositionQty() == 0;
     }
 
     /**
@@ -50,5 +50,23 @@ public class BbRsiThreadModel extends StratThreadModel<BbRsiThread> {
      */
     public boolean isLowTarget() {
         return thread.isLowValue();
+    }
+
+    /**
+     * Gets trade value.
+     *
+     * @return the trade value
+     */
+    public double getTradeValue() {
+        return thread.getTradeValue();
+    }
+
+    /**
+     * Gets trail value.
+     *
+     * @return the trail value
+     */
+    public double getTrailValue() {
+        return thread.getTrailValue();
     }
 }

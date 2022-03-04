@@ -113,6 +113,14 @@ public abstract class BbRsiConstants {
      * The constant BB_RSI_THREAD_STATE_UT_GTT_FAILED.
      */
     public static final int BB_RSI_THREAD_STATE_UT_GTT_FAILED = 25;
+    /**
+     * The constant BB_RSI_THREAD_STATE_LT_REENTER.
+     */
+    public static final int BB_RSI_THREAD_STATE_LT_REENTER = 26;
+    /**
+     * The constant BB_RSI_THREAD_STATE_UT_REENTER.
+     */
+    public static final int BB_RSI_THREAD_STATE_UT_REENTER = 27;
 
     /**
      * The constant RSI_LOWER_LIMIT.
@@ -121,11 +129,11 @@ public abstract class BbRsiConstants {
     /**
      * The constant RSI_LOWER_LIMIT_REBOUND.
      */
-    public static final double RSI_LOWER_LIMIT_REBOUND = 32;
+    public static final double RSI_LOWER_LIMIT_REBOUND = 40;
     /**
      * The constant RSI_LOWER_LIMIT_PREMATURE_DIFF.
      */
-    public static final double RSI_LOWER_LIMIT_PREMATURE_DIFF = 5;
+    public static final double RSI_LOWER_LIMIT_PREMATURE_DIFF = 7.5f;
     /**
      * The constant RSI_LOWER_LIMIT_PANIC_DIFF.
      */
@@ -138,11 +146,11 @@ public abstract class BbRsiConstants {
     /**
      * The constant RSI_UPPER_LIMIT_REBOUND.
      */
-    public static final double RSI_UPPER_LIMIT_REBOUND = 68;
+    public static final double RSI_UPPER_LIMIT_REBOUND = 60;
     /**
      * The constant RSI_UPPER_LIMIT_PREMATURE_DIFF.
      */
-    public static final double RSI_UPPER_LIMIT_PREMATURE_DIFF = -5;
+    public static final double RSI_UPPER_LIMIT_PREMATURE_DIFF = -7.5f;
     /**
      * The constant RSI_UPPER_LIMIT_PANIC_DIFF.
      */

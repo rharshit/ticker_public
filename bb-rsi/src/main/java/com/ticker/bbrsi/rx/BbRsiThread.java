@@ -26,6 +26,7 @@ public class BbRsiThread extends StratThread<BbRsiService> {
     private long triggerWaveEndTime;
     private long tradeStartTime;
     private double tradeValue;
+    private double trailValue;
     private double targetValue = 0;
     private double peak;
     private double dip;
@@ -33,8 +34,8 @@ public class BbRsiThread extends StratThread<BbRsiService> {
     private long rsiSetTime;
     private int panicSell = 0;
     private int panicBuy = 0;
-    private boolean safeState = true;
     private boolean goodToTrigger = false;
+    private boolean satisfied = false;
 
     /**
      * Instantiates a new Bb rsi thread.
@@ -90,25 +91,18 @@ public class BbRsiThread extends StratThread<BbRsiService> {
     }
 
     @Override
-    public void setPositionQty(int positionQty) {
-        super.setPositionQty(positionQty);
-        if (getPositionQty() == 0) {
-            setSafeState(true);
-        }
-    }
-
-    @Override
     public void resetTriggers() {
         log.trace(getThreadName() + " : Resetting triggers");
         super.resetTriggers();
         triggerWaveEndTime = 0;
         tradeStartTime = 0;
         tradeValue = 0;
+        trailValue = 0;
         dip = 0;
         peak = 0;
         panicSell = 0;
         panicBuy = 0;
-        setSafeState(true);
         setGoodToTrigger(false);
+        setSatisfied(false);
     }
 }
