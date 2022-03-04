@@ -10,7 +10,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.context.annotation.Scope;
 import org.springframework.stereotype.Component;
 
-import static com.ticker.bbrsisafe.constants.BbRsiSafeConstants.BB_RSI_THREAD_COMP_NAME;
+import static com.ticker.bbrsisafe.constants.BbRsiSafeConstants.BB_RSI_SAFE_THREAD_COMP_NAME;
 
 /**
  * The type Bb rsi safe thread.
@@ -18,7 +18,7 @@ import static com.ticker.bbrsisafe.constants.BbRsiSafeConstants.BB_RSI_THREAD_CO
 @Getter
 @Setter
 @Slf4j
-@Component(BB_RSI_THREAD_COMP_NAME)
+@Component(BB_RSI_SAFE_THREAD_COMP_NAME)
 @Scope("prototype")
 @NoArgsConstructor
 public class BbRsiSafeThread extends StratThread<BbRsiSafeService> {

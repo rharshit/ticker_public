@@ -544,6 +544,15 @@ public class BbRsiSafeService extends StratTickerService<BbRsiSafeThread, BbRsiS
     }
 
     private void checkLtGTT(BbRsiSafeThread thread) {
+        if (thread.isGoodToTrigger()) {
+            return;
+        }
+        double dayLDiff = getDiffPercentage(thread.getDayL(), thread.getCurrentValue());
+        double prevCloseDiffPercentage = getPrevCloseDiffPercentage(thread);
+        double openDiffPercentage = getOpenDiffPercentage(thread);
+        if (dayLDiff < 0.15 && prevCloseDiffPercentage < -0.5 && openDiffPercentage < -0.5) {
+            thread.setGoodToTrigger(true);
+        }
         if (thread.getTema() <= thread.getBbL() || thread.getRsi() < GTT_RSI_LOWER_LIMIT) {
             thread.setGoodToTrigger(true);
         }
@@ -617,6 +626,15 @@ public class BbRsiSafeService extends StratTickerService<BbRsiSafeThread, BbRsiS
     }
 
     private void checkUtGTT(BbRsiSafeThread thread) {
+        if (thread.isGoodToTrigger()) {
+            return;
+        }
+        double dayHDiff = getDiffPercentage(thread.getCurrentValue(), thread.getDayH());
+        double prevCloseDiffPercentage = getPrevCloseDiffPercentage(thread);
+        double openDiffPercentage = getOpenDiffPercentage(thread);
+        if (dayHDiff < 0.15 && prevCloseDiffPercentage > 0.5 && openDiffPercentage > 0.5) {
+            thread.setGoodToTrigger(true);
+        }
         if (thread.getTema() >= thread.getBbU() || thread.getRsi() > GTT_RSI_UPPER_LIMIT) {
             thread.setGoodToTrigger(true);
         }
@@ -681,14 +699,56 @@ public class BbRsiSafeService extends StratTickerService<BbRsiSafeThread, BbRsiS
         if (!isEomTrigger(15)) {
             return;
         }
-        if (thread.getRsi() <= RSI_LOWER_LIMIT && thread.getO() > thread.getC()) {
+        if (isGttLower(thread)) {
             thread.setCurrentState(BB_RSI_SAFE_THREAD_STATE_LT_TRIGGER_START);
             thread.setTriggerStartValue(thread.getCurrentValue());
             thread.setTriggerStartTime(System.currentTimeMillis());
-        } else if (thread.getRsi() >= RSI_UPPER_LIMIT && thread.getO() < thread.getC()) {
+        } else if (isGttUpper(thread)) {
             thread.setCurrentState(BB_RSI_SAFE_THREAD_STATE_UT_TRIGGER_START);
             thread.setTriggerStartValue(thread.getCurrentValue());
             thread.setTriggerStartTime(System.currentTimeMillis());
         }
+    }
+
+    private boolean isGttLower(BbRsiSafeThread thread) {
+        if (thread.getRsi() <= RSI_LOWER_LIMIT && thread.getO() > thread.getC()) {
+            double prevCloseDiffPercentage = getPrevCloseDiffPercentage(thread);
+            double openDiffPercentage = getOpenDiffPercentage(thread);
+            if (prevCloseDiffPercentage > 1.5 || openDiffPercentage > 1) {
+                log.info(thread.getThreadName() + " : isGttLower false - " + prevCloseDiffPercentage + ", " + openDiffPercentage);
+                return false;
+            }
+            log.info(thread.getThreadName() + " : isGttLower true - " + prevCloseDiffPercentage + ", " + openDiffPercentage);
+            return true;
+        } else {
+            return false;
+        }
+    }
+
+    private boolean isGttUpper(BbRsiSafeThread thread) {
+        if (thread.getRsi() >= RSI_UPPER_LIMIT && thread.getO() < thread.getC()) {
+            double prevCloseDiffPercentage = getPrevCloseDiffPercentage(thread);
+            double openDiffPercentage = getOpenDiffPercentage(thread);
+            if (prevCloseDiffPercentage < -1.5 || openDiffPercentage < -1) {
+                log.info(thread.getThreadName() + " : isGttUpper false - " + prevCloseDiffPercentage + ", " + openDiffPercentage);
+                return false;
+            }
+            log.info(thread.getThreadName() + " : isGttUpper true - " + prevCloseDiffPercentage + ", " + openDiffPercentage);
+            return true;
+        } else {
+            return false;
+        }
+    }
+
+    private double getOpenDiffPercentage(BbRsiSafeThread thread) {
+        return getDiffPercentage(thread.getDayO(), thread.getCurrentValue());
+    }
+
+    private double getPrevCloseDiffPercentage(BbRsiSafeThread thread) {
+        return getDiffPercentage(thread.getPrevClose(), thread.getCurrentValue());
+    }
+
+    private double getDiffPercentage(double prevValue, double currentValue) {
+        return ((currentValue - prevValue) / prevValue) * 100;
     }
 }

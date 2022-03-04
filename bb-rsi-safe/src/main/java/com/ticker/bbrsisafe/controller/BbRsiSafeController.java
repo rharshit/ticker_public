@@ -6,7 +6,7 @@ import com.ticker.common.controller.StratController;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
-import static com.ticker.bbrsisafe.constants.BbRsiSafeConstants.BB_RSI_THREAD_COMP_NAME;
+import static com.ticker.bbrsisafe.constants.BbRsiSafeConstants.BB_RSI_SAFE_THREAD_COMP_NAME;
 
 /**
  * The type Bb rsi safe controller.
@@ -17,6 +17,6 @@ public class BbRsiSafeController extends StratController<BbRsiSafeService, BbRsi
 
     @Override
     public String getThreadCompName() {
-        return BB_RSI_THREAD_COMP_NAME;
+        return BB_RSI_SAFE_THREAD_COMP_NAME;
     }
 }

@@ -8,7 +8,7 @@ public abstract class BbRsiSafeConstants {
     /**
      * The constant BB_RSI_THREAD_COMP_NAME.
      */
-    public static final String BB_RSI_THREAD_COMP_NAME = "bbRsiSafeThread";
+    public static final String BB_RSI_SAFE_THREAD_COMP_NAME = "bbRsiSafeThread";
     /**
      * The constant BB_RSI_SAFE_THREAD_STATE_STRAT_FAILED.
      */
