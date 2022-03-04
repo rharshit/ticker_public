@@ -544,6 +544,15 @@ public class BbRsiSafeService extends StratTickerService<BbRsiSafeThread, BbRsiS
     }
 
     private void checkLtGTT(BbRsiSafeThread thread) {
+        if (thread.isGoodToTrigger()) {
+            return;
+        }
+        double dayLDiff = getDiffPercentage(thread.getDayL(), thread.getCurrentValue());
+        double prevCloseDiffPercentage = getPrevCloseDiffPercentage(thread);
+        double openDiffPercentage = getOpenDiffPercentage(thread);
+        if (dayLDiff < 0.15 && prevCloseDiffPercentage < -0.5 && openDiffPercentage < -0.5) {
+            thread.setGoodToTrigger(true);
+        }
         if (thread.getTema() <= thread.getBbL() || thread.getRsi() < GTT_RSI_LOWER_LIMIT) {
             thread.setGoodToTrigger(true);
         }
@@ -617,6 +626,15 @@ public class BbRsiSafeService extends StratTickerService<BbRsiSafeThread, BbRsiS
     }
 
     private void checkUtGTT(BbRsiSafeThread thread) {
+        if (thread.isGoodToTrigger()) {
+            return;
+        }
+        double dayHDiff = getDiffPercentage(thread.getCurrentValue(), thread.getDayH());
+        double prevCloseDiffPercentage = getPrevCloseDiffPercentage(thread);
+        double openDiffPercentage = getOpenDiffPercentage(thread);
+        if (dayHDiff < 0.15 && prevCloseDiffPercentage > 0.5 && openDiffPercentage > 0.5) {
+            thread.setGoodToTrigger(true);
+        }
         if (thread.getTema() >= thread.getBbU() || thread.getRsi() > GTT_RSI_UPPER_LIMIT) {
             thread.setGoodToTrigger(true);
         }
