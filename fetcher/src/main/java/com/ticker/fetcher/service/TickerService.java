@@ -223,6 +223,15 @@ public class TickerService extends TickerThreadService<FetcherThread, FetcherThr
         log.info("Initialized tables in " + (System.currentTimeMillis() - start) + "ms");
     }
 
+    @Scheduled(cron = "1 15 9 ? * MON,TUE,WED,THU,FRI *")
+    public void refreshWebsockets() {
+        log.info("Refreshing all websockets");
+        Set<FetcherThread> threadMap = getThreadPool();
+        for (FetcherThread thread : threadMap) {
+            fetcherTaskExecutor.execute(thread::refresh);
+        }
+    }
+
     public void updatePointValue(FetcherThread thread) {
         try {
             ExchangeSymbolEntity exchangeSymbolEntity = exchangeSymbolRepository.findById(new ExchangeSymbolEntityPK(thread.getExchange(), thread.getSymbol())).orElse(null);
