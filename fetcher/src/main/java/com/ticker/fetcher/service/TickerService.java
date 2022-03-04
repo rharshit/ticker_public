@@ -223,7 +223,7 @@ public class TickerService extends TickerThreadService<FetcherThread, FetcherThr
         log.info("Initialized tables in " + (System.currentTimeMillis() - start) + "ms");
     }
 
-    @Scheduled(cron = "1 15 9 ? * MON,TUE,WED,THU,FRI *")
+    @Scheduled(cron = "1 15 9 ? * MON,TUE,WED,THU,FRI")
     public void refreshWebsockets() {
         log.info("Refreshing all websockets");
         Set<FetcherThread> threadMap = getThreadPool();
