@@ -95,6 +95,7 @@ public class FetcherThread extends TickerThread<TickerService> {
     private long lastPingAt = 0;
 
     private int retry = 0;
+    private int incorrectValues = 0;
 
     private static final Semaphore websocketFetcher;
     private static String buildTime = "";
@@ -272,10 +273,27 @@ public class FetcherThread extends TickerThread<TickerService> {
         while (isEnabled()) {
             while (isEnabled() && isInitialized()) {
                 waitFor(WAIT_LONG);
+                checkValues();
             }
         }
         destroy();
         log.info("Terminated thread : " + getThreadName());
+    }
+
+    private void checkValues() {
+        if (isEnabled() && isInitialized()) {
+            if (getCurrentValue() == 0 ||
+                    getCurrentValue() > dayH ||
+                    getCurrentValue() < dayL) {
+                incorrectValues++;
+                log.info(getThreadName() + " : incorrectValues " + incorrectValues + " - " + dayL + ", " + getCurrentValue() + ", " + dayH);
+            }
+        } else {
+            incorrectValues = 0;
+        }
+        if (incorrectValues > 5) {
+            refresh();
+        }
     }
 
     /**
@@ -284,6 +302,7 @@ public class FetcherThread extends TickerThread<TickerService> {
      * @param refresh the refresh
      */
     protected void initialize(boolean refresh) {
+        incorrectValues = 0;
         setInitialized(false);
         if (refresh) {
             log.info(getExchange() + ":" + getSymbol() + " - Refreshing");
