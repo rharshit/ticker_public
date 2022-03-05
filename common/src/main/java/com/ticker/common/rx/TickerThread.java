@@ -43,9 +43,11 @@ public abstract class TickerThread<S extends TickerThreadService> extends Thread
      */
     protected ExchangeSymbolEntity entity;
 
+    Thread shutdownHook = new Thread(() -> terminateThread(true));
+
     {
         setDaemon(true);
-        Runtime.getRuntime().addShutdownHook(new Thread(this::terminateThread));
+        addShutdownHook();
     }
 
     /**
@@ -65,6 +67,10 @@ public abstract class TickerThread<S extends TickerThreadService> extends Thread
      */
     public static TickerThread createCompareObject(ExchangeSymbolEntity entity) {
         return new TickerThread(entity) {
+            {
+                removeShutdownHook();
+            }
+
             @Override
             protected void initialize() {
 
@@ -77,11 +83,6 @@ public abstract class TickerThread<S extends TickerThreadService> extends Thread
 
             @Override
             public void run() {
-
-            }
-
-            @Override
-            public void destroy() {
 
             }
         };
@@ -114,15 +115,25 @@ public abstract class TickerThread<S extends TickerThreadService> extends Thread
     @Override
     public abstract void run();
 
-    @Override
-    public abstract void destroy();
-
     /**
      * Terminate thread.
+     *
+     * @param shutDownInitiated
      */
-    public void terminateThread() {
+    public void terminateThread(boolean shutDownInitiated) {
+        if (!shutDownInitiated) {
+            removeShutdownHook();
+        }
+        log.info(getThreadName() + " : disabling thread");
         this.enabled = false;
-        log.info(getThreadName() + " : terminating thread");
+    }
+
+    protected void removeShutdownHook() {
+        Runtime.getRuntime().removeShutdownHook(shutdownHook);
+    }
+
+    protected void addShutdownHook() {
+        Runtime.getRuntime().addShutdownHook(shutdownHook);
     }
 
     /**

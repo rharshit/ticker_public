@@ -64,7 +64,7 @@ public class BbRsiService extends StratTickerService<BbRsiThread, BbRsiThreadMod
             try {
                 switch (thread.getCurrentState()) {
                     case BB_RSI_THREAD_STATE_STRAT_FAILED:
-                        thread.destroy();
+                        thread.terminateThread(false);
                         break;
                     case 0:
                         thread.setCurrentState(BB_RSI_THREAD_STATE_WAITING_FOR_TRIGGER);

@@ -76,7 +76,7 @@ public class TickerService extends TickerThreadService<MockFetcherThread, MockFe
      * @param thread the thread
      */
     public void deleteTicker(MockFetcherThread thread) {
-        destroyThread(thread);
+        destroyThread(thread, false);
     }
 
     /**
@@ -85,7 +85,7 @@ public class TickerService extends TickerThreadService<MockFetcherThread, MockFe
     public void deleteAllTickers() {
         Set<MockFetcherThread> threadMap = getThreadPool();
         for (MockFetcherThread threadName : threadMap) {
-            destroyThread(threadName);
+            destroyThread(threadName, false);
         }
     }
 

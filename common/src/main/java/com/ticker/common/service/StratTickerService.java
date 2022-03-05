@@ -168,7 +168,7 @@ public abstract class StratTickerService<T extends StratThread, TM extends Strat
         }
         checkFetchingForApp(thread);
         if (!thread.isFetching()) {
-            thread.destroy();
+            thread.terminateThread(false);
         }
     }
 

@@ -107,7 +107,7 @@ public class TickerService extends TickerThreadService<FetcherThread, FetcherThr
      * @param thread the thread
      */
     public void deleteTicker(FetcherThread thread) {
-        destroyThread(thread);
+        destroyThread(thread, false);
     }
 
     /**
@@ -116,7 +116,7 @@ public class TickerService extends TickerThreadService<FetcherThread, FetcherThr
     public void deleteAllTickers() {
         Set<FetcherThread> threadMap = getThreadPool();
         for (FetcherThread threadName : threadMap) {
-            destroyThread(threadName);
+            destroyThread(threadName, false);
         }
     }
 

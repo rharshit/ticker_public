@@ -84,11 +84,12 @@ public abstract class StratThread<S extends StratTickerService> extends TickerTh
                 }
             }
         }
-        destroy();
+        terminateThread(false);
     }
 
     @Override
-    public void destroy() {
+    public void terminateThread(boolean shutdownInitiates) {
+        super.terminateThread(shutdownInitiates);
         service.stopFetching(getExchange(), getSymbol());
     }
 

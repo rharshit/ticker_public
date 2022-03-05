@@ -166,7 +166,7 @@ public class MockFetcherThread extends TickerThread<TickerService> {
                     log.error("Error while initializing " + getThreadName(), e);
                 }
                 log.error("Destorying " + getThreadName());
-                destroy();
+                terminateThread(false);
             }
         }
     }
@@ -179,8 +179,9 @@ public class MockFetcherThread extends TickerThread<TickerService> {
                 '}';
     }
 
-    @Deprecated
-    public void destroy() {
+    @Override
+    public void terminateThread(boolean shutdownInitiates) {
+        super.terminateThread(shutdownInitiates);
         service.deleteTicker(this);
     }
 

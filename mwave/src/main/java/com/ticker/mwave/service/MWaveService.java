@@ -42,7 +42,7 @@ public class MWaveService extends StratTickerService<MWaveThread, MWaveThreadMod
                 checkState(thread);
                 break;
             case MWAVE_THREAD_STATE_STRAT_FAILED:
-                thread.destroy();
+                thread.terminateThread(false);
                 break;
         }
     }

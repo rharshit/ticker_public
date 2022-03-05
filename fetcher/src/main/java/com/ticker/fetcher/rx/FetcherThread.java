@@ -276,7 +276,7 @@ public class FetcherThread extends TickerThread<TickerService> {
                 checkValues();
             }
         }
-        destroy();
+        terminateThread(false);
         log.info("Terminated thread : " + getThreadName());
     }
 
@@ -354,7 +354,7 @@ public class FetcherThread extends TickerThread<TickerService> {
                     log.error("Error while initializing " + getThreadName(), e);
                 }
                 log.error("Destroying: " + getThreadName());
-                destroy();
+                service.deleteTicker(this);
             }
         }
     }
@@ -365,11 +365,6 @@ public class FetcherThread extends TickerThread<TickerService> {
                 "exchange='" + getExchange() + '\'' +
                 ", symbol='" + getSymbol() + '\'' +
                 '}';
-    }
-
-    @Deprecated
-    public void destroy() {
-        service.deleteTicker(this);
     }
 
     /**
@@ -398,14 +393,15 @@ public class FetcherThread extends TickerThread<TickerService> {
         if (getFetcherApps().isEmpty()) {
             log.info("No apps fetching data");
             log.info("Terminating thread: " + getThreadName());
-            terminateThread();
+            terminateThread(false);
         }
     }
 
     @Override
-    public void terminateThread() {
-        super.terminateThread();
+    public void terminateThread(boolean shutDownInitiated) {
+        super.terminateThread(shutDownInitiated);
         closeWebsocketIfExists(GOING_AWAY, "Terminating thread");
+        service.deleteTicker(this);
     }
 
     private void closeWebsocketIfExists(int code, String reason) {

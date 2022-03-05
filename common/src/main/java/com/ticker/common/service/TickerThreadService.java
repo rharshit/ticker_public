@@ -47,7 +47,7 @@ public abstract class TickerThreadService<T extends TickerThread, TM extends Tic
                 super.run();
                 log.info("Thread pool - Shutdown initiated...");
                 for (T thread : getThreadPool()) {
-                    destroyThread(thread);
+                    destroyThread(thread, true);
                 }
                 log.info("Thread pool - Shutdown completed.");
             }
@@ -115,13 +115,18 @@ public abstract class TickerThreadService<T extends TickerThread, TM extends Tic
      *
      * @param thread the thread
      */
-    public void destroyThread(T thread) {
+    public void destroyThread(T thread, boolean shutDownInitiated) {
         if (thread == null) {
             return;
         }
-        thread.terminateThread();
-        getThreadPool().remove(thread);
-        log.info(thread.getThreadName() + " : removed thread");
+        if (threadPool.contains(thread)) {
+            getThreadPool().remove(thread);
+            log.info(thread.getThreadName() + " : removed thread");
+        }
+        if (thread.isEnabled()) {
+            log.info(thread.getThreadName() + " : terminating thread");
+            thread.terminateThread(shutDownInitiated);
+        }
     }
 
     /**
@@ -131,7 +136,7 @@ public abstract class TickerThreadService<T extends TickerThread, TM extends Tic
      * @param symbol   the symbol
      */
     public void destroyThread(String exchange, String symbol) {
-        destroyThread(getThread(exchange, symbol));
+        destroyThread(getThread(exchange, symbol), false);
     }
 
     /**
