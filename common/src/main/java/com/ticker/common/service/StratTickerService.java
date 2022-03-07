@@ -414,6 +414,8 @@ public abstract class StratTickerService<T extends StratThread, TM extends Strat
                 return 1;
             } else if (o1.getCurrentState() != 0 && o2.getCurrentState() == 0) {
                 return -1;
+            } else if (o1.isFetching() != o2.isFetching()) {
+                return o1.isFetching() ? 1 : -1;
             } else if (o1.isEnabled() != o2.isEnabled()) {
                 return o1.isEnabled() ? -1 : 1;
             } else if (o1.isInitialized() != o2.isInitialized()) {
