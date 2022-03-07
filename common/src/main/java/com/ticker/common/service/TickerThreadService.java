@@ -180,8 +180,13 @@ public abstract class TickerThreadService<T extends TickerThread, TM extends Tic
         for (T thread : threads) {
             tickers.add(createTickerThreadModel(thread));
         }
+        sortTickers(tickers);
         Map<String, List<TM>> list = new HashMap<>();
         list.put("tickers", tickers);
         return list;
+    }
+
+    protected void sortTickers(List<TM> tickers) {
+
     }
 }

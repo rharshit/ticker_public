@@ -17,6 +17,7 @@ import org.springframework.stereotype.Service;
 import java.sql.Timestamp;
 import java.text.SimpleDateFormat;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.Executor;
@@ -270,5 +271,18 @@ public class TickerService extends TickerThreadService<FetcherThread, FetcherThr
             }
         }
         log.debug("Started temp websockets in " + (System.currentTimeMillis() - start) + "ms");
+    }
+
+    @Override
+    protected void sortTickers(List<FetcherThreadModel> tickers) {
+        tickers.sort((o1, o2) -> {
+            if (o1.isEnabled() != o2.isEnabled()) {
+                return o1.isEnabled() ? -1 : 1;
+            } else if (o1.isInitialized() != o2.isInitialized()) {
+                return o1.isInitialized() ? 1 : -1;
+            } else {
+                return o1.getThreadName().compareTo(o2.getThreadName());
+            }
+        });
     }
 }
