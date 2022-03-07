@@ -137,15 +137,16 @@ public class FetcherThread extends TickerThread<TickerService> {
         initializeTables();
     }
 
-    private void initializeWebSocket() {
+    private WebSocketClient initializeWebSocket() {
+        WebSocketClient webSocket;
         try {
             synchronized (this) {
                 while (!websocketFetcher.tryAcquire()) {
                     this.wait(WAIT_QUICK);
                 }
-                closeWebsocketIfExists(SERVICE_RESTART, "Restarting Websocket");
+                closeWebsocketsIfExists(SERVICE_RESTART, "Restarting Websocket");
                 FetcherThread thisThread = this;
-                webSocketClient = new WebSocketClient(new URI("wss://data.tradingview.com/socket.io/websocket?from=chart%2F&date=" + getBuildTime())) {
+                webSocket = new WebSocketClient(new URI("wss://data.tradingview.com/socket.io/websocket?from=chart%2F&date=" + getBuildTime())) {
                     @Override
                     public void onOpen(ServerHandshake handshakedata) {
                         log.debug(getThreadName() + " : Opened websocket");
@@ -154,7 +155,7 @@ public class FetcherThread extends TickerThread<TickerService> {
                     @Override
                     public void onMessage(String message) {
                         setLastPingAt(System.currentTimeMillis());
-                        fetcherService.onReceiveMessage(thisThread, message);
+                        fetcherService.onReceiveMessage(thisThread, this, message);
                     }
 
                     @Override
@@ -170,26 +171,26 @@ public class FetcherThread extends TickerThread<TickerService> {
                         log.error(getThreadName() + " : Error in websocket", ex);
                     }
                 };
-                webSocketClient.addHeader("Accept-Encoding", "gzip, deflate, br");
-                webSocketClient.addHeader("Accept-Language", "en-IN,en;q=0.9");
-                webSocketClient.addHeader("Cache-Control", "no-cache");
-                webSocketClient.addHeader("Connection", "Upgrade");
-                webSocketClient.addHeader("Host", "data.tradingview.com");
-                webSocketClient.addHeader("Origin", "https://in.tradingview.com");
-                webSocketClient.addHeader("Pragma", "no-cache");
-                webSocketClient.addHeader("Sec-WebSocket-Extensions", "client_max_window_bits");
-                webSocketClient.addHeader("Sec-WebSocket-Key", "rxPHgoX6myglC4x5XLaLtA==");
-                webSocketClient.addHeader("Sec-WebSocket-Version", "13");
-                webSocketClient.addHeader("Upgrade", "websocket");
-                webSocketClient.addHeader("User-Agent", "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/98.0.4758.80 Safari/537.36");
-                webSocketClient.connect();
+                webSocket.addHeader("Accept-Encoding", "gzip, deflate, br");
+                webSocket.addHeader("Accept-Language", "en-IN,en;q=0.9");
+                webSocket.addHeader("Cache-Control", "no-cache");
+                webSocket.addHeader("Connection", "Upgrade");
+                webSocket.addHeader("Host", "data.tradingview.com");
+                webSocket.addHeader("Origin", "https://in.tradingview.com");
+                webSocket.addHeader("Pragma", "no-cache");
+                webSocket.addHeader("Sec-WebSocket-Extensions", "client_max_window_bits");
+                webSocket.addHeader("Sec-WebSocket-Key", "rxPHgoX6myglC4x5XLaLtA==");
+                webSocket.addHeader("Sec-WebSocket-Version", "13");
+                webSocket.addHeader("Upgrade", "websocket");
+                webSocket.addHeader("User-Agent", "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/98.0.4758.80 Safari/537.36");
+                webSocket.connect();
 
                 createSession();
 
                 setSessionId("");
                 setRequestId(0);
-                fetcherService.addSession(this);
-                fetcherService.handshake(this);
+                fetcherService.addSession(this, webSocket);
+                fetcherService.handshake(this, webSocket);
 
                 setInitialized(true);
             }
@@ -199,7 +200,7 @@ public class FetcherThread extends TickerThread<TickerService> {
         } finally {
             websocketFetcher.release();
         }
-
+        return webSocket;
     }
 
     private void createSession() {
@@ -253,6 +254,9 @@ public class FetcherThread extends TickerThread<TickerService> {
         }
     }
 
+    /**
+     * Initialize tables.
+     */
     public void initializeTables() {
         String tableName = getTableName();
         fetcherService.createTable(tableName);
@@ -313,7 +317,7 @@ public class FetcherThread extends TickerThread<TickerService> {
         try {
             setLastPingAt(0);
             setUpdatedAt(0);
-            initializeWebSocket();
+            webSocketClient = initializeWebSocket();
             log.debug(getThreadName() + " :" +
                     " getStudySeries(): " + getStudySeries() +
                     " getStudyBB(): " + getStudyBB() +
@@ -400,11 +404,11 @@ public class FetcherThread extends TickerThread<TickerService> {
     @Override
     public void terminateThread(boolean shutDownInitiated) {
         super.terminateThread(shutDownInitiated);
-        closeWebsocketIfExists(GOING_AWAY, "Terminating thread");
+        closeWebsocketsIfExists(GOING_AWAY, "Terminating thread");
         service.deleteTicker(this);
     }
 
-    private void closeWebsocketIfExists(int code, String reason) {
+    private void closeWebsocketsIfExists(int code, String reason) {
         setInitialized(false);
         if (webSocketClient != null) {
             log.debug(getThreadName() + " : Closing websocket");
@@ -465,6 +469,11 @@ public class FetcherThread extends TickerThread<TickerService> {
         return (char) (x + add);
     }
 
+    /**
+     * Sets point value.
+     *
+     * @param pointValue the point value
+     */
     public void setPointValue(int pointValue) {
         if (this.pointValue != pointValue) {
             this.pointValue = pointValue;
