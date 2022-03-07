@@ -93,8 +93,9 @@ public class FetcherService extends BaseService {
      * @param thread    the thread
      * @param webSocket the web socket
      * @param data      the data
+     * @param temp
      */
-    public void onReceiveMessage(FetcherThread thread, WebSocketClient webSocket, String data) {
+    public void onReceiveMessage(FetcherThread thread, WebSocketClient webSocket, String data, boolean temp) {
         log.debug("Recv:");
         fetcherTaskExecutor.execute(() -> {
             String[] messages = decodeMessage(data);
@@ -108,15 +109,17 @@ public class FetcherService extends BaseService {
                 }
                 log.debug("\n" + parsedMessage);
                 if (Pattern.matches("~h~\\d*$", message)) {
-                    sendMessage(webSocket, message);
+                    if (!temp) {
+                        sendMessage(webSocket, message);
+                    }
                 } else {
-                    fetcherTaskExecutor.execute(() -> parseMessage(thread, message));
+                    fetcherTaskExecutor.execute(() -> parseMessage(thread, message, temp));
                 }
             }
         });
     }
 
-    private void parseMessage(FetcherThread thread, String message) {
+    private void parseMessage(FetcherThread thread, String message, boolean temp) {
         try {
             JSONObject object = new JSONObject(message);
             if (object.has("session_id")) {
@@ -128,7 +131,7 @@ public class FetcherService extends BaseService {
                         String objString = array.get(i).toString();
                         JSONObject jsonObject = new JSONObject(objString);
                         if (hasInterestedValue(thread, jsonObject)) {
-                            setVal(thread, jsonObject);
+                            setVal(thread, jsonObject, temp);
                         }
                     } catch (Exception ignored) {
 
@@ -157,7 +160,7 @@ public class FetcherService extends BaseService {
         return false;
     }
 
-    private void setVal(FetcherThread thread, JSONObject object) {
+    private void setVal(FetcherThread thread, JSONObject object, boolean temp) {
         log.trace(thread.getThreadName() + " : Setting value");
         for (String key : object.keySet()) {
             log.trace("Key: " + key);
@@ -211,8 +214,18 @@ public class FetcherService extends BaseService {
                     if (value.has("pointvalue")) {
                         thread.setPointValue(value.getInt("pointvalue"));
                     }
+                    if (temp
+                            && value.has("open_price")
+                            && value.has("high_price")
+                            && value.has("low_price")
+                            && value.has("lp")
+                            && value.has("prev_close_price")) {
+                        thread.removeTempWebSockets();
+                    }
                 }
-                thread.setUpdatedAt(System.currentTimeMillis());
+                if (!temp) {
+                    thread.setUpdatedAt(System.currentTimeMillis());
+                }
                 synchronized (dataQueue) {
                     dataQueue.add(new FetcherRepoModel(thread));
                 }
@@ -293,14 +306,15 @@ public class FetcherService extends BaseService {
      *
      * @param thread    the thread
      * @param webSocket the web socket
+     * @param temp
      */
-    public void handshake(FetcherThread thread, WebSocketClient webSocket) {
+    public void handshake(FetcherThread thread, WebSocketClient webSocket, boolean temp) {
         if (webSocket == null) {
             throw new TickerException(thread.getThreadName() + " : Null websocket");
         }
         long startTime = System.currentTimeMillis();
         while (thread.isEnabled() && !webSocket.isOpen()) {
-            if (System.currentTimeMillis() - startTime > 10000) {
+            if (System.currentTimeMillis() - startTime > 10000 && !temp) {
                 throw new TickerException(thread.getThreadName() + " : Timeout while waiting for websocket to open");
             }
             waitFor(WAIT_QUICK);
@@ -367,21 +381,22 @@ public class FetcherService extends BaseService {
      *
      * @param thread    the thread
      * @param webSocket the web socket
+     * @param temp
      */
-    public void addSession(FetcherThread thread, WebSocketClient webSocket) {
+    public void addSession(FetcherThread thread, WebSocketClient webSocket, boolean temp) {
         if (webSocket == null) {
             throw new TickerException(thread.getThreadName() + " : Null websocket");
         }
         long startTime = System.currentTimeMillis();
         while (thread.isEnabled() && !webSocket.isOpen()) {
-            if (System.currentTimeMillis() - startTime > 10000) {
+            if (System.currentTimeMillis() - startTime > 10000 && !temp) {
                 throw new TickerException(thread.getThreadName() + " : Timeout while waiting for websocket to open");
             }
             waitFor(WAIT_QUICK);
         }
         startTime = System.currentTimeMillis();
         while (ObjectUtils.isEmpty(thread.getSessionId())) {
-            if (System.currentTimeMillis() - startTime > 10000) {
+            if (System.currentTimeMillis() - startTime > 10000 && !temp) {
                 throw new TickerException(thread.getThreadName() + " : Timeout while waiting for Session ID");
             }
             waitFor(WAIT_QUICK);

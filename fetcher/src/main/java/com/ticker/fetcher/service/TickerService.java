@@ -257,4 +257,18 @@ public class TickerService extends TickerThreadService<FetcherThread, FetcherThr
         executorMap.put("RepoExecutor", repoExecutor);
         return executorMap;
     }
+
+    @Async("fetcherTaskExecutor")
+    @Scheduled(cron = "0 * * ? * *")
+    public void runTempWebSockets() {
+        log.debug("Starting temp WebSockets");
+        long start = System.currentTimeMillis();
+        Set<FetcherThread> threadMap = getThreadPool();
+        for (FetcherThread thread : threadMap) {
+            if (thread.isEnabled() && thread.isInitialized()) {
+                fetcherTaskExecutor.execute(thread::addTempWebSocket);
+            }
+        }
+        log.debug("Started temp websockets in " + (System.currentTimeMillis() - start) + "ms");
+    }
 }
