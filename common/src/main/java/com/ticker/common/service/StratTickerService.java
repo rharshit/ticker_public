@@ -19,6 +19,7 @@ import org.springframework.web.client.RestTemplate;
 import java.text.SimpleDateFormat;
 import java.util.Date;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.concurrent.Executor;
 
@@ -400,5 +401,28 @@ public abstract class StratTickerService<T extends StratThread, TM extends Strat
         executorMap.put("StratTaskExecutor", stratTaskExecutor);
         executorMap.put("FetcherExecutor", fetcherExecutor);
         return executorMap;
+    }
+
+    @Override
+    protected void sortTickers(List<TM> tickers) {
+        tickers.sort((o1, o2) -> {
+            if (o1.getPositionQty() == 0 && o2.getPositionQty() != 0) {
+                return 1;
+            } else if (o1.getPositionQty() != 0 && o2.getPositionQty() == 0) {
+                return -1;
+            } else if (o1.getCurrentState() == 0 && o2.getCurrentState() != 0) {
+                return 1;
+            } else if (o1.getCurrentState() != 0 && o2.getCurrentState() == 0) {
+                return -1;
+            } else if (o1.isFetching() != o2.isFetching()) {
+                return o1.isFetching() ? 1 : -1;
+            } else if (o1.isEnabled() != o2.isEnabled()) {
+                return o1.isEnabled() ? -1 : 1;
+            } else if (o1.isInitialized() != o2.isInitialized()) {
+                return o1.isInitialized() ? 1 : -1;
+            } else {
+                return o1.getThreadName().compareTo(o2.getThreadName());
+            }
+        });
     }
 }

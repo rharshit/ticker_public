@@ -16,11 +16,11 @@ import org.springframework.stereotype.Service;
 
 import java.sql.Timestamp;
 import java.text.SimpleDateFormat;
-import java.util.HashMap;
-import java.util.Map;
-import java.util.Set;
+import java.util.*;
 import java.util.concurrent.Executor;
+import java.util.stream.Collectors;
 
+import static com.ticker.common.util.Util.getRandom;
 import static com.ticker.fetcher.constants.FetcherConstants.FETCHER_THREAD_COMP_NAME;
 
 /**
@@ -261,14 +261,37 @@ public class TickerService extends TickerThreadService<FetcherThread, FetcherThr
     @Async("fetcherTaskExecutor")
     @Scheduled(cron = "0 * * ? * *")
     public void runTempWebSockets() {
-        log.debug("Starting temp WebSockets");
+        log.debug("Refreshing temp WebSockets");
         long start = System.currentTimeMillis();
+        int count = 0;
         Set<FetcherThread> threadMap = getThreadPool();
-        for (FetcherThread thread : threadMap) {
+        List<FetcherThread> fetcherThreads = new ArrayList<>(threadMap).stream()
+                .filter(thread -> thread.isEnabled() && thread.isInitialized())
+                .sorted((o1, o2) -> (getRandom().nextInt() % 3) - 1)
+                .collect(Collectors.toList());
+        for (FetcherThread thread : fetcherThreads) {
+            if (System.currentTimeMillis() - start > 58000) {
+                log.debug("Interrupting thread refresh due to timeout");
+                break;
+            }
             if (thread.isEnabled() && thread.isInitialized()) {
-                fetcherTaskExecutor.execute(thread::addTempWebSocket);
+                thread.addTempWebSocket();
+                count++;
             }
         }
-        log.debug("Started temp websockets in " + (System.currentTimeMillis() - start) + "ms");
+        log.info("Refreshed " + count + " of " + fetcherThreads.size() + " temp websockets in " + (System.currentTimeMillis() - start) + "ms");
+    }
+
+    @Override
+    protected void sortTickers(List<FetcherThreadModel> tickers) {
+        tickers.sort((o1, o2) -> {
+            if (o1.isEnabled() != o2.isEnabled()) {
+                return o1.isEnabled() ? -1 : 1;
+            } else if (o1.isInitialized() != o2.isInitialized()) {
+                return o1.isInitialized() ? 1 : -1;
+            } else {
+                return o1.getThreadName().compareTo(o2.getThreadName());
+            }
+        });
     }
 }

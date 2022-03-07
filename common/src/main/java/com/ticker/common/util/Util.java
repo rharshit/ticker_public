@@ -5,6 +5,7 @@ import lombok.extern.slf4j.Slf4j;
 import java.io.File;
 import java.io.FileWriter;
 import java.io.IOException;
+import java.util.Random;
 
 import static com.ticker.common.contants.TickerConstants.*;
 
@@ -29,6 +30,8 @@ public abstract class Util {
      * The constant WAIT_LONG.
      */
     public static final long WAIT_LONG = 2000;
+
+    private static Random random;
 
     /**
      * Wait for.
@@ -113,5 +116,12 @@ public abstract class Util {
         } catch (IOException e) {
             log.debug("An error occurred while creating file");
         }
+    }
+
+    public static synchronized Random getRandom() {
+        if (random == null) {
+            random = new Random();
+        }
+        return random;
     }
 }

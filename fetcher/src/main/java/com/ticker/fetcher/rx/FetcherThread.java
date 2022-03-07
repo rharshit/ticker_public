@@ -25,7 +25,6 @@ import java.net.URI;
 import java.net.URL;
 import java.util.Arrays;
 import java.util.HashSet;
-import java.util.Random;
 import java.util.Set;
 import java.util.concurrent.Semaphore;
 import java.util.regex.Matcher;
@@ -468,9 +467,8 @@ public class FetcherThread extends TickerThread<TickerService> {
 
     private String createHash(int len) {
         StringBuilder hash = new StringBuilder();
-        Random rand = new Random();
         for (int i = 0; i < len; i++) {
-            hash.append(getAlphaNumericChar(rand.nextInt(62)));
+            hash.append(getAlphaNumericChar(getRandom().nextInt(62)));
         }
         return hash.toString();
     }
