@@ -86,6 +86,7 @@ public class FetcherThread extends TickerThread<TickerService> {
     private String studyTEMA = "st7";
 
     private WebSocketClient webSocketClient;
+    private static final Semaphore tempWebsocketFetcher;
     private String sessionId;
     private String clusterId;
     private String chartSession;
@@ -98,11 +99,15 @@ public class FetcherThread extends TickerThread<TickerService> {
     private int incorrectValues = 0;
 
     private static final Semaphore websocketFetcher;
-    private static String buildTime = "";
 
     static {
         websocketFetcher = new Semaphore(5);
+        tempWebsocketFetcher = new Semaphore(250);
     }
+
+    private static String buildTime = "";
+
+    private Set<WebSocketClient> tempWebSocketClients = new HashSet<>();
 
     /**
      * Sets properties.
@@ -137,15 +142,22 @@ public class FetcherThread extends TickerThread<TickerService> {
         initializeTables();
     }
 
-    private void initializeWebSocket() {
+    private WebSocketClient initializeWebSocket(boolean temp) {
+        long startTime = System.currentTimeMillis();
+        WebSocketClient webSocket;
+        Semaphore websocketSemaphore = temp ? tempWebsocketFetcher : websocketFetcher;
         try {
             synchronized (this) {
-                while (!websocketFetcher.tryAcquire()) {
+                while (!websocketSemaphore.tryAcquire()) {
                     this.wait(WAIT_QUICK);
                 }
-                closeWebsocketIfExists(SERVICE_RESTART, "Restarting Websocket");
+                if (!temp) {
+                    closeWebsocketIfExists(SERVICE_RESTART, "Restarting Websocket", webSocketClient);
+                }
                 FetcherThread thisThread = this;
-                webSocketClient = new WebSocketClient(new URI("wss://data.tradingview.com/socket.io/websocket?from=chart%2F&date=" + getBuildTime())) {
+                webSocket = new WebSocketClient(new URI("wss://data.tradingview.com/socket.io/websocket?from=chart%2F&date=" + getBuildTime())) {
+                    final long start = startTime;
+
                     @Override
                     public void onOpen(ServerHandshake handshakedata) {
                         log.debug(getThreadName() + " : Opened websocket");
@@ -153,53 +165,64 @@ public class FetcherThread extends TickerThread<TickerService> {
 
                     @Override
                     public void onMessage(String message) {
-                        setLastPingAt(System.currentTimeMillis());
-                        fetcherService.onReceiveMessage(thisThread, message);
+                        if (!temp) {
+                            setLastPingAt(System.currentTimeMillis());
+                        }
+                        fetcherService.onReceiveMessage(thisThread, this, message, temp);
                     }
 
                     @Override
                     public void onClose(int code, String reason, boolean remote) {
                         log.debug(getThreadName() + " : Closed websocket, reason - " + reason);
-                        if (isEnabled() && isInitialized()) {
+                        if (!temp && isEnabled() && isInitialized()) {
                             refresh();
+                        }
+                        if (temp) {
+                            log.debug(thisThread.getThreadName() + " : Closing temp websocket in " + (System.currentTimeMillis() - start) + "ms");
                         }
                     }
 
                     @Override
                     public void onError(Exception ex) {
-                        log.error(getThreadName() + " : Error in websocket", ex);
+                        if (!temp) {
+                            log.error(getThreadName() + " : Error in websocket", ex);
+                        } else {
+                            close(GOING_AWAY, "Error in temp websocket");
+                        }
                     }
                 };
-                webSocketClient.addHeader("Accept-Encoding", "gzip, deflate, br");
-                webSocketClient.addHeader("Accept-Language", "en-IN,en;q=0.9");
-                webSocketClient.addHeader("Cache-Control", "no-cache");
-                webSocketClient.addHeader("Connection", "Upgrade");
-                webSocketClient.addHeader("Host", "data.tradingview.com");
-                webSocketClient.addHeader("Origin", "https://in.tradingview.com");
-                webSocketClient.addHeader("Pragma", "no-cache");
-                webSocketClient.addHeader("Sec-WebSocket-Extensions", "client_max_window_bits");
-                webSocketClient.addHeader("Sec-WebSocket-Key", "rxPHgoX6myglC4x5XLaLtA==");
-                webSocketClient.addHeader("Sec-WebSocket-Version", "13");
-                webSocketClient.addHeader("Upgrade", "websocket");
-                webSocketClient.addHeader("User-Agent", "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/98.0.4758.80 Safari/537.36");
-                webSocketClient.connect();
+                webSocket.addHeader("Accept-Encoding", "gzip, deflate, br");
+                webSocket.addHeader("Accept-Language", "en-IN,en;q=0.9");
+                webSocket.addHeader("Cache-Control", "no-cache");
+                webSocket.addHeader("Connection", "Upgrade");
+                webSocket.addHeader("Host", "data.tradingview.com");
+                webSocket.addHeader("Origin", "https://in.tradingview.com");
+                webSocket.addHeader("Pragma", "no-cache");
+                webSocket.addHeader("Sec-WebSocket-Extensions", "client_max_window_bits");
+                webSocket.addHeader("Sec-WebSocket-Key", "rxPHgoX6myglC4x5XLaLtA==");
+                webSocket.addHeader("Sec-WebSocket-Version", "13");
+                webSocket.addHeader("Upgrade", "websocket");
+                webSocket.addHeader("User-Agent", "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/98.0.4758.80 Safari/537.36");
+                webSocket.connect();
 
                 createSession();
 
                 setSessionId("");
                 setRequestId(0);
-                fetcherService.addSession(this);
-                fetcherService.handshake(this);
+                fetcherService.addSession(this, webSocket, temp);
+                fetcherService.handshake(this, webSocket, temp);
 
-                setInitialized(true);
+                if (!temp) {
+                    setInitialized(true);
+                }
             }
 
-        } catch (Exception ignored) {
+        } catch (Exception e) {
             throw new TickerException(getThreadName() + " : Error while creating websocket");
         } finally {
-            websocketFetcher.release();
+            websocketSemaphore.release();
         }
-
+        return webSocket;
     }
 
     private void createSession() {
@@ -253,6 +276,9 @@ public class FetcherThread extends TickerThread<TickerService> {
         }
     }
 
+    /**
+     * Initialize tables.
+     */
     public void initializeTables() {
         String tableName = getTableName();
         fetcherService.createTable(tableName);
@@ -313,7 +339,7 @@ public class FetcherThread extends TickerThread<TickerService> {
         try {
             setLastPingAt(0);
             setUpdatedAt(0);
-            initializeWebSocket();
+            webSocketClient = initializeWebSocket(false);
             log.debug(getThreadName() + " :" +
                     " getStudySeries(): " + getStudySeries() +
                     " getStudyBB(): " + getStudyBB() +
@@ -400,18 +426,20 @@ public class FetcherThread extends TickerThread<TickerService> {
     @Override
     public void terminateThread(boolean shutDownInitiated) {
         super.terminateThread(shutDownInitiated);
-        closeWebsocketIfExists(GOING_AWAY, "Terminating thread");
+        setInitialized(false);
+        closeWebsocketIfExists(GOING_AWAY, "Terminating thread", webSocketClient);
+        this.webSocketClient = null;
+        removeTempWebSockets();
         service.deleteTicker(this);
     }
 
-    private void closeWebsocketIfExists(int code, String reason) {
-        setInitialized(false);
-        if (webSocketClient != null) {
+    private void closeWebsocketIfExists(int code, String reason, WebSocketClient webSocket) {
+        if (webSocket != null) {
             log.debug(getThreadName() + " : Closing websocket");
             try {
                 long start = System.currentTimeMillis();
-                webSocketClient.close(code, reason);
-                while (webSocketClient.isOpen() || webSocketClient.isClosing() || !webSocketClient.isClosed()) {
+                webSocket.close(code, reason);
+                while (webSocket.isOpen() || webSocket.isClosing() || !webSocket.isClosed()) {
                     waitFor(WAIT_QUICK);
                     if (System.currentTimeMillis() - start >= 5000) {
                         break;
@@ -420,7 +448,7 @@ public class FetcherThread extends TickerThread<TickerService> {
             } catch (Exception ignored) {
 
             }
-            webSocketClient = null;
+            tempWebSocketClients.remove(webSocket);
             log.debug(getThreadName() + " : Websocket closed");
         }
     }
@@ -465,6 +493,11 @@ public class FetcherThread extends TickerThread<TickerService> {
         return (char) (x + add);
     }
 
+    /**
+     * Sets point value.
+     *
+     * @param pointValue the point value
+     */
     public void setPointValue(int pointValue) {
         if (this.pointValue != pointValue) {
             this.pointValue = pointValue;
@@ -484,5 +517,17 @@ public class FetcherThread extends TickerThread<TickerService> {
         Pattern p = Pattern.compile("window\\.BUILD_TIME *= *\"(.*)\";");
         Matcher m = p.matcher(sessionId);
         this.clusterId = m.matches() ? m.group(2) : "";
+    }
+
+    public void addTempWebSocket() {
+        WebSocketClient webSocket = initializeWebSocket(true);
+        tempWebSocketClients.add(webSocket);
+    }
+
+    public void removeTempWebSockets() {
+        WebSocketClient[] tempWebSocketArr = tempWebSocketClients.toArray(new WebSocketClient[0]);
+        for (WebSocketClient webSocketClient : tempWebSocketArr) {
+            closeWebsocketIfExists(GOING_AWAY, "Terminating temp websocket", webSocketClient);
+        }
     }
 }

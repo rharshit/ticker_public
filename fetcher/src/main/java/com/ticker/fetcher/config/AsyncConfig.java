@@ -37,9 +37,9 @@ public class AsyncConfig implements AsyncConfigurer {
     @Bean(name = "fetcherTaskExecutor")
     public Executor getFetcherAsyncExecutor() {
         ThreadPoolTaskExecutor executor = new ThreadPoolTaskExecutor();
-        executor.setCorePoolSize(64);
-        executor.setMaxPoolSize(128);
-        executor.setQueueCapacity(32);
+        executor.setCorePoolSize(128);
+        executor.setMaxPoolSize(256);
+        executor.setQueueCapacity(64);
         executor.setThreadNamePrefix("fetcherExec-");
         executor.initialize();
         return executor;
