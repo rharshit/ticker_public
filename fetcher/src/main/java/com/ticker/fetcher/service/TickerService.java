@@ -267,8 +267,8 @@ public class TickerService extends TickerThreadService<FetcherThread, FetcherThr
         Set<FetcherThread> threadMap = getThreadPool();
         List<FetcherThread> fetcherThreads = new ArrayList<>(threadMap).stream()
                 .filter(thread -> thread.isEnabled() && thread.isInitialized())
-                .sorted((o1, o2) -> (getRandom().nextInt() % 3) - 1)
                 .collect(Collectors.toList());
+        Collections.shuffle(fetcherThreads, getRandom());
         for (FetcherThread thread : fetcherThreads) {
             if (System.currentTimeMillis() - start > 58000) {
                 log.debug("Interrupting thread refresh due to timeout");
