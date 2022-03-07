@@ -20,6 +20,7 @@ import java.util.*;
 import java.util.concurrent.Executor;
 import java.util.stream.Collectors;
 
+import static com.ticker.common.util.Util.getRandom;
 import static com.ticker.fetcher.constants.FetcherConstants.FETCHER_THREAD_COMP_NAME;
 
 /**
@@ -49,8 +50,6 @@ public class TickerService extends TickerThreadService<FetcherThread, FetcherThr
     @Autowired
     @Qualifier("repoExecutor")
     private Executor repoExecutor;
-
-    private final Random random = new Random();
 
     /**
      * Add tracking for the ticker, given exchange and symbol for app
@@ -268,7 +267,7 @@ public class TickerService extends TickerThreadService<FetcherThread, FetcherThr
         Set<FetcherThread> threadMap = getThreadPool();
         List<FetcherThread> fetcherThreads = new ArrayList<>(threadMap).stream()
                 .filter(thread -> thread.isEnabled() && thread.isInitialized())
-                .sorted((o1, o2) -> (random.nextInt() % 3) - 1)
+                .sorted((o1, o2) -> (getRandom().nextInt() % 3) - 1)
                 .collect(Collectors.toList());
         for (FetcherThread thread : fetcherThreads) {
             if (System.currentTimeMillis() - start > 58000) {
