@@ -43,7 +43,7 @@ public abstract class Util {
         try {
             Thread.sleep(time);
         } catch (InterruptedException e) {
-            log.error("Error while waiting", e);
+            log.debug("Error while waiting", e);
         }
         log.debug("Resume");
     }
