@@ -749,6 +749,9 @@ public class BbRsiSafeService extends StratTickerService<BbRsiSafeThread, BbRsiS
     }
 
     private double getDiffPercentage(double prevValue, double currentValue) {
+        if (prevValue == 0) {
+            return 0;
+        }
         return ((currentValue - prevValue) / prevValue) * 100;
     }
 }
