@@ -425,4 +425,8 @@ public abstract class StratTickerService<T extends StratThread, TM extends Strat
             }
         });
     }
+
+    protected boolean isGttTimeFrame() {
+        return true;
+    }
 }
