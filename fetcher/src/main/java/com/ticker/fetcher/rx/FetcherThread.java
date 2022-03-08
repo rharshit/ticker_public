@@ -146,74 +146,75 @@ public class FetcherThread extends TickerThread<TickerService> {
         WebSocketClient webSocket;
         Semaphore websocketSemaphore = temp ? tempWebsocketFetcher : websocketFetcher;
         try {
-            synchronized (this) {
-                while (!websocketSemaphore.tryAcquire()) {
-                    this.wait(WAIT_QUICK);
+            while (!websocketSemaphore.tryAcquire()) {
+                this.wait(WAIT_QUICK);
+                if (System.currentTimeMillis() - startTime > 120000) {
+                    throw new TickerException("Error while waiting to acquire websocket fetcher lock");
                 }
-                if (!temp) {
-                    closeWebsocketIfExists(SERVICE_RESTART, "Restarting Websocket", webSocketClient);
+            }
+            if (!temp) {
+                closeWebsocketIfExists(SERVICE_RESTART, "Restarting Websocket", webSocketClient);
+            }
+            FetcherThread thisThread = this;
+            webSocket = new WebSocketClient(new URI("wss://data.tradingview.com/socket.io/websocket?from=chart%2F&date=" + getBuildTime())) {
+                final long start = startTime;
+
+                @Override
+                public void onOpen(ServerHandshake handshakedata) {
+                    log.debug(getThreadName() + " : Opened websocket");
                 }
-                FetcherThread thisThread = this;
-                webSocket = new WebSocketClient(new URI("wss://data.tradingview.com/socket.io/websocket?from=chart%2F&date=" + getBuildTime())) {
-                    final long start = startTime;
 
-                    @Override
-                    public void onOpen(ServerHandshake handshakedata) {
-                        log.debug(getThreadName() + " : Opened websocket");
+                @Override
+                public void onMessage(String message) {
+                    if (!temp) {
+                        setLastPingAt(System.currentTimeMillis());
                     }
-
-                    @Override
-                    public void onMessage(String message) {
-                        if (!temp) {
-                            setLastPingAt(System.currentTimeMillis());
-                        }
-                        fetcherService.onReceiveMessage(thisThread, this, message, temp);
-                    }
-
-                    @Override
-                    public void onClose(int code, String reason, boolean remote) {
-                        log.debug(getThreadName() + " : Closed websocket, reason - " + reason);
-                        if (!temp && isEnabled() && isInitialized()) {
-                            refresh();
-                        }
-                        if (temp) {
-                            log.debug(thisThread.getThreadName() + " : Closing temp websocket in " + (System.currentTimeMillis() - start) + "ms");
-                        }
-                    }
-
-                    @Override
-                    public void onError(Exception ex) {
-                        if (!temp) {
-                            log.error(getThreadName() + " : Error in websocket", ex);
-                        } else {
-                            close(GOING_AWAY, "Error in temp websocket");
-                        }
-                    }
-                };
-                webSocket.addHeader("Accept-Encoding", "gzip, deflate, br");
-                webSocket.addHeader("Accept-Language", "en-IN,en;q=0.9");
-                webSocket.addHeader("Cache-Control", "no-cache");
-                webSocket.addHeader("Connection", "Upgrade");
-                webSocket.addHeader("Host", "data.tradingview.com");
-                webSocket.addHeader("Origin", "https://in.tradingview.com");
-                webSocket.addHeader("Pragma", "no-cache");
-                webSocket.addHeader("Sec-WebSocket-Extensions", "client_max_window_bits");
-                webSocket.addHeader("Sec-WebSocket-Key", "rxPHgoX6myglC4x5XLaLtA==");
-                webSocket.addHeader("Sec-WebSocket-Version", "13");
-                webSocket.addHeader("Upgrade", "websocket");
-                webSocket.addHeader("User-Agent", "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/98.0.4758.80 Safari/537.36");
-                webSocket.connect();
-
-                createSession();
-
-                setSessionId("");
-                setRequestId(0);
-                fetcherService.addSession(this, webSocket, temp);
-                fetcherService.handshake(this, webSocket, temp);
-
-                if (!temp) {
-                    setInitialized(true);
+                    fetcherService.onReceiveMessage(thisThread, this, message, temp);
                 }
+
+                @Override
+                public void onClose(int code, String reason, boolean remote) {
+                    log.debug(getThreadName() + " : Closed websocket, reason - " + reason);
+                    if (!temp && isEnabled() && isInitialized()) {
+                        refresh();
+                    }
+                    if (temp) {
+                        log.debug(thisThread.getThreadName() + " : Closing temp websocket in " + (System.currentTimeMillis() - start) + "ms");
+                    }
+                }
+
+                @Override
+                public void onError(Exception ex) {
+                    if (!temp) {
+                        log.error(getThreadName() + " : Error in websocket", ex);
+                    } else {
+                        close(GOING_AWAY, "Error in temp websocket");
+                    }
+                }
+            };
+            webSocket.addHeader("Accept-Encoding", "gzip, deflate, br");
+            webSocket.addHeader("Accept-Language", "en-IN,en;q=0.9");
+            webSocket.addHeader("Cache-Control", "no-cache");
+            webSocket.addHeader("Connection", "Upgrade");
+            webSocket.addHeader("Host", "data.tradingview.com");
+            webSocket.addHeader("Origin", "https://in.tradingview.com");
+            webSocket.addHeader("Pragma", "no-cache");
+            webSocket.addHeader("Sec-WebSocket-Extensions", "client_max_window_bits");
+            webSocket.addHeader("Sec-WebSocket-Key", "rxPHgoX6myglC4x5XLaLtA==");
+            webSocket.addHeader("Sec-WebSocket-Version", "13");
+            webSocket.addHeader("Upgrade", "websocket");
+            webSocket.addHeader("User-Agent", "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/98.0.4758.80 Safari/537.36");
+            webSocket.connect();
+
+            createSession();
+
+            setSessionId("");
+            setRequestId(0);
+            fetcherService.addSession(this, webSocket, temp);
+            fetcherService.handshake(this, webSocket, temp);
+
+            if (!temp) {
+                setInitialized(true);
             }
 
         } catch (Exception e) {

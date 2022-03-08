@@ -97,26 +97,24 @@ public class FetcherService extends BaseService {
      */
     public void onReceiveMessage(FetcherThread thread, WebSocketClient webSocket, String data, boolean temp) {
         log.debug("Recv:");
-        fetcherTaskExecutor.execute(() -> {
-            String[] messages = decodeMessage(data);
-            for (String message : messages) {
-                String parsedMessage = message;
-                try {
-                    JSONObject jsonObject = new JSONObject(message);
-                    parsedMessage = jsonObject.toString(2);
-                } catch (Exception e) {
+        String[] messages = decodeMessage(data);
+        for (String message : messages) {
+            String parsedMessage = message;
+            try {
+                JSONObject jsonObject = new JSONObject(message);
+                parsedMessage = jsonObject.toString(2);
+            } catch (Exception e) {
 
-                }
-                log.debug("\n" + parsedMessage);
-                if (Pattern.matches("~h~\\d*$", message)) {
-                    if (!temp) {
-                        sendMessage(webSocket, message);
-                    }
-                } else {
-                    fetcherTaskExecutor.execute(() -> parseMessage(thread, message, temp));
-                }
             }
-        });
+            log.debug("\n" + parsedMessage);
+            if (Pattern.matches("~h~\\d*$", message)) {
+                if (!temp) {
+                    sendMessage(webSocket, message);
+                }
+            } else {
+                fetcherTaskExecutor.execute(() -> parseMessage(thread, message, temp));
+            }
+        }
     }
 
     private void parseMessage(FetcherThread thread, String message, boolean temp) {
