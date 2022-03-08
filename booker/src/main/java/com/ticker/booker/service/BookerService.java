@@ -470,9 +470,13 @@ public class BookerService extends BaseService {
             if (completeTrade.getSell() == null
                     || completeTrade.getSell().quantity == null
                     || Integer.parseInt(completeTrade.getSell().quantity) == 0
+                    || completeTrade.getSell().averagePrice == null
+                    || Double.parseDouble(completeTrade.getSell().averagePrice) == 0
                     || completeTrade.getBuy() == null
                     || completeTrade.getBuy().quantity == null
-                    || Integer.parseInt(completeTrade.getBuy().quantity) == 0) {
+                    || Integer.parseInt(completeTrade.getBuy().quantity) == 0
+                    || completeTrade.getBuy().averagePrice == null
+                    || Double.parseDouble(completeTrade.getBuy().averagePrice) == 0) {
                 return false;
             }
         } catch (Exception e) {
