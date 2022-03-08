@@ -328,10 +328,10 @@ public class FetcherThread extends TickerThread<TickerService> {
      */
     protected void initialize(boolean refresh) {
         incorrectValues = 0;
-        setInitialized(false);
         if (refresh) {
             log.info(getExchange() + ":" + getSymbol() + " - Refreshing");
         } else {
+            setInitialized(false);
             log.info(getExchange() + ":" + getSymbol() + " - Initializing");
         }
 
