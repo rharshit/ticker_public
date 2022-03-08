@@ -715,10 +715,10 @@ public class BbRsiSafeService extends StratTickerService<BbRsiSafeThread, BbRsiS
             double prevCloseDiffPercentage = getPrevCloseDiffPercentage(thread);
             double openDiffPercentage = getOpenDiffPercentage(thread);
             if (prevCloseDiffPercentage > 1.5 || openDiffPercentage > 1) {
-                log.info(thread.getThreadName() + " : isGttLower false - " + prevCloseDiffPercentage + ", " + openDiffPercentage);
+                log.debug(thread.getThreadName() + " : isGttLower false - " + prevCloseDiffPercentage + ", " + openDiffPercentage);
                 return false;
             }
-            log.info(thread.getThreadName() + " : isGttLower true - " + prevCloseDiffPercentage + ", " + openDiffPercentage);
+            log.debug(thread.getThreadName() + " : isGttLower true - " + prevCloseDiffPercentage + ", " + openDiffPercentage);
             return true;
         } else {
             return false;
@@ -730,10 +730,10 @@ public class BbRsiSafeService extends StratTickerService<BbRsiSafeThread, BbRsiS
             double prevCloseDiffPercentage = getPrevCloseDiffPercentage(thread);
             double openDiffPercentage = getOpenDiffPercentage(thread);
             if (prevCloseDiffPercentage < -1.5 || openDiffPercentage < -1) {
-                log.info(thread.getThreadName() + " : isGttUpper false - " + prevCloseDiffPercentage + ", " + openDiffPercentage);
+                log.debug(thread.getThreadName() + " : isGttUpper false - " + prevCloseDiffPercentage + ", " + openDiffPercentage);
                 return false;
             }
-            log.info(thread.getThreadName() + " : isGttUpper true - " + prevCloseDiffPercentage + ", " + openDiffPercentage);
+            log.debug(thread.getThreadName() + " : isGttUpper true - " + prevCloseDiffPercentage + ", " + openDiffPercentage);
             return true;
         } else {
             return false;
