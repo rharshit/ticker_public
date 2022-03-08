@@ -260,8 +260,14 @@ public abstract class StratTickerService<T extends StratThread, TM extends Strat
      * @return the boolean
      */
     public boolean isSameMinTrigger(long triggerTime) {
-        return DATE_TIME_FORMATTER_TIME_MINUTES.format(new Date(triggerTime)).equals(
-                DATE_TIME_FORMATTER_TIME_MINUTES.format(new Date(System.currentTimeMillis())));
+        try {
+            return DATE_TIME_FORMATTER_TIME_MINUTES.format(new Date(triggerTime)).equals(
+                    DATE_TIME_FORMATTER_TIME_MINUTES.format(new Date(System.currentTimeMillis())));
+        } catch (Exception e) {
+            log.error(String.valueOf(triggerTime));
+            e.printStackTrace();
+            return true;
+        }
     }
 
     /**
