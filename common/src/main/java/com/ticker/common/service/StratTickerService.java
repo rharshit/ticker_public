@@ -410,9 +410,9 @@ public abstract class StratTickerService<T extends StratThread, TM extends Strat
                 return 1;
             } else if (o1.getPositionQty() != 0 && o2.getPositionQty() == 0) {
                 return -1;
-            } else if (o1.getCurrentState() == 0 && o2.getCurrentState() != 0) {
+            } else if (o1.getCurrentState() == 1 && o2.getCurrentState() != 1) {
                 return 1;
-            } else if (o1.getCurrentState() != 0 && o2.getCurrentState() == 0) {
+            } else if (o1.getCurrentState() != 1 && o2.getCurrentState() == 1) {
                 return -1;
             } else if (o1.isFetching() != o2.isFetching()) {
                 return o1.isFetching() ? 1 : -1;
