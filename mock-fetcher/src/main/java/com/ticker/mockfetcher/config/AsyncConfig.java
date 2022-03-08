@@ -8,6 +8,7 @@ import org.springframework.scheduling.annotation.EnableAsync;
 import org.springframework.scheduling.concurrent.ThreadPoolTaskExecutor;
 
 import java.util.concurrent.Executor;
+import java.util.concurrent.Executors;
 
 /**
  * The type Async config.
@@ -19,14 +20,7 @@ public class AsyncConfig implements AsyncConfigurer {
 
     @Override
     public Executor getAsyncExecutor() {
-        ThreadPoolTaskExecutor executor = new ThreadPoolTaskExecutor();
-        executor.setCorePoolSize(10);
-        executor.setMaxPoolSize(20);
-        executor.setQueueCapacity(200);
-        executor.setKeepAliveSeconds(5);
-        executor.setThreadNamePrefix("appExecutor-");
-        executor.initialize();
-        return executor;
+        return Executors.newCachedThreadPool();
     }
 
     /**
@@ -36,13 +30,7 @@ public class AsyncConfig implements AsyncConfigurer {
      */
     @Bean(name = "fetcherTaskExecutor")
     public Executor getFetcherAsyncExecutor() {
-        ThreadPoolTaskExecutor executor = new ThreadPoolTaskExecutor();
-        executor.setCorePoolSize(32);
-        executor.setMaxPoolSize(64);
-        executor.setQueueCapacity(8);
-        executor.setThreadNamePrefix("fetcherExec-");
-        executor.initialize();
-        return executor;
+        return Executors.newCachedThreadPool();
     }
 
     /**
