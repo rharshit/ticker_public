@@ -23,7 +23,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.concurrent.Executor;
 
-import static com.ticker.common.contants.DateTimeConstants.*;
+import static com.ticker.common.contants.DateTimeConstants.DATE_TIME_FORMATTER_TIME_SECONDS;
 import static com.ticker.common.contants.TickerConstants.*;
 import static com.ticker.common.util.Util.*;
 
@@ -250,7 +250,8 @@ public abstract class StratTickerService<T extends StratThread, TM extends Strat
      * @return the boolean
      */
     protected boolean isEomTrigger(int eom) {
-        return Integer.parseInt(DATE_TIME_FORMATTER_TIME_ONLY_SECONDS.format(System.currentTimeMillis())) >= eom;
+        long now = System.currentTimeMillis();
+        return ((now / 1000) - (now / 60000) * 60) >= eom;
     }
 
     /**
@@ -260,14 +261,7 @@ public abstract class StratTickerService<T extends StratThread, TM extends Strat
      * @return the boolean
      */
     public boolean isSameMinTrigger(long triggerTime) {
-        try {
-            return DATE_TIME_FORMATTER_TIME_MINUTES.format(new Date(triggerTime)).equals(
-                    DATE_TIME_FORMATTER_TIME_MINUTES.format(new Date(System.currentTimeMillis())));
-        } catch (Exception e) {
-            log.error(String.valueOf(triggerTime));
-            e.printStackTrace();
-            return true;
-        }
+        return (triggerTime / 60000) == (System.currentTimeMillis() / 60000);
     }
 
     /**
