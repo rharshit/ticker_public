@@ -6,6 +6,7 @@ import com.ticker.common.service.StratTickerService;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 
+import java.util.Date;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -696,6 +697,9 @@ public class BbRsiSafeService extends StratTickerService<BbRsiSafeThread, BbRsiS
     private void checkTrigger(BbRsiSafeThread thread) {
         log.trace(thread.getThreadName() + " : checkTrigger");
         thread.resetTriggers();
+        if (!isGttTimeFrame()) {
+            return;
+        }
         if (!isEomTrigger(15)) {
             return;
         }
@@ -708,6 +712,12 @@ public class BbRsiSafeService extends StratTickerService<BbRsiSafeThread, BbRsiS
             thread.setTriggerStartValue(thread.getCurrentValue());
             thread.setTriggerStartTime(System.currentTimeMillis());
         }
+    }
+
+    @Override
+    protected boolean isGttTimeFrame() {
+        int time = Integer.parseInt(BB_RSI_SAFE_TIME_FORMAT.format(new Date(System.currentTimeMillis())));
+        return time > 935 && time < 1500;
     }
 
     private boolean isGttLower(BbRsiSafeThread thread) {

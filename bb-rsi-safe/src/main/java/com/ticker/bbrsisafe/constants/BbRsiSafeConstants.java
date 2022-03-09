@@ -1,9 +1,13 @@
 package com.ticker.bbrsisafe.constants;
 
+import java.text.SimpleDateFormat;
+
 /**
  * The type Bb rsi safe constants.
  */
 public abstract class BbRsiSafeConstants {
+
+    public static final SimpleDateFormat BB_RSI_SAFE_TIME_FORMAT = new SimpleDateFormat("HHmm");
 
     /**
      * The constant BB_RSI_THREAD_COMP_NAME.
