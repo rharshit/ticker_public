@@ -77,7 +77,7 @@ public class FetcherAppRepository {
     /**
      * Push data.
      */
-    @Scheduled(fixedRate = 5000)
+    @Scheduled(fixedRate = 60000)
     public void pushData() {
         if (!pushing) {
             pushing = true;
