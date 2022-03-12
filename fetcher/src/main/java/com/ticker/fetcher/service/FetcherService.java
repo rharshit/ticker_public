@@ -112,7 +112,7 @@ public class FetcherService extends BaseService {
                     sendMessage(webSocket, message);
                 }
             } else {
-                fetcherTaskExecutor.execute(() -> parseMessage(thread, message, temp));
+                parseMessage(thread, message, temp);
             }
         }
     }
@@ -129,7 +129,7 @@ public class FetcherService extends BaseService {
                         String objString = array.get(i).toString();
                         JSONObject jsonObject = new JSONObject(objString);
                         if (hasInterestedValue(thread, jsonObject)) {
-                            setVal(thread, jsonObject, temp);
+                            thread.getExecutor().execute(() -> setVal(thread, jsonObject, temp));
                         }
                     } catch (Exception ignored) {
 
@@ -322,12 +322,16 @@ public class FetcherService extends BaseService {
             sendMessage(webSocket, "{\"m\":\"set_auth_token\",\"p\":[\"unauthorized_user_token\"]}");
             sendMessage(webSocket, "{\"m\":\"chart_create_session\",\"p\":[\"" + thread.getChartSession() + "\",\"\"]}");
             sendMessage(webSocket, "{\"m\":\"quote_create_session\",\"p\":[\"" + thread.getQuoteSession() + "\"]}");
+            waitFor(WAIT_QUICK);
             sendMessage(webSocket, "{\"m\":\"quote_set_fields\",\"p\":[\"" + thread.getQuoteSession() + "\",\"base-currency-logoid\",\"ch\",\"chp\",\"currency-logoid\",\"currency_code\",\"current_session\",\"description\",\"exchange\",\"format\",\"fractional\",\"is_tradable\",\"language\",\"local_description\",\"logoid\",\"lp\",\"lp_time\",\"minmov\",\"minmove2\",\"original_name\",\"pricescale\",\"pro_name\",\"short_name\",\"type\",\"update_mode\",\"volume\",\"rchp\",\"rtc\",\"country_code\",\"provider_id\"]}");
             sendMessage(webSocket, "{\"m\":\"request_studies_metadata\",\"p\":[\"" + thread.getChartSession() + "\",\"metadata_1\"]}");
+            waitFor(WAIT_QUICK);
             sendMessage(webSocket, "{\"m\":\"resolve_symbol\",\"p\":[\"" + thread.getChartSession() + "\",\"sds_sym_1\",\"={\\\"symbol\\\":\\\"" + thread.getExchange() + ":" + thread.getSymbol() + "\\\",\\\"adjustment\\\":\\\"splits\\\"}\"]}");
+            waitFor(WAIT_QUICK);
             sendMessage(webSocket, "{\"m\":\"create_series\",\"p\":[\"" + thread.getChartSession() + "\",\"" + thread.getStudySeries() + "\",\"s1\",\"sds_sym_1\",\"D\",300,\"\"]}");
             sendMessage(webSocket, "{\"m\":\"switch_timezone\",\"p\":[\"" + thread.getChartSession() + "\",\"Asia/Kolkata\"]}");
             sendMessage(webSocket, "{\"m\":\"quote_create_session\",\"p\":[\"" + thread.getQuoteSessionTicker() + "\"]}");
+            waitFor(WAIT_QUICK);
             sendMessage(webSocket, "{\"m\":\"quote_add_symbols\",\"p\":[\"" + thread.getQuoteSessionTicker() + "\",\"={\\\"symbol\\\":\\\"" + thread.getExchange() + ":" + thread.getSymbol() + "\\\",\\\"adjustment\\\":\\\"splits\\\"}\"]}");
             sendMessage(webSocket, "{\"m\":\"create_study\",\"p\":[\"" + thread.getChartSession() + "\",\"st1\",\"st1\",\"" + thread.getStudySeries() + "\",\"Dividends@tv-basicstudies-149\",{}]}");
             sendMessage(webSocket, "{\"m\":\"create_study\",\"p\":[\"" + thread.getChartSession() + "\",\"st2\",\"st1\",\"" + thread.getStudySeries() + "\",\"Splits@tv-basicstudies-149\",{}]}");
@@ -340,6 +344,7 @@ public class FetcherService extends BaseService {
             sendMessage(webSocket, "{\"m\":\"quote_add_symbols\",\"p\":[\"" + thread.getQuoteSessionTicker() + "\",\"={\\\"symbol\\\":\\\"" + thread.getExchange() + ":" + thread.getSymbol() + "\\\",\\\"currency-id\\\":\\\"INR\\\",\\\"adjustment\\\":\\\"splits\\\"}\"]}");
             sendMessage(webSocket, "{\"m\":\"quote_fast_symbols\",\"p\":[\"" + thread.getQuoteSessionTickerNew() + "\",\"" + thread.getExchange() + ":" + thread.getSymbol() + "\"]}");
             sendMessage(webSocket, "{\"m\":\"request_more_tickmarks\",\"p\":[\"" + thread.getChartSession() + "\",\"sds_1\",10]}");
+            waitFor(WAIT_QUICK);
             sendMessage(webSocket, "{\"m\":\"create_study\",\"p\":[\"" + thread.getChartSession() + "\",\"st4\",\"st1\",\"sds_1\",\"Volume@tv-basicstudies-149\",{\"length\":20,\"col_prev_close\":false}]}");
             sendMessage(webSocket, "{\"m\":\"quote_add_symbols\",\"p\":[\"" + thread.getQuoteSessionTicker() + "\",\"" + thread.getExchange() + ":" + thread.getSymbol() + "\"]}");
             sendMessage(webSocket, "{\"m\":\"quote_remove_symbols\",\"p\":[\"" + thread.getQuoteSessionTickerNew() + "\",\"" + thread.getExchange() + ":" + thread.getSymbol() + "\"]}");

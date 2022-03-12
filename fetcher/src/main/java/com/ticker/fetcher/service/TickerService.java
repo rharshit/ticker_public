@@ -203,7 +203,7 @@ public class TickerService extends TickerThreadService<FetcherThread, FetcherThr
         for (FetcherThread thread : threadMap) {
             if (thread.getLastPingAt() != 0 && now - thread.getLastPingAt() > 60000 && thread.isInitialized() && thread.isEnabled()) {
                 log.info(thread.getThreadName() + " : not updated for " + (now - thread.getUpdatedAt()) + "ms");
-                fetcherTaskExecutor.execute(thread::refresh);
+                thread.refresh();
             }
         }
     }
@@ -228,7 +228,7 @@ public class TickerService extends TickerThreadService<FetcherThread, FetcherThr
         log.info("Refreshing all websockets");
         Set<FetcherThread> threadMap = getThreadPool();
         for (FetcherThread thread : threadMap) {
-            fetcherTaskExecutor.execute(thread::refresh);
+            thread.refresh();
         }
     }
 

@@ -26,6 +26,8 @@ import java.net.URL;
 import java.util.Arrays;
 import java.util.HashSet;
 import java.util.Set;
+import java.util.concurrent.Executor;
+import java.util.concurrent.Executors;
 import java.util.concurrent.Semaphore;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
@@ -94,15 +96,17 @@ public class FetcherThread extends TickerThread<TickerService> {
     private String quoteSessionTickerNew;
     private long lastPingAt = 0;
 
+    static {
+        websocketFetcher = new Semaphore(5);
+        tempWebsocketFetcher = new Semaphore(5);
+    }
+
     private int retry = 0;
     private int incorrectValues = 0;
 
     private static final Semaphore websocketFetcher;
 
-    static {
-        websocketFetcher = new Semaphore(5);
-        tempWebsocketFetcher = new Semaphore(250);
-    }
+    private Executor executor = Executors.newCachedThreadPool();
 
     private static String buildTime = "";
 
@@ -147,7 +151,7 @@ public class FetcherThread extends TickerThread<TickerService> {
         Semaphore websocketSemaphore = temp ? tempWebsocketFetcher : websocketFetcher;
         try {
             while (!websocketSemaphore.tryAcquire()) {
-                this.wait(WAIT_QUICK);
+                waitFor(WAIT_QUICK);
                 if (System.currentTimeMillis() - startTime > 120000) {
                     throw new TickerException("Error while waiting to acquire websocket fetcher lock");
                 }
@@ -200,7 +204,7 @@ public class FetcherThread extends TickerThread<TickerService> {
             webSocket.addHeader("Origin", "https://in.tradingview.com");
             webSocket.addHeader("Pragma", "no-cache");
             webSocket.addHeader("Sec-WebSocket-Extensions", "client_max_window_bits");
-            webSocket.addHeader("Sec-WebSocket-Key", "rxPHgoX6myglC4x5XLaLtA==");
+            webSocket.addHeader("Sec-WebSocket-Key", createHash(22) + "==");
             webSocket.addHeader("Sec-WebSocket-Version", "13");
             webSocket.addHeader("Upgrade", "websocket");
             webSocket.addHeader("User-Agent", "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/98.0.4758.80 Safari/537.36");
@@ -218,6 +222,7 @@ public class FetcherThread extends TickerThread<TickerService> {
             }
 
         } catch (Exception e) {
+            e.printStackTrace();
             throw new TickerException(getThreadName() + " : Error while creating websocket");
         } finally {
             websocketSemaphore.release();
@@ -312,12 +317,13 @@ public class FetcherThread extends TickerThread<TickerService> {
                     getCurrentValue() > dayH ||
                     getCurrentValue() < dayL) {
                 incorrectValues++;
-                log.info(getThreadName() + " : incorrectValues " + incorrectValues + " - " + dayL + ", " + getCurrentValue() + ", " + dayH);
+                log.debug(getThreadName() + " : incorrectValues " + incorrectValues + " - " + dayL + ", " + getCurrentValue() + ", " + dayH);
             }
         } else {
             incorrectValues = 0;
         }
         if (incorrectValues > 5) {
+            log.info(getThreadName() + " : Incorrect values " + incorrectValues + " - " + dayL + ", " + getCurrentValue() + ", " + dayH);
             refresh();
         }
     }
@@ -397,7 +403,7 @@ public class FetcherThread extends TickerThread<TickerService> {
      * Refresh browser.
      */
     public void refresh() {
-        initialize(true);
+        executor.execute(() -> initialize(true));
     }
 
     /**
