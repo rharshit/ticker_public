@@ -87,7 +87,6 @@ public class FetcherThread extends TickerThread<TickerService> {
     private String studyTEMA = "st7";
 
     private WebSocketClient webSocketClient;
-    private static final Semaphore tempWebsocketFetcher;
     private String sessionId;
     private String clusterId;
     private String chartSession;
@@ -98,7 +97,6 @@ public class FetcherThread extends TickerThread<TickerService> {
 
     static {
         websocketFetcher = new Semaphore(5);
-        tempWebsocketFetcher = new Semaphore(5);
     }
 
     private int retry = 0;
@@ -111,6 +109,7 @@ public class FetcherThread extends TickerThread<TickerService> {
     private static String buildTime = "";
 
     private Set<WebSocketClient> tempWebSocketClients = new HashSet<>();
+    private long lastDailyValueUpdatedAt = System.currentTimeMillis();
 
     /**
      * Sets properties.
@@ -148,9 +147,8 @@ public class FetcherThread extends TickerThread<TickerService> {
     private WebSocketClient initializeWebSocket(boolean temp) {
         long startTime = System.currentTimeMillis();
         WebSocketClient webSocket;
-        Semaphore websocketSemaphore = temp ? tempWebsocketFetcher : websocketFetcher;
         try {
-            while (!websocketSemaphore.tryAcquire()) {
+            while (!websocketFetcher.tryAcquire()) {
                 waitFor(WAIT_QUICK);
                 if (System.currentTimeMillis() - startTime > 120000) {
                     throw new TickerException("Error while waiting to acquire websocket fetcher lock");
@@ -225,7 +223,7 @@ public class FetcherThread extends TickerThread<TickerService> {
             e.printStackTrace();
             throw new TickerException(getThreadName() + " : Error while creating websocket");
         } finally {
-            websocketSemaphore.release();
+            websocketFetcher.release();
         }
         return webSocket;
     }
@@ -318,6 +316,19 @@ public class FetcherThread extends TickerThread<TickerService> {
                     getCurrentValue() < dayL) {
                 incorrectValues++;
                 log.debug(getThreadName() + " : incorrectValues " + incorrectValues + " - " + dayL + ", " + getCurrentValue() + ", " + dayH);
+            }
+            if (System.currentTimeMillis() - lastDailyValueUpdatedAt > 60000) {
+                if (tempWebSocketClients.isEmpty()) {
+                    addTempWebSocket();
+                } else {
+                    log.debug(getThreadName() + " : Temp websocket already added " + (System.currentTimeMillis() - lastDailyValueUpdatedAt));
+                    if (System.currentTimeMillis() - lastDailyValueUpdatedAt > 75000) {
+                        removeTempWebSockets();
+                        addTempWebSocket();
+                    }
+                }
+            } else {
+                removeTempWebSockets();
             }
         } else {
             incorrectValues = 0;
@@ -525,14 +536,21 @@ public class FetcherThread extends TickerThread<TickerService> {
     }
 
     public void addTempWebSocket() {
+        log.debug(getThreadName() + " : Adding temp websocket");
         WebSocketClient webSocket = initializeWebSocket(true);
         tempWebSocketClients.add(webSocket);
     }
 
     public void removeTempWebSockets() {
+        log.debug(getThreadName() + " : Removing temp websockets");
         WebSocketClient[] tempWebSocketArr = tempWebSocketClients.toArray(new WebSocketClient[0]);
         for (WebSocketClient webSocketClient : tempWebSocketArr) {
             closeWebsocketIfExists(GOING_AWAY, "Terminating temp websocket", webSocketClient);
         }
+    }
+
+    public void finishTempWebsocketTask() {
+        log.debug(getThreadName() + " : Temp websocket task finished");
+        removeTempWebSockets();
     }
 }

@@ -218,7 +218,8 @@ public class FetcherService extends BaseService {
                             && value.has("low_price")
                             && value.has("lp")
                             && value.has("prev_close_price")) {
-                        thread.removeTempWebSockets();
+                        thread.setLastDailyValueUpdatedAt(System.currentTimeMillis());
+                        thread.finishTempWebsocketTask();
                     }
                 }
                 if (!temp) {

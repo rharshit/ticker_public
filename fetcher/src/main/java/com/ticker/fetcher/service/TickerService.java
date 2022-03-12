@@ -16,11 +16,12 @@ import org.springframework.stereotype.Service;
 
 import java.sql.Timestamp;
 import java.text.SimpleDateFormat;
-import java.util.*;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.Set;
 import java.util.concurrent.Executor;
-import java.util.stream.Collectors;
 
-import static com.ticker.common.util.Util.getRandom;
 import static com.ticker.fetcher.constants.FetcherConstants.FETCHER_THREAD_COMP_NAME;
 
 /**
@@ -256,30 +257,6 @@ public class TickerService extends TickerThreadService<FetcherThread, FetcherThr
         executorMap.put("ScheduledExecutor", scheduledExecutor);
         executorMap.put("RepoExecutor", repoExecutor);
         return executorMap;
-    }
-
-    @Async("fetcherTaskExecutor")
-    @Scheduled(cron = "0 * * ? * *")
-    public void runTempWebSockets() {
-        log.debug("Refreshing temp WebSockets");
-        long start = System.currentTimeMillis();
-        int count = 0;
-        Set<FetcherThread> threadMap = getThreadPool();
-        List<FetcherThread> fetcherThreads = new ArrayList<>(threadMap).stream()
-                .filter(thread -> thread.isEnabled() && thread.isInitialized())
-                .collect(Collectors.toList());
-        Collections.shuffle(fetcherThreads, getRandom());
-        for (FetcherThread thread : fetcherThreads) {
-            if (System.currentTimeMillis() - start > 58000) {
-                log.debug("Interrupting thread refresh due to timeout");
-                break;
-            }
-            if (thread.isEnabled() && thread.isInitialized()) {
-                thread.addTempWebSocket();
-                count++;
-            }
-        }
-        log.info("Refreshed " + count + " of " + fetcherThreads.size() + " temp websockets in " + (System.currentTimeMillis() - start) + "ms");
     }
 
     @Override
