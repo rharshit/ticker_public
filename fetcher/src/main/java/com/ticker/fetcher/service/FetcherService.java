@@ -18,10 +18,10 @@ import org.springframework.util.ObjectUtils;
 
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
-import java.util.ArrayList;
 import java.util.HashMap;
-import java.util.List;
+import java.util.HashSet;
 import java.util.Map;
+import java.util.Set;
 import java.util.concurrent.Executor;
 import java.util.regex.Pattern;
 
@@ -37,7 +37,7 @@ import static com.ticker.fetcher.FetcherUtil.encodeMessage;
 @Slf4j
 public class FetcherService extends BaseService {
 
-    private static final List<FetcherRepoModel> dataQueue = new ArrayList<>();
+    private static final Set<FetcherRepoModel> dataSet = new HashSet<>();
     @Autowired
     private TickerService appService;
     @Autowired
@@ -225,8 +225,8 @@ public class FetcherService extends BaseService {
                 if (!temp) {
                     thread.setUpdatedAt(System.currentTimeMillis());
                 }
-                synchronized (dataQueue) {
-                    dataQueue.add(new FetcherRepoModel(thread));
+                synchronized (dataSet) {
+                    dataSet.add(new FetcherRepoModel(thread));
                 }
             } catch (Exception ignored) {
 
@@ -273,10 +273,10 @@ public class FetcherService extends BaseService {
         LocalDateTime now = LocalDateTime.now();
         String sNow = dtf.format(now);
         log.trace("Scheduled task started: " + sNow);
-        List<FetcherRepoModel> tempDataQueue;
-        synchronized (dataQueue) {
-            tempDataQueue = new ArrayList<>(dataQueue);
-            dataQueue.clear();
+        Set<FetcherRepoModel> tempDataQueue;
+        synchronized (dataSet) {
+            tempDataQueue = new HashSet<>(dataSet);
+            dataSet.clear();
         }
         log.trace("Scheduled task populated: " + sNow);
         log.trace("Data size: " + tempDataQueue.size());

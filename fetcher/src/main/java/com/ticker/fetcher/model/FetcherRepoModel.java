@@ -5,6 +5,7 @@ import lombok.Data;
 
 import java.sql.Timestamp;
 import java.text.SimpleDateFormat;
+import java.util.Objects;
 
 /**
  * The type Fetcher repo model.
@@ -106,5 +107,19 @@ public class FetcherRepoModel {
                 ", rsi=" + rsi +
                 ", tema=" + tema +
                 '}';
+    }
+
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (o == null || getClass() != o.getClass()) return false;
+        FetcherRepoModel that = (FetcherRepoModel) o;
+        return tableName.equals(that.tableName) &&
+                timestamp.equals(that.timestamp);
+    }
+
+    @Override
+    public int hashCode() {
+        return Objects.hash(tableName, timestamp);
     }
 }
