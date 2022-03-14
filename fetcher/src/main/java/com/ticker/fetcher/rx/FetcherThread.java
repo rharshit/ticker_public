@@ -317,12 +317,15 @@ public class FetcherThread extends TickerThread<TickerService> {
                 incorrectValues++;
                 log.debug(getThreadName() + " : incorrectValues " + incorrectValues + " - " + dayL + ", " + getCurrentValue() + ", " + dayH);
             }
-            if (System.currentTimeMillis() - lastDailyValueUpdatedAt > 60000) {
+            long now = System.currentTimeMillis();
+            if (now - lastDailyValueUpdatedAt > 60000 && now - updatedAt < 30000) {
                 if (tempWebSocketClients.isEmpty()) {
+                    log.debug(getThreadName() + " : Refreshing daily values");
                     addTempWebSocket();
                 } else {
-                    log.debug(getThreadName() + " : Temp websocket already added " + (System.currentTimeMillis() - lastDailyValueUpdatedAt));
-                    if (System.currentTimeMillis() - lastDailyValueUpdatedAt > 75000) {
+                    log.debug(getThreadName() + " : Already refreshing daily values " + (now - lastDailyValueUpdatedAt));
+                    if (now - lastDailyValueUpdatedAt > 75000) {
+                        log.debug(getThreadName() + " : Refreshing new daily values");
                         removeTempWebSockets();
                         addTempWebSocket();
                     }
