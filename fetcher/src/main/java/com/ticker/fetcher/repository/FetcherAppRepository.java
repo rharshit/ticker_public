@@ -17,10 +17,7 @@ import java.sql.Statement;
 import java.sql.Types;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 import java.util.concurrent.Executor;
 
 import static com.ticker.fetcher.constants.DBConstants.TABLE_NAME;
@@ -126,24 +123,21 @@ public class FetcherAppRepository {
     /**
      * Add to queue.
      *
-     * @param datas the datas
-     * @param sNow  the s now
+     * @param dataSet the dataSet
+     * @param sNow    the s now
      */
     @Async
-    public void addToQueue(List<FetcherRepoModel> datas, String sNow) {
+    public void addToQueue(Set<FetcherRepoModel> dataSet, String sNow) {
         log.trace("addToQueue task started: " + sNow);
-        log.trace("Adding data, size: " + datas.size());
-        if (!CollectionUtils.isEmpty(datas)) {
+        log.trace("Adding data, size: " + dataSet.size());
+        if (!CollectionUtils.isEmpty(dataSet)) {
             List<String> tempQueue = new ArrayList<>();
-            for (FetcherRepoModel data : datas) {
+            for (FetcherRepoModel data : dataSet) {
                 if (data.getTimestamp().startsWith("1970-01-01")) {
                     log.trace(data.getTableName() + " : Skipping data due to invalid timestamp: " + data.getTimestamp());
                     continue;
                 }
                 log.trace(data.toString());
-                String deleteSql = "DELETE FROM " + data.getTableName() + " WHERE `timestamp`='" + data.getTimestamp() + "'";
-                log.trace(deleteSql);
-                tempQueue.add(deleteSql);
                 String insertSql = "INSERT INTO " + data.getTableName() +
                         " (`timestamp`, O, H, L, C, BB_U, BB_A, BB_L, RSI, TEMA, DAY_O, DAY_H, DAY_L, DAY_C, PREV_CLOSE)" +
                         "VALUES('" + data.getTimestamp() + "', " + data.getO() + ", " + data.getH() +
@@ -157,6 +151,7 @@ public class FetcherAppRepository {
             synchronized (sqlQueue) {
                 log.debug("Initial data, size: " + sqlQueue.size());
                 sqlQueue.addAll(tempQueue);
+                sqlQueue.sort(String::compareTo);
                 log.debug("Data Added, size: " + sqlQueue.size());
             }
         }
