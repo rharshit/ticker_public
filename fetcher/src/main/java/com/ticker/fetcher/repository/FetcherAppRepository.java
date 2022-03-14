@@ -138,6 +138,9 @@ public class FetcherAppRepository {
                     continue;
                 }
                 log.trace(data.toString());
+                String deleteSql = "DELETE FROM " + data.getTableName() + " WHERE `timestamp`='" + data.getTimestamp() + "'";
+                log.trace(deleteSql);
+                tempQueue.add(deleteSql);
                 String insertSql = "INSERT INTO " + data.getTableName() +
                         " (`timestamp`, O, H, L, C, BB_U, BB_A, BB_L, RSI, TEMA, DAY_O, DAY_H, DAY_L, DAY_C, PREV_CLOSE)" +
                         "VALUES('" + data.getTimestamp() + "', " + data.getO() + ", " + data.getH() +
@@ -151,7 +154,7 @@ public class FetcherAppRepository {
             synchronized (sqlQueue) {
                 log.debug("Initial data, size: " + sqlQueue.size());
                 sqlQueue.addAll(tempQueue);
-                sqlQueue.sort(String::compareTo);
+//                sqlQueue.sort(String::compareTo);
                 log.debug("Data Added, size: " + sqlQueue.size());
             }
         }
