@@ -37,8 +37,7 @@ import static com.ticker.common.contants.WebConstants.TRADING_VIEW_BASE;
 import static com.ticker.common.contants.WebConstants.TRADING_VIEW_CHART;
 import static com.ticker.common.util.Util.*;
 import static com.ticker.fetcher.constants.FetcherConstants.FETCHER_THREAD_COMP_NAME;
-import static org.java_websocket.framing.CloseFrame.GOING_AWAY;
-import static org.java_websocket.framing.CloseFrame.SERVICE_RESTART;
+import static org.java_websocket.framing.CloseFrame.*;
 
 /**
  * The type Fetcher thread.
@@ -146,7 +145,7 @@ public class FetcherThread extends TickerThread<TickerService> {
 
     private WebSocketClient initializeWebSocket(boolean temp) {
         long startTime = System.currentTimeMillis();
-        WebSocketClient webSocket;
+        WebSocketClient webSocket = null;
         try {
             while (!websocketFetcher.tryAcquire()) {
                 waitFor(WAIT_QUICK);
@@ -221,6 +220,7 @@ public class FetcherThread extends TickerThread<TickerService> {
 
         } catch (Exception e) {
             e.printStackTrace();
+            closeWebsocketIfExists(TRY_AGAIN_LATER, "Error while creating websocket", webSocket);
             throw new TickerException(getThreadName() + " : Error while creating websocket");
         } finally {
             websocketFetcher.release();
