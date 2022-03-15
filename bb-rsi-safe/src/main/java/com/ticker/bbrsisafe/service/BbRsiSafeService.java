@@ -17,46 +17,46 @@ import static com.ticker.bbrsisafe.constants.BbRsiSafeConstants.*;
  */
 @Slf4j
 @Service
-public class BbRsiSafeService extends StratTickerService<BbRsiSafeThread, BbRsiSafeThreadModel> {
+public class BbRsiSafeService<T extends BbRsiSafeThread<?>, TM extends BbRsiSafeThreadModel<?>> extends StratTickerService<T, TM> {
 
-    private static final Map<Integer, String> stateValueMap = new HashMap<Integer, String>() {{
-        put(BB_RSI_SAFE_THREAD_STATE_STRAT_FAILED, "Thread failed");
-        put(BB_RSI_SAFE_THREAD_STATE_WAITING_FOR_TRIGGER, "Waiting for trigger");
-        put(BB_RSI_SAFE_THREAD_STATE_LT_TRIGGER_START, "Lower trigger started");
-        put(BB_RSI_SAFE_THREAD_STATE_UT_TRIGGER_START, "Upper trigger started");
-        put(BB_RSI_SAFE_THREAD_STATE_LT_TRIGGER_END1, "Lower trigger ended1");
-        put(BB_RSI_SAFE_THREAD_STATE_LT_TRIGGER_END2, "Lower trigger ended2");
-        put(BB_RSI_SAFE_THREAD_STATE_UT_TRIGGER_END1, "Upper trigger ended1");
-        put(BB_RSI_SAFE_THREAD_STATE_UT_TRIGGER_END2, "Upper trigger ended2");
-        put(BB_RSI_SAFE_THREAD_STATE_LT_BOUGHT, "Lower trigger bought");
-        put(BB_RSI_SAFE_THREAD_STATE_UT_SOLD, "Upper trigger sold");
-        put(BB_RSI_SAFE_THREAD_STATE_LT_WAIT_END_WAVE, "Waiting for lower wave to end");
-        put(BB_RSI_SAFE_THREAD_STATE_UT_WAIT_END_WAVE, "Waiting for upper wave to end");
-        put(BB_RSI_SAFE_THREAD_STATE_LT_WAIT_WAVE_ENDED1, "Lower trigger wave ended1");
-        put(BB_RSI_SAFE_THREAD_STATE_LT_WAIT_WAVE_ENDED2, "Lower trigger wave ended2");
-        put(BB_RSI_SAFE_THREAD_STATE_LT_WAIT_WAVE_ENDED3, "Lower trigger wave ended3");
-        put(BB_RSI_SAFE_THREAD_STATE_UT_WAIT_WAVE_ENDED1, "Upper trigger wave ended1");
-        put(BB_RSI_SAFE_THREAD_STATE_UT_WAIT_WAVE_ENDED2, "Upper trigger wave ended2");
-        put(BB_RSI_SAFE_THREAD_STATE_UT_WAIT_WAVE_ENDED3, "Upper trigger wave ended3");
-        put(BB_RSI_SAFE_THREAD_STATE_LT_WAIT_WAVE_SOLD, "Lower trigger sold SO");
-        put(BB_RSI_SAFE_THREAD_STATE_UT_WAIT_WAVE_BOUGHT, "Lower trigger bought SO");
-        put(BB_RSI_SAFE_THREAD_STATE_LT_WAIT_WAVE_REVENGE, "Lower trigger revenge trading");
-        put(BB_RSI_SAFE_THREAD_STATE_UT_WAIT_WAVE_REVENGE, "Upper trigger revenge trading");
-        put(BB_RSI_SAFE_THREAD_STATE_LT_PANIC_SELL, "Lower trigger panic sell");
-        put(BB_RSI_SAFE_THREAD_STATE_UT_PANIC_BUY, "Upper trigger panic buy");
-        put(BB_RSI_SAFE_THREAD_STATE_LT_GTT_FAILED, "Lower trigger GTT fail");
-        put(BB_RSI_SAFE_THREAD_STATE_UT_GTT_FAILED, "Upper trigger GTT fail");
-        put(BB_RSI_SAFE_THREAD_STATE_LT_REENTER, "Lower trigger Re-enter");
-        put(BB_RSI_SAFE_THREAD_STATE_UT_REENTER, "Upper trigger Re-enter");
+    protected static final Map<Integer, String> stateValueMap = new HashMap<Integer, String>() {{
+        put(BB_RSI_THREAD_STATE_STRAT_FAILED, "Thread failed");
+        put(BB_RSI_THREAD_STATE_WAITING_FOR_TRIGGER, "Waiting for trigger");
+        put(BB_RSI_THREAD_STATE_LT_TRIGGER_START, "Lower trigger started");
+        put(BB_RSI_THREAD_STATE_UT_TRIGGER_START, "Upper trigger started");
+        put(BB_RSI_THREAD_STATE_LT_TRIGGER_END1, "Lower trigger ended1");
+        put(BB_RSI_THREAD_STATE_LT_TRIGGER_END2, "Lower trigger ended2");
+        put(BB_RSI_THREAD_STATE_UT_TRIGGER_END1, "Upper trigger ended1");
+        put(BB_RSI_THREAD_STATE_UT_TRIGGER_END2, "Upper trigger ended2");
+        put(BB_RSI_THREAD_STATE_LT_BOUGHT, "Lower trigger bought");
+        put(BB_RSI_THREAD_STATE_UT_SOLD, "Upper trigger sold");
+        put(BB_RSI_THREAD_STATE_LT_WAIT_END_WAVE, "Waiting for lower wave to end");
+        put(BB_RSI_THREAD_STATE_UT_WAIT_END_WAVE, "Waiting for upper wave to end");
+        put(BB_RSI_THREAD_STATE_LT_WAIT_WAVE_ENDED1, "Lower trigger wave ended1");
+        put(BB_RSI_THREAD_STATE_LT_WAIT_WAVE_ENDED2, "Lower trigger wave ended2");
+        put(BB_RSI_THREAD_STATE_LT_WAIT_WAVE_ENDED3, "Lower trigger wave ended3");
+        put(BB_RSI_THREAD_STATE_UT_WAIT_WAVE_ENDED1, "Upper trigger wave ended1");
+        put(BB_RSI_THREAD_STATE_UT_WAIT_WAVE_ENDED2, "Upper trigger wave ended2");
+        put(BB_RSI_THREAD_STATE_UT_WAIT_WAVE_ENDED3, "Upper trigger wave ended3");
+        put(BB_RSI_THREAD_STATE_LT_WAIT_WAVE_SOLD, "Lower trigger sold SO");
+        put(BB_RSI_THREAD_STATE_UT_WAIT_WAVE_BOUGHT, "Lower trigger bought SO");
+        put(BB_RSI_THREAD_STATE_LT_WAIT_WAVE_REVENGE, "Lower trigger revenge trading");
+        put(BB_RSI_THREAD_STATE_UT_WAIT_WAVE_REVENGE, "Upper trigger revenge trading");
+        put(BB_RSI_THREAD_STATE_LT_PANIC_SELL, "Lower trigger panic sell");
+        put(BB_RSI_THREAD_STATE_UT_PANIC_BUY, "Upper trigger panic buy");
+        put(BB_RSI_THREAD_STATE_LT_GTT_FAILED, "Lower trigger GTT fail");
+        put(BB_RSI_THREAD_STATE_UT_GTT_FAILED, "Upper trigger GTT fail");
+        put(BB_RSI_THREAD_STATE_LT_REENTER, "Lower trigger Re-enter");
+        put(BB_RSI_THREAD_STATE_UT_REENTER, "Upper trigger Re-enter");
     }};
 
     @Override
-    public BbRsiSafeThreadModel createTickerThreadModel(BbRsiSafeThread thread) {
-        return new BbRsiSafeThreadModel(thread);
+    public TM createTickerThreadModel(T thread) {
+        return (TM) new BbRsiSafeThreadModel(thread);
     }
 
     @Override
-    public void doAction(BbRsiSafeThread thread) {
+    public void doAction(T thread) {
         if (!thread.isFetching() || thread.isLocked() || thread.getTargetThreshold() == 0) {
             return;
         }
@@ -64,71 +64,71 @@ public class BbRsiSafeService extends StratTickerService<BbRsiSafeThread, BbRsiS
             thread.setLocked(true);
             try {
                 switch (thread.getCurrentState()) {
-                    case BB_RSI_SAFE_THREAD_STATE_STRAT_FAILED:
+                    case BB_RSI_THREAD_STATE_STRAT_FAILED:
                         thread.terminateThread(false);
                         break;
                     case 0:
-                        thread.setCurrentState(BB_RSI_SAFE_THREAD_STATE_WAITING_FOR_TRIGGER);
+                        thread.setCurrentState(BB_RSI_THREAD_STATE_WAITING_FOR_TRIGGER);
                         break;
-                    case BB_RSI_SAFE_THREAD_STATE_WAITING_FOR_TRIGGER:
+                    case BB_RSI_THREAD_STATE_WAITING_FOR_TRIGGER:
                         checkTrigger(thread);
                         break;
-                    case BB_RSI_SAFE_THREAD_STATE_LT_TRIGGER_START:
+                    case BB_RSI_THREAD_STATE_LT_TRIGGER_START:
                         checkForLtEnd(thread);
                         break;
-                    case BB_RSI_SAFE_THREAD_STATE_LT_TRIGGER_END1:
+                    case BB_RSI_THREAD_STATE_LT_TRIGGER_END1:
                         checkForLtEnd1(thread);
                         break;
-                    case BB_RSI_SAFE_THREAD_STATE_UT_TRIGGER_START:
+                    case BB_RSI_THREAD_STATE_UT_TRIGGER_START:
                         checkForUtEnd(thread);
                         break;
-                    case BB_RSI_SAFE_THREAD_STATE_UT_TRIGGER_END1:
+                    case BB_RSI_THREAD_STATE_UT_TRIGGER_END1:
                         checkForUtEnd1(thread);
                         break;
-                    case BB_RSI_SAFE_THREAD_STATE_LT_TRIGGER_END2:
+                    case BB_RSI_THREAD_STATE_LT_TRIGGER_END2:
                         buyAction1(thread);
                         break;
-                    case BB_RSI_SAFE_THREAD_STATE_UT_TRIGGER_END2:
+                    case BB_RSI_THREAD_STATE_UT_TRIGGER_END2:
                         sellAction1(thread);
                         break;
-                    case BB_RSI_SAFE_THREAD_STATE_LT_BOUGHT:
-                        thread.setCurrentState(BB_RSI_SAFE_THREAD_STATE_LT_WAIT_END_WAVE);
+                    case BB_RSI_THREAD_STATE_LT_BOUGHT:
+                        thread.setCurrentState(BB_RSI_THREAD_STATE_LT_WAIT_END_WAVE);
                         break;
-                    case BB_RSI_SAFE_THREAD_STATE_UT_SOLD:
-                        thread.setCurrentState(BB_RSI_SAFE_THREAD_STATE_UT_WAIT_END_WAVE);
+                    case BB_RSI_THREAD_STATE_UT_SOLD:
+                        thread.setCurrentState(BB_RSI_THREAD_STATE_UT_WAIT_END_WAVE);
                         break;
-                    case BB_RSI_SAFE_THREAD_STATE_LT_WAIT_END_WAVE:
+                    case BB_RSI_THREAD_STATE_LT_WAIT_END_WAVE:
                         checkForLtWaveEnd(thread);
                         break;
-                    case BB_RSI_SAFE_THREAD_STATE_UT_WAIT_END_WAVE:
+                    case BB_RSI_THREAD_STATE_UT_WAIT_END_WAVE:
                         checkForUtWaveEnd(thread);
                         break;
-                    case BB_RSI_SAFE_THREAD_STATE_LT_WAIT_WAVE_ENDED1:
+                    case BB_RSI_THREAD_STATE_LT_WAIT_WAVE_ENDED1:
                         checkForLtWaveEnd1(thread);
                         break;
-                    case BB_RSI_SAFE_THREAD_STATE_UT_WAIT_WAVE_ENDED1:
+                    case BB_RSI_THREAD_STATE_UT_WAIT_WAVE_ENDED1:
                         checkForUtWaveEnd1(thread);
                         break;
-                    case BB_RSI_SAFE_THREAD_STATE_LT_WAIT_WAVE_ENDED2:
+                    case BB_RSI_THREAD_STATE_LT_WAIT_WAVE_ENDED2:
                         sellAction2(thread);
                         break;
-                    case BB_RSI_SAFE_THREAD_STATE_UT_WAIT_WAVE_ENDED2:
+                    case BB_RSI_THREAD_STATE_UT_WAIT_WAVE_ENDED2:
                         buyAction2(thread);
                         break;
-                    case BB_RSI_SAFE_THREAD_STATE_LT_WAIT_WAVE_REVENGE:
+                    case BB_RSI_THREAD_STATE_LT_WAIT_WAVE_REVENGE:
                         sellActionRevenge(thread);
                         break;
-                    case BB_RSI_SAFE_THREAD_STATE_UT_WAIT_WAVE_REVENGE:
+                    case BB_RSI_THREAD_STATE_UT_WAIT_WAVE_REVENGE:
                         buyActionRevenge(thread);
                         break;
-                    case BB_RSI_SAFE_THREAD_STATE_LT_PANIC_SELL:
+                    case BB_RSI_THREAD_STATE_LT_PANIC_SELL:
                         panicSell(thread);
                         break;
-                    case BB_RSI_SAFE_THREAD_STATE_UT_PANIC_BUY:
+                    case BB_RSI_THREAD_STATE_UT_PANIC_BUY:
                         panicBuy(thread);
                         break;
-                    case BB_RSI_SAFE_THREAD_STATE_LT_WAIT_WAVE_SOLD:
-                    case BB_RSI_SAFE_THREAD_STATE_UT_WAIT_WAVE_BOUGHT:
+                    case BB_RSI_THREAD_STATE_LT_WAIT_WAVE_SOLD:
+                    case BB_RSI_THREAD_STATE_UT_WAIT_WAVE_BOUGHT:
                         resetThread(thread);
                         break;
                 }
@@ -141,11 +141,11 @@ public class BbRsiSafeService extends StratTickerService<BbRsiSafeThread, BbRsiS
 
     }
 
-    private void buyActionRevenge(BbRsiSafeThread thread) {
+    protected void buyActionRevenge(T thread) {
         log.info(thread.getThreadName() + " : Revenge buy");
         try {
             squareOff(thread);
-            thread.setCurrentState(BB_RSI_SAFE_THREAD_STATE_UT_TRIGGER_START);
+            thread.setCurrentState(BB_RSI_THREAD_STATE_UT_TRIGGER_START);
             thread.setTradeStartTime(System.currentTimeMillis());
             thread.resetTriggers();
             thread.setGoodToTrigger(true);
@@ -154,11 +154,11 @@ public class BbRsiSafeService extends StratTickerService<BbRsiSafeThread, BbRsiS
         }
     }
 
-    private void sellActionRevenge(BbRsiSafeThread thread) {
+    protected void sellActionRevenge(T thread) {
         log.info(thread.getThreadName() + " : Revenge sell");
         try {
             squareOff(thread);
-            thread.setCurrentState(BB_RSI_SAFE_THREAD_STATE_LT_TRIGGER_START);
+            thread.setCurrentState(BB_RSI_THREAD_STATE_LT_TRIGGER_START);
             thread.setTradeStartTime(System.currentTimeMillis());
             thread.resetTriggers();
             thread.setGoodToTrigger(true);
@@ -167,52 +167,52 @@ public class BbRsiSafeService extends StratTickerService<BbRsiSafeThread, BbRsiS
         }
     }
 
-    private void resetThread(BbRsiSafeThread thread) {
+    protected void resetThread(T thread) {
         log.info(thread.getThreadName() + " : Reset triggers");
         thread.resetTriggers();
         thread.setGoodToTrigger(true);
-        thread.setCurrentState(BB_RSI_SAFE_THREAD_STATE_WAITING_FOR_TRIGGER);
+        thread.setCurrentState(BB_RSI_THREAD_STATE_WAITING_FOR_TRIGGER);
     }
 
-    private void buyAction2(BbRsiSafeThread thread) {
+    protected void buyAction2(T thread) {
         log.debug(thread.getThreadName() + " : Buy action 2");
         try {
             squareOff(thread);
-            thread.setCurrentState(BB_RSI_SAFE_THREAD_STATE_UT_WAIT_WAVE_BOUGHT);
+            thread.setCurrentState(BB_RSI_THREAD_STATE_UT_WAIT_WAVE_BOUGHT);
             thread.setTradeStartTime(System.currentTimeMillis());
             if (thread.getRsi() >= RSI_UPPER_LIMIT_REBOUND) {
                 log.trace(thread.getThreadName() + " : rebound");
-                thread.setStates(BB_RSI_SAFE_THREAD_STATE_UT_WAIT_WAVE_BOUGHT, BB_RSI_SAFE_THREAD_STATE_UT_WAIT_WAVE_REVENGE, BB_RSI_SAFE_THREAD_STATE_UT_TRIGGER_START);
+                thread.setStates(BB_RSI_THREAD_STATE_UT_WAIT_WAVE_BOUGHT, BB_RSI_THREAD_STATE_UT_WAIT_WAVE_REVENGE, BB_RSI_THREAD_STATE_UT_TRIGGER_START);
             }
         } catch (Exception e) {
 
         }
     }
 
-    private void sellAction2(BbRsiSafeThread thread) {
+    protected void sellAction2(T thread) {
         log.debug(thread.getThreadName() + " : Sell action 2");
         try {
             squareOff(thread);
-            thread.setCurrentState(BB_RSI_SAFE_THREAD_STATE_LT_WAIT_WAVE_SOLD);
+            thread.setCurrentState(BB_RSI_THREAD_STATE_LT_WAIT_WAVE_SOLD);
             thread.setTradeStartTime(System.currentTimeMillis());
             if (thread.getRsi() <= RSI_LOWER_LIMIT_REBOUND) {
                 log.trace(thread.getThreadName() + " : rebound");
-                thread.setStates(BB_RSI_SAFE_THREAD_STATE_LT_WAIT_WAVE_SOLD, BB_RSI_SAFE_THREAD_STATE_LT_WAIT_WAVE_REVENGE, BB_RSI_SAFE_THREAD_STATE_LT_TRIGGER_START);
+                thread.setStates(BB_RSI_THREAD_STATE_LT_WAIT_WAVE_SOLD, BB_RSI_THREAD_STATE_LT_WAIT_WAVE_REVENGE, BB_RSI_THREAD_STATE_LT_TRIGGER_START);
             }
         } catch (Exception e) {
 
         }
     }
 
-    private void checkForUtWaveEnd1(BbRsiSafeThread thread) {
+    protected void checkForUtWaveEnd1(T thread) {
         log.trace("");
         log.trace(thread.getThreadName() + " : checkForUtWaveEnd1");
         checkUtPanicExit(thread);
         checkUtSatisfy(thread);
-        if (thread.getCurrentState() == BB_RSI_SAFE_THREAD_STATE_UT_WAIT_WAVE_BOUGHT
-                || thread.getCurrentState() == BB_RSI_SAFE_THREAD_STATE_UT_WAIT_WAVE_ENDED2
-                || thread.getCurrentState() == BB_RSI_SAFE_THREAD_STATE_UT_REENTER
-                || thread.getCurrentState() == BB_RSI_SAFE_THREAD_STATE_UT_SOLD) {
+        if (thread.getCurrentState() == BB_RSI_THREAD_STATE_UT_WAIT_WAVE_BOUGHT
+                || thread.getCurrentState() == BB_RSI_THREAD_STATE_UT_WAIT_WAVE_ENDED2
+                || thread.getCurrentState() == BB_RSI_THREAD_STATE_UT_REENTER
+                || thread.getCurrentState() == BB_RSI_THREAD_STATE_UT_SOLD) {
             return;
         }
         if (isSameMinTrigger(thread.getTriggerStartTime()) || !isEomTrigger()) {
@@ -226,47 +226,47 @@ public class BbRsiSafeService extends StratTickerService<BbRsiSafeThread, BbRsiS
                 return;
             } else {
                 log.debug(thread.getThreadName() + " : ended 2");
-                thread.setCurrentState(BB_RSI_SAFE_THREAD_STATE_UT_WAIT_WAVE_ENDED2);
+                thread.setCurrentState(BB_RSI_THREAD_STATE_UT_WAIT_WAVE_ENDED2);
                 return;
             }
         } else {
             log.trace(thread.getThreadName() + " : back to wave");
-            thread.setCurrentState(BB_RSI_SAFE_THREAD_STATE_UT_WAIT_END_WAVE);
+            thread.setCurrentState(BB_RSI_THREAD_STATE_UT_WAIT_END_WAVE);
         }
         thread.setTriggerWaveEndTime(System.currentTimeMillis());
-        if (thread.getCurrentState() == BB_RSI_SAFE_THREAD_STATE_UT_WAIT_WAVE_ENDED2) {
+        if (thread.getCurrentState() == BB_RSI_THREAD_STATE_UT_WAIT_WAVE_ENDED2) {
             buyAction2(thread);
         }
     }
 
-    private void checkUtSatisfy(BbRsiSafeThread thread) {
+    private void checkUtSatisfy(T thread) {
         if (thread.isSatisfied()) {
             double curr = thread.getCurrentValue();
             double trail = thread.getTrailValue();
             double newTrail = curr + ((2 * thread.getTargetThreshold()) / 3);
             thread.setTrailValue(Math.min(trail, newTrail));
         } else if (thread.getTrailValue() - thread.getTargetThreshold() >= thread.getCurrentValue() - 0.004) {
-            thread.setCurrentState(BB_RSI_SAFE_THREAD_STATE_UT_WAIT_WAVE_ENDED2);
+            thread.setCurrentState(BB_RSI_THREAD_STATE_UT_WAIT_WAVE_ENDED2);
             if (isDownwardTrend(thread)) {
-                thread.setIntermediateState(BB_RSI_SAFE_THREAD_STATE_UT_REENTER);
+                thread.setIntermediateState(BB_RSI_THREAD_STATE_UT_REENTER);
                 thread.setSatisfied(true);
             } else {
                 squareOff(thread);
-                thread.setCurrentState(BB_RSI_SAFE_THREAD_STATE_UT_WAIT_WAVE_BOUGHT);
+                thread.setCurrentState(BB_RSI_THREAD_STATE_UT_WAIT_WAVE_BOUGHT);
             }
         }
     }
 
-    private void checkForLtWaveEnd1(BbRsiSafeThread thread) {
+    protected void checkForLtWaveEnd1(T thread) {
         log.trace("");
 
         log.trace(thread.getThreadName() + " : checkForLtWaveEnd1");
         checkLtPanicExit(thread);
         checkLtSatisfy(thread);
-        if (thread.getCurrentState() == BB_RSI_SAFE_THREAD_STATE_LT_WAIT_WAVE_SOLD
-                || thread.getCurrentState() == BB_RSI_SAFE_THREAD_STATE_LT_WAIT_WAVE_ENDED2
-                || thread.getCurrentState() == BB_RSI_SAFE_THREAD_STATE_LT_REENTER
-                || thread.getCurrentState() == BB_RSI_SAFE_THREAD_STATE_LT_BOUGHT) {
+        if (thread.getCurrentState() == BB_RSI_THREAD_STATE_LT_WAIT_WAVE_SOLD
+                || thread.getCurrentState() == BB_RSI_THREAD_STATE_LT_WAIT_WAVE_ENDED2
+                || thread.getCurrentState() == BB_RSI_THREAD_STATE_LT_REENTER
+                || thread.getCurrentState() == BB_RSI_THREAD_STATE_LT_BOUGHT) {
             return;
         }
         if (isSameMinTrigger(thread.getTriggerStartTime()) || !isEomTrigger()) {
@@ -280,45 +280,45 @@ public class BbRsiSafeService extends StratTickerService<BbRsiSafeThread, BbRsiS
                 return;
             } else {
                 log.trace(thread.getThreadName() + " : ended 2");
-                thread.setCurrentState(BB_RSI_SAFE_THREAD_STATE_LT_WAIT_WAVE_ENDED2);
+                thread.setCurrentState(BB_RSI_THREAD_STATE_LT_WAIT_WAVE_ENDED2);
             }
         } else {
             log.trace(thread.getThreadName() + " : back to wave");
-            thread.setCurrentState(BB_RSI_SAFE_THREAD_STATE_LT_WAIT_END_WAVE);
+            thread.setCurrentState(BB_RSI_THREAD_STATE_LT_WAIT_END_WAVE);
         }
         thread.setTriggerWaveEndTime(System.currentTimeMillis());
-        if (thread.getCurrentState() == BB_RSI_SAFE_THREAD_STATE_LT_WAIT_WAVE_ENDED2) {
+        if (thread.getCurrentState() == BB_RSI_THREAD_STATE_LT_WAIT_WAVE_ENDED2) {
             sellAction2(thread);
         }
     }
 
-    private void checkLtSatisfy(BbRsiSafeThread thread) {
+    private void checkLtSatisfy(T thread) {
         if (thread.isSatisfied()) {
             double curr = thread.getCurrentValue();
             double trail = thread.getTrailValue();
             double newTrail = curr - ((2 * thread.getTargetThreshold()) / 3);
             thread.setTrailValue(Math.max(trail, newTrail));
         } else if (thread.getTrailValue() + thread.getTargetThreshold() <= thread.getCurrentValue() + 0.004) {
-            thread.setCurrentState(BB_RSI_SAFE_THREAD_STATE_LT_WAIT_WAVE_ENDED2);
+            thread.setCurrentState(BB_RSI_THREAD_STATE_LT_WAIT_WAVE_ENDED2);
             if (isUpwardTrend(thread)) {
-                thread.setIntermediateState(BB_RSI_SAFE_THREAD_STATE_LT_REENTER);
+                thread.setIntermediateState(BB_RSI_THREAD_STATE_LT_REENTER);
                 thread.setSatisfied(true);
             } else {
                 squareOff(thread);
-                thread.setCurrentState(BB_RSI_SAFE_THREAD_STATE_LT_WAIT_WAVE_SOLD);
+                thread.setCurrentState(BB_RSI_THREAD_STATE_LT_WAIT_WAVE_SOLD);
             }
         }
     }
 
-    private void checkForUtWaveEnd(BbRsiSafeThread thread) {
+    protected void checkForUtWaveEnd(T thread) {
         log.trace("");
         log.trace(thread.getThreadName() + " : checkForUtWaveEnd");
         checkUtPanicExit(thread);
         checkUtSatisfy(thread);
-        if (thread.getCurrentState() == BB_RSI_SAFE_THREAD_STATE_UT_WAIT_WAVE_BOUGHT
-                || thread.getCurrentState() == BB_RSI_SAFE_THREAD_STATE_UT_WAIT_WAVE_ENDED2
-                || thread.getCurrentState() == BB_RSI_SAFE_THREAD_STATE_UT_REENTER
-                || thread.getCurrentState() == BB_RSI_SAFE_THREAD_STATE_UT_SOLD) {
+        if (thread.getCurrentState() == BB_RSI_THREAD_STATE_UT_WAIT_WAVE_BOUGHT
+                || thread.getCurrentState() == BB_RSI_THREAD_STATE_UT_WAIT_WAVE_ENDED2
+                || thread.getCurrentState() == BB_RSI_THREAD_STATE_UT_REENTER
+                || thread.getCurrentState() == BB_RSI_THREAD_STATE_UT_SOLD) {
             return;
         }
         if (isSameMinTrigger(thread.getTradeStartTime()) || !isEomTrigger()) {
@@ -327,12 +327,12 @@ public class BbRsiSafeService extends StratTickerService<BbRsiSafeThread, BbRsiS
         }
         if (isUpwardTrend(thread)) {
             log.trace(thread.getThreadName() + " : Upward");
-            thread.setCurrentState(BB_RSI_SAFE_THREAD_STATE_UT_WAIT_WAVE_ENDED1);
+            thread.setCurrentState(BB_RSI_THREAD_STATE_UT_WAIT_WAVE_ENDED1);
             thread.setTriggerWaveEndTime(System.currentTimeMillis());
         }
     }
 
-    private void checkUtPanicExit(BbRsiSafeThread thread) {
+    private void checkUtPanicExit(T thread) {
         log.trace(thread.getThreadName() + " : checkUtPanicExit");
         thread.setDip(thread.getCurrentValue());
         if ((thread.getCurrentValue() - thread.getDip() > thread.getTargetThreshold())
@@ -381,21 +381,21 @@ public class BbRsiSafeService extends StratTickerService<BbRsiSafeThread, BbRsiS
         }
     }
 
-    private void panicBuy(BbRsiSafeThread thread) {
+    protected void panicBuy(T thread) {
         log.debug(thread.getThreadName() + " : Panic buy " + thread.getPanicBuy());
         thread.setPanicBuy(thread.getPanicBuy() + 1);
         if (thread.getPanicBuy() > PANIC_TIME_OFF) {
-            thread.setCurrentState(BB_RSI_SAFE_THREAD_STATE_UT_PANIC_BUY);
+            thread.setCurrentState(BB_RSI_THREAD_STATE_UT_PANIC_BUY);
             try {
                 double tradeStart = thread.getTrailValue();
                 log.info(thread.getThreadName() + " : panic square-off");
                 double tradeEnd = squareOff(thread);
                 if (tradeStart - tradeEnd > thread.getTargetThreshold() || thread.isSatisfied()) {
-                    thread.setCurrentState(BB_RSI_SAFE_THREAD_STATE_UT_WAIT_WAVE_BOUGHT);
+                    thread.setCurrentState(BB_RSI_THREAD_STATE_UT_WAIT_WAVE_BOUGHT);
                 } else {
                     thread.resetTriggers();
                     thread.setGoodToTrigger(true);
-                    thread.setCurrentState(BB_RSI_SAFE_THREAD_STATE_UT_TRIGGER_START);
+                    thread.setCurrentState(BB_RSI_THREAD_STATE_UT_TRIGGER_START);
                 }
                 thread.setTradeStartTime(System.currentTimeMillis());
             } catch (Exception e) {
@@ -404,15 +404,15 @@ public class BbRsiSafeService extends StratTickerService<BbRsiSafeThread, BbRsiS
         }
     }
 
-    private void checkForLtWaveEnd(BbRsiSafeThread thread) {
+    protected void checkForLtWaveEnd(T thread) {
         log.trace("");
         log.trace(thread.getThreadName() + " : checkForLtWaveEnd");
         checkLtPanicExit(thread);
         checkLtSatisfy(thread);
-        if (thread.getCurrentState() == BB_RSI_SAFE_THREAD_STATE_LT_WAIT_WAVE_SOLD
-                || thread.getCurrentState() == BB_RSI_SAFE_THREAD_STATE_LT_WAIT_WAVE_ENDED2
-                || thread.getCurrentState() == BB_RSI_SAFE_THREAD_STATE_LT_REENTER
-                || thread.getCurrentState() == BB_RSI_SAFE_THREAD_STATE_LT_BOUGHT) {
+        if (thread.getCurrentState() == BB_RSI_THREAD_STATE_LT_WAIT_WAVE_SOLD
+                || thread.getCurrentState() == BB_RSI_THREAD_STATE_LT_WAIT_WAVE_ENDED2
+                || thread.getCurrentState() == BB_RSI_THREAD_STATE_LT_REENTER
+                || thread.getCurrentState() == BB_RSI_THREAD_STATE_LT_BOUGHT) {
             return;
         }
         if (isSameMinTrigger(thread.getTradeStartTime()) || !isEomTrigger()) {
@@ -421,12 +421,12 @@ public class BbRsiSafeService extends StratTickerService<BbRsiSafeThread, BbRsiS
         }
         if (isDownwardTrend(thread)) {
             log.trace(thread.getThreadName() + " : Downward");
-            thread.setCurrentState(BB_RSI_SAFE_THREAD_STATE_LT_WAIT_WAVE_ENDED1);
+            thread.setCurrentState(BB_RSI_THREAD_STATE_LT_WAIT_WAVE_ENDED1);
             thread.setTriggerWaveEndTime(System.currentTimeMillis());
         }
     }
 
-    private void checkLtPanicExit(BbRsiSafeThread thread) {
+    private void checkLtPanicExit(T thread) {
         log.trace(thread.getThreadName() + " : checkLtPanicExit");
         thread.setPeak(thread.getCurrentValue());
         if ((thread.getPeak() - thread.getCurrentValue() > thread.getTargetThreshold())
@@ -476,21 +476,21 @@ public class BbRsiSafeService extends StratTickerService<BbRsiSafeThread, BbRsiS
     }
 
 
-    private void panicSell(BbRsiSafeThread thread) {
+    protected void panicSell(T thread) {
         log.debug(thread.getThreadName() + " : Panic sell " + thread.getPanicSell());
         thread.setPanicSell(thread.getPanicSell() + 1);
         if (thread.getPanicSell() > PANIC_TIME_OFF) {
-            thread.setCurrentState(BB_RSI_SAFE_THREAD_STATE_LT_PANIC_SELL);
+            thread.setCurrentState(BB_RSI_THREAD_STATE_LT_PANIC_SELL);
             try {
                 double tradeStart = thread.getTrailValue();
                 log.info(thread.getThreadName() + " : panic square-off");
                 double tradeEnd = squareOff(thread);
                 if (tradeEnd - tradeStart > thread.getTargetThreshold() || thread.isSatisfied()) {
-                    thread.setCurrentState(BB_RSI_SAFE_THREAD_STATE_LT_WAIT_WAVE_SOLD);
+                    thread.setCurrentState(BB_RSI_THREAD_STATE_LT_WAIT_WAVE_SOLD);
                 } else {
                     thread.resetTriggers();
                     thread.setGoodToTrigger(true);
-                    thread.setCurrentState(BB_RSI_SAFE_THREAD_STATE_LT_TRIGGER_START);
+                    thread.setCurrentState(BB_RSI_THREAD_STATE_LT_TRIGGER_START);
                 }
                 thread.setTradeStartTime(System.currentTimeMillis());
             } catch (Exception e) {
@@ -499,11 +499,11 @@ public class BbRsiSafeService extends StratTickerService<BbRsiSafeThread, BbRsiS
         }
     }
 
-    private void buyAction1(BbRsiSafeThread thread) {
+    protected void buyAction1(T thread) {
         log.debug(thread.getThreadName() + " : Panic buy");
         try {
             buy(thread, thread.getEntity().getMinQty());
-            thread.setCurrentState(BB_RSI_SAFE_THREAD_STATE_LT_BOUGHT);
+            thread.setCurrentState(BB_RSI_THREAD_STATE_LT_BOUGHT);
             thread.setTradeStartTime(System.currentTimeMillis());
             thread.setTradeValue(thread.getCurrentValue());
             thread.setTrailValue(thread.getCurrentValue());
@@ -512,11 +512,11 @@ public class BbRsiSafeService extends StratTickerService<BbRsiSafeThread, BbRsiS
         }
     }
 
-    private void sellAction1(BbRsiSafeThread thread) {
+    protected void sellAction1(T thread) {
         log.debug(thread.getThreadName() + " : Sell action 1");
         try {
             sell(thread, thread.getEntity().getMinQty());
-            thread.setCurrentState(BB_RSI_SAFE_THREAD_STATE_UT_SOLD);
+            thread.setCurrentState(BB_RSI_THREAD_STATE_UT_SOLD);
             thread.setTradeStartTime(System.currentTimeMillis());
             thread.setTradeValue(thread.getCurrentValue());
             thread.setTrailValue(thread.getCurrentValue());
@@ -525,11 +525,11 @@ public class BbRsiSafeService extends StratTickerService<BbRsiSafeThread, BbRsiS
         }
     }
 
-    private void checkForLtEnd(BbRsiSafeThread thread) {
+    protected void checkForLtEnd(T thread) {
         log.trace(thread.getThreadName() + " : checkForLtEnd");
         checkLtGTT(thread);
         checkPreMatureLtEnd(thread);
-        if (thread.getCurrentState() == BB_RSI_SAFE_THREAD_STATE_LT_TRIGGER_END2) {
+        if (thread.getCurrentState() == BB_RSI_THREAD_STATE_LT_TRIGGER_END2) {
             log.info(thread.getThreadName() + " : PreMatureLtEnd");
             return;
         }
@@ -539,12 +539,12 @@ public class BbRsiSafeService extends StratTickerService<BbRsiSafeThread, BbRsiS
         }
         if (thread.getRsi() > RSI_LOWER_LIMIT && isUpwardTrend(thread)) {
             log.trace(thread.getThreadName() + " : LtEnd");
-            thread.setCurrentState(BB_RSI_SAFE_THREAD_STATE_LT_TRIGGER_END1);
+            thread.setCurrentState(BB_RSI_THREAD_STATE_LT_TRIGGER_END1);
             thread.setTriggerWaveEndTime(System.currentTimeMillis());
         }
     }
 
-    private void checkLtGTT(BbRsiSafeThread thread) {
+    private void checkLtGTT(T thread) {
         if (thread.isGoodToTrigger()) {
             return;
         }
@@ -558,11 +558,11 @@ public class BbRsiSafeService extends StratTickerService<BbRsiSafeThread, BbRsiS
             thread.setGoodToTrigger(true);
         }
         if (!thread.isGoodToTrigger() && thread.getRsi() > RSI_LOWER_LIMIT_REBOUND) {
-            thread.setIntermediateState(BB_RSI_SAFE_THREAD_STATE_LT_GTT_FAILED, BB_RSI_SAFE_THREAD_STATE_WAITING_FOR_TRIGGER);
+            thread.setIntermediateState(BB_RSI_THREAD_STATE_LT_GTT_FAILED, BB_RSI_THREAD_STATE_WAITING_FOR_TRIGGER);
         }
     }
 
-    private void checkPreMatureLtEnd(BbRsiSafeThread thread) {
+    private void checkPreMatureLtEnd(T thread) {
         thread.setDip(thread.getCurrentValue());
         if (thread.getRsi() >= RSI_LOWER_LIMIT
                 && thread.getTema() >= thread.getBbL()
@@ -579,17 +579,17 @@ public class BbRsiSafeService extends StratTickerService<BbRsiSafeThread, BbRsiS
                     (thread.getCurrentValue() - thread.getDip() > 0.75f * thread.getTargetThreshold() &&
                             thread.getRsiDiff() > RSI_LOWER_LIMIT_PREMATURE_DIFF)) {
                 log.debug(thread.getThreadName() + " : PreMatureLtEnd");
-                thread.setCurrentState(BB_RSI_SAFE_THREAD_STATE_LT_TRIGGER_END2);
+                thread.setCurrentState(BB_RSI_THREAD_STATE_LT_TRIGGER_END2);
             }
             log.debug(thread.getThreadName() + " : thread.getTargetThreshold() = " + thread.getTargetThreshold());
         }
     }
 
-    private void checkForLtEnd1(BbRsiSafeThread thread) {
+    protected void checkForLtEnd1(T thread) {
         log.trace(thread.getThreadName() + " : checkForLtEnd1");
         checkLtGTT(thread);
         checkPreMatureLtEnd(thread);
-        if (thread.getCurrentState() == BB_RSI_SAFE_THREAD_STATE_LT_TRIGGER_END2) {
+        if (thread.getCurrentState() == BB_RSI_THREAD_STATE_LT_TRIGGER_END2) {
             log.info(thread.getThreadName() + " : PreMatureLtEnd");
             return;
         }
@@ -602,16 +602,16 @@ public class BbRsiSafeService extends StratTickerService<BbRsiSafeThread, BbRsiS
                 && isUpwardTrend(thread)
                 && thread.isGoodToTrigger()) {
             log.trace(thread.getThreadName() + " : LtEnd1");
-            thread.setCurrentState(BB_RSI_SAFE_THREAD_STATE_LT_TRIGGER_END2);
+            thread.setCurrentState(BB_RSI_THREAD_STATE_LT_TRIGGER_END2);
             thread.setTriggerWaveEndTime(System.currentTimeMillis());
         }
     }
 
-    private void checkForUtEnd(BbRsiSafeThread thread) {
+    protected void checkForUtEnd(T thread) {
         log.trace(thread.getThreadName() + " : checkForUtEnd");
         checkUtGTT(thread);
         checkPreMatureUtEnd(thread);
-        if (thread.getCurrentState() == BB_RSI_SAFE_THREAD_STATE_UT_TRIGGER_END2) {
+        if (thread.getCurrentState() == BB_RSI_THREAD_STATE_UT_TRIGGER_END2) {
             log.info(thread.getThreadName() + " : PreMatureUtEnd");
             return;
         }
@@ -621,12 +621,12 @@ public class BbRsiSafeService extends StratTickerService<BbRsiSafeThread, BbRsiS
         }
         if (thread.getRsi() < RSI_UPPER_LIMIT && isDownwardTrend(thread)) {
             log.trace(thread.getThreadName() + " : UtEnd");
-            thread.setCurrentState(BB_RSI_SAFE_THREAD_STATE_UT_TRIGGER_END1);
+            thread.setCurrentState(BB_RSI_THREAD_STATE_UT_TRIGGER_END1);
             thread.setTriggerWaveEndTime(System.currentTimeMillis());
         }
     }
 
-    private void checkUtGTT(BbRsiSafeThread thread) {
+    private void checkUtGTT(T thread) {
         if (thread.isGoodToTrigger()) {
             return;
         }
@@ -640,11 +640,11 @@ public class BbRsiSafeService extends StratTickerService<BbRsiSafeThread, BbRsiS
             thread.setGoodToTrigger(true);
         }
         if (!thread.isGoodToTrigger() && thread.getRsi() < RSI_UPPER_LIMIT_REBOUND) {
-            thread.setIntermediateState(BB_RSI_SAFE_THREAD_STATE_UT_GTT_FAILED, BB_RSI_SAFE_THREAD_STATE_WAITING_FOR_TRIGGER);
+            thread.setIntermediateState(BB_RSI_THREAD_STATE_UT_GTT_FAILED, BB_RSI_THREAD_STATE_WAITING_FOR_TRIGGER);
         }
     }
 
-    private void checkPreMatureUtEnd(BbRsiSafeThread thread) {
+    private void checkPreMatureUtEnd(T thread) {
         thread.setPeak(thread.getCurrentValue());
         if (thread.getRsi() <= RSI_UPPER_LIMIT
                 && thread.getTema() <= thread.getBbU()
@@ -661,17 +661,17 @@ public class BbRsiSafeService extends StratTickerService<BbRsiSafeThread, BbRsiS
                     (thread.getPeak() - thread.getCurrentValue() > 0.75f * thread.getTargetThreshold() &&
                             thread.getRsiDiff() < RSI_UPPER_LIMIT_PREMATURE_DIFF)) {
                 log.debug(thread.getThreadName() + " : PreMatureUtEnd");
-                thread.setCurrentState(BB_RSI_SAFE_THREAD_STATE_UT_TRIGGER_END2);
+                thread.setCurrentState(BB_RSI_THREAD_STATE_UT_TRIGGER_END2);
             }
             log.debug(thread.getThreadName() + " : thread.getTargetThreshold() = " + thread.getTargetThreshold());
         }
     }
 
-    private void checkForUtEnd1(BbRsiSafeThread thread) {
+    protected void checkForUtEnd1(T thread) {
         log.trace(thread.getThreadName() + " : checkForUtEnd1");
         checkUtGTT(thread);
         checkPreMatureUtEnd(thread);
-        if (thread.getCurrentState() == BB_RSI_SAFE_THREAD_STATE_UT_TRIGGER_END2) {
+        if (thread.getCurrentState() == BB_RSI_THREAD_STATE_UT_TRIGGER_END2) {
             log.info(thread.getThreadName() + " : PreMatureUtEnd");
             return;
         }
@@ -684,7 +684,7 @@ public class BbRsiSafeService extends StratTickerService<BbRsiSafeThread, BbRsiS
                 && isDownwardTrend(thread)
                 && thread.isGoodToTrigger()) {
             log.trace(thread.getThreadName() + " : UtEnd1");
-            thread.setCurrentState(BB_RSI_SAFE_THREAD_STATE_UT_TRIGGER_END2);
+            thread.setCurrentState(BB_RSI_THREAD_STATE_UT_TRIGGER_END2);
             thread.setTriggerWaveEndTime(System.currentTimeMillis());
         }
     }
@@ -694,7 +694,7 @@ public class BbRsiSafeService extends StratTickerService<BbRsiSafeThread, BbRsiS
         return stateValueMap;
     }
 
-    private void checkTrigger(BbRsiSafeThread thread) {
+    protected void checkTrigger(T thread) {
         log.trace(thread.getThreadName() + " : checkTrigger");
         thread.resetTriggers();
         if (!isGttTimeFrame()) {
@@ -704,11 +704,11 @@ public class BbRsiSafeService extends StratTickerService<BbRsiSafeThread, BbRsiS
             return;
         }
         if (isGttLower(thread)) {
-            thread.setCurrentState(BB_RSI_SAFE_THREAD_STATE_LT_TRIGGER_START);
+            thread.setCurrentState(BB_RSI_THREAD_STATE_LT_TRIGGER_START);
             thread.setTriggerStartValue(thread.getCurrentValue());
             thread.setTriggerStartTime(System.currentTimeMillis());
         } else if (isGttUpper(thread)) {
-            thread.setCurrentState(BB_RSI_SAFE_THREAD_STATE_UT_TRIGGER_START);
+            thread.setCurrentState(BB_RSI_THREAD_STATE_UT_TRIGGER_START);
             thread.setTriggerStartValue(thread.getCurrentValue());
             thread.setTriggerStartTime(System.currentTimeMillis());
         }
@@ -716,11 +716,11 @@ public class BbRsiSafeService extends StratTickerService<BbRsiSafeThread, BbRsiS
 
     @Override
     protected boolean isGttTimeFrame() {
-        int time = Integer.parseInt(BB_RSI_SAFE_TIME_FORMAT.format(new Date(System.currentTimeMillis())));
+        int time = Integer.parseInt(BB_RSI_TIME_FORMAT.format(new Date(System.currentTimeMillis())));
         return time > 935 && time < 1500;
     }
 
-    private boolean isGttLower(BbRsiSafeThread thread) {
+    private boolean isGttLower(T thread) {
         if (thread.getRsi() <= RSI_LOWER_LIMIT && thread.getO() > thread.getC()) {
             double prevCloseDiffPercentage = getPrevCloseDiffPercentage(thread);
             double openDiffPercentage = getOpenDiffPercentage(thread);
@@ -735,7 +735,7 @@ public class BbRsiSafeService extends StratTickerService<BbRsiSafeThread, BbRsiS
         }
     }
 
-    private boolean isGttUpper(BbRsiSafeThread thread) {
+    private boolean isGttUpper(T thread) {
         if (thread.getRsi() >= RSI_UPPER_LIMIT && thread.getO() < thread.getC()) {
             double prevCloseDiffPercentage = getPrevCloseDiffPercentage(thread);
             double openDiffPercentage = getOpenDiffPercentage(thread);
@@ -750,11 +750,11 @@ public class BbRsiSafeService extends StratTickerService<BbRsiSafeThread, BbRsiS
         }
     }
 
-    private double getOpenDiffPercentage(BbRsiSafeThread thread) {
+    private double getOpenDiffPercentage(T thread) {
         return getDiffPercentage(thread.getDayO(), thread.getCurrentValue());
     }
 
-    private double getPrevCloseDiffPercentage(BbRsiSafeThread thread) {
+    private double getPrevCloseDiffPercentage(T thread) {
         return getDiffPercentage(thread.getPrevClose(), thread.getCurrentValue());
     }
 

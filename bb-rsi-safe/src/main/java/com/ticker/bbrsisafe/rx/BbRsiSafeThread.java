@@ -21,7 +21,7 @@ import static com.ticker.bbrsisafe.constants.BbRsiSafeConstants.BB_RSI_SAFE_THRE
 @Component(BB_RSI_SAFE_THREAD_COMP_NAME)
 @Scope("prototype")
 @NoArgsConstructor
-public class BbRsiSafeThread extends StratThread<BbRsiSafeService> {
+public class BbRsiSafeThread<S extends BbRsiSafeService<?, ?>> extends StratThread<S> {
 
     private long triggerWaveEndTime;
     private long tradeStartTime;
