@@ -13,7 +13,7 @@ import static com.ticker.bbrsisafe.constants.BbRsiSafeConstants.BB_RSI_SAFE_THRE
  */
 @RestController
 @RequestMapping("/")
-public class BbRsiSafeController extends StratController<BbRsiSafeService, BbRsiSafeThreadModel> {
+public class BbRsiSafeController<S extends BbRsiSafeService<?, ?>, TM extends BbRsiSafeThreadModel<?>> extends StratController<S, TM> {
 
     @Override
     public String getThreadCompName() {

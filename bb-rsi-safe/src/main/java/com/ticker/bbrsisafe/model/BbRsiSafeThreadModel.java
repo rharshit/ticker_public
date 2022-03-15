@@ -6,13 +6,13 @@ import com.ticker.common.model.StratThreadModel;
 /**
  * The type Bb rsi safe thread model.
  */
-public class BbRsiSafeThreadModel extends StratThreadModel<BbRsiSafeThread> {
+public class BbRsiSafeThreadModel<T extends BbRsiSafeThread<?>> extends StratThreadModel<T> {
     /**
      * Instantiates a new Bb rsi safe thread model.
      *
      * @param thread the thread
      */
-    public BbRsiSafeThreadModel(BbRsiSafeThread thread) {
+    public BbRsiSafeThreadModel(T thread) {
         super(thread);
     }
 

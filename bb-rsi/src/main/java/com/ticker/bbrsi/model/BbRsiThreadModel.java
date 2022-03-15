@@ -1,12 +1,12 @@
 package com.ticker.bbrsi.model;
 
 import com.ticker.bbrsi.rx.BbRsiThread;
-import com.ticker.common.model.StratThreadModel;
+import com.ticker.bbrsisafe.model.BbRsiSafeThreadModel;
 
 /**
  * The type Bb rsi thread model.
  */
-public class BbRsiThreadModel extends StratThreadModel<BbRsiThread> {
+public class BbRsiThreadModel extends BbRsiSafeThreadModel<BbRsiThread> {
     /**
      * Instantiates a new Bb rsi thread model.
      *
@@ -16,57 +16,4 @@ public class BbRsiThreadModel extends StratThreadModel<BbRsiThread> {
         super(thread);
     }
 
-    /**
-     * Gets dip.
-     *
-     * @return the dip
-     */
-    public double getDip() {
-        return thread.getDip();
-    }
-
-    /**
-     * Gets peak.
-     *
-     * @return the peak
-     */
-    public double getPeak() {
-        return thread.getPeak();
-    }
-
-    /**
-     * Is safe state boolean.
-     *
-     * @return the boolean
-     */
-    public boolean isSafeState() {
-        return thread.getPositionQty() == 0;
-    }
-
-    /**
-     * Is low target boolean.
-     *
-     * @return the boolean
-     */
-    public boolean isLowTarget() {
-        return thread.isLowValue();
-    }
-
-    /**
-     * Gets trade value.
-     *
-     * @return the trade value
-     */
-    public double getTradeValue() {
-        return thread.getTradeValue();
-    }
-
-    /**
-     * Gets trail value.
-     *
-     * @return the trail value
-     */
-    public double getTrailValue() {
-        return thread.getTrailValue();
-    }
 }
