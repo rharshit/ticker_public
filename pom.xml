@@ -40,7 +40,7 @@
         <ticker.mwave.version>0.0.1-SNAPSHOT</ticker.mwave.version>
         <ticker.notification.version>0.0.1-SNAPSHOT</ticker.notification.version>
 
-        <spring.boot.version>2.5.2</spring.boot.version>
+        <spring.boot.version>2.5.12</spring.boot.version>
         <spring.version>5.3.8</spring.version>
         <lombok.version>1.18.20</lombok.version>
     </properties>
