@@ -21,6 +21,8 @@ jobs:
         with:
           java-version: '8'
           distribution: 'adopt'
+      - name: Add maven wrapper
+        run: mvn wrapper:wrapper
       - name: Build Ticker
         run: mvn clean install
       - name: Maven Dependency Tree Dependency Submission
