@@ -40,9 +40,9 @@
         <ticker.mwave.version>0.0.1-SNAPSHOT</ticker.mwave.version>
         <ticker.notification.version>0.0.1-SNAPSHOT</ticker.notification.version>
 
-        <spring.boot.version>2.5.12</spring.boot.version>
-        <spring.version>5.3.8</spring.version>
-        <lombok.version>1.18.20</lombok.version>
+        <spring.boot.version>2.5.15</spring.boot.version>
+        <spring.version>5.3.39</spring.version>
+        <lombok.version>1.18.30</lombok.version>
     </properties>
 
     <dependencies>
@@ -77,6 +77,20 @@
                             <artifactId>lombok</artifactId>
                         </exclude>
                     </excludes>
+                </configuration>
+            </plugin>
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-compiler-plugin</artifactId>
+                <version>3.8.1</version>
+                <configuration>
+                    <annotationProcessorPaths>
+                        <path>
+                            <groupId>org.projectlombok</groupId>
+                            <artifactId>lombok</artifactId>
+                            <version>${lombok.version}</version>
+                        </path>
+                    </annotationProcessorPaths>
                 </configuration>
             </plugin>
         </plugins>
