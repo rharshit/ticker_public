@@ -7,10 +7,10 @@
         <artifactId>core</artifactId>
         <version>1.0-SNAPSHOT</version>
     </parent>
-    <artifactId>tempalte</artifactId>
+    <artifactId>template</artifactId>
     <version>${ticker.template.version}</version>
-    <name>Tempalte</name>
-    <description>Template for creating new applicaitons</description>
+    <name>Template</name>
+    <description>Template for creating new applications</description>
 
     <dependencies>
         <dependency>
