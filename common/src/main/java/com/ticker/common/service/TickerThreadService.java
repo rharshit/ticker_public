@@ -104,8 +104,8 @@ public abstract class TickerThreadService<T extends TickerThread, TM extends Tic
      */
     protected synchronized Set<T> getThreadPool() {
         if (threadPool == null) {
-            initializeThreadPool();
             log.info("Initializing thread pool");
+            initializeThreadPool();
         }
         return threadPool;
     }
