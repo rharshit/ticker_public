@@ -54,6 +54,12 @@ public class FetcherThread extends TickerThread<TickerService> {
      * The constant RETRY_LIMIT.
      */
     public static final int RETRY_LIMIT = 3;
+    private static final Semaphore websocketFetcher;
+    private static String buildTime = "";
+
+    static {
+        websocketFetcher = new Semaphore(5);
+    }
 
     private final Object postInitLock = new Object();
     @Autowired
@@ -84,7 +90,6 @@ public class FetcherThread extends TickerThread<TickerService> {
     private String studyBB = "st5";
     private String studyRSI = "st6";
     private String studyTEMA = "st7";
-
     private WebSocketClient webSocketClient;
     private String sessionId;
     private String clusterId;
@@ -93,22 +98,54 @@ public class FetcherThread extends TickerThread<TickerService> {
     private String quoteSessionTicker;
     private String quoteSessionTickerNew;
     private long lastPingAt = 0;
-
-    static {
-        websocketFetcher = new Semaphore(5);
-    }
-
     private int retry = 0;
     private int incorrectValues = 0;
-
-    private static final Semaphore websocketFetcher;
-
     private Executor executor = Executors.newCachedThreadPool();
-
-    private static String buildTime = "";
-
     private Set<WebSocketClient> tempWebSocketClients = new HashSet<>();
     private long lastDailyValueUpdatedAt = System.currentTimeMillis();
+
+    /**
+     * Gets build time for charts.
+     *
+     * @return the build time
+     */
+    public static String fetchBuildTime() {
+        synchronized (FetcherThread.buildTime) {
+            if (FetcherThread.buildTime != null && !FetcherThread.buildTime.isEmpty()) {
+                log.debug("Returning buildTime");
+                return FetcherThread.buildTime;
+            }
+            try {
+                log.info("Fetching buildTime");
+                URL url = new URL(TRADING_VIEW_BASE + TRADING_VIEW_CHART);
+                HttpURLConnection httpURLConnection = (HttpURLConnection) url.openConnection();
+                BufferedReader in = new BufferedReader(new InputStreamReader(httpURLConnection.getInputStream()));
+                String inputLine;
+                String buildTime = "";
+                while (StringUtils.isEmpty(buildTime) && (inputLine = in.readLine()) != null) {
+                    try {
+                        if (inputLine.contains("BUILD_TIME")) {
+                            inputLine = inputLine.trim();
+                            Pattern p = Pattern.compile("window\\.BUILD_TIME *= *\"(.*)\";");
+                            Matcher m = p.matcher(inputLine);
+                            if (m.matches()) {
+                                buildTime = m.group(1);
+                                FetcherThread.buildTime = buildTime;
+                                log.info("Build time : {}", buildTime);
+                                return buildTime;
+                            }
+                        }
+                    } catch (Exception ignored) {
+
+                    }
+                }
+                return (FetcherThread.buildTime = buildTime);
+            } catch (Exception e) {
+
+            }
+            return null;
+        }
+    }
 
     /**
      * Sets properties.
@@ -157,7 +194,7 @@ public class FetcherThread extends TickerThread<TickerService> {
                 closeWebsocketIfExists(SERVICE_RESTART, "Restarting Websocket", webSocketClient);
             }
             FetcherThread thisThread = this;
-            webSocket = new WebSocketClient(new URI("wss://data.tradingview.com/socket.io/websocket?from=chart%2F&date=" + getBuildTime())) {
+            webSocket = new WebSocketClient(new URI("wss://data.tradingview.com/socket.io/websocket?from=chart%2F&date=" + fetchBuildTime())) {
                 final long start = startTime;
 
                 @Override
@@ -237,46 +274,6 @@ public class FetcherThread extends TickerThread<TickerService> {
         log.debug(getThreadName() + " : quoteSession - " + quoteSession);
         log.debug(getThreadName() + " : quoteSessionTicker - " + quoteSessionTicker);
         log.debug(getThreadName() + " : quoteSessionTickerNew - " + quoteSessionTickerNew);
-    }
-
-    /**
-     * Gets build time for charts.
-     *
-     * @return the build time
-     */
-    public static String getBuildTime() {
-        synchronized (FetcherThread.buildTime) {
-            if (FetcherThread.buildTime != null && !FetcherThread.buildTime.isEmpty()) {
-                log.debug("Returning buildTime");
-                return FetcherThread.buildTime;
-            }
-            try {
-                log.info("Fetching and returning buildTime");
-                URL url = new URL(TRADING_VIEW_BASE + TRADING_VIEW_CHART);
-                HttpURLConnection httpURLConnection = (HttpURLConnection) url.openConnection();
-                BufferedReader in = new BufferedReader(new InputStreamReader(httpURLConnection.getInputStream()));
-                String inputLine;
-                String buildTime = "";
-                while (StringUtils.isEmpty(buildTime) && (inputLine = in.readLine()) != null) {
-                    try {
-                        if (inputLine.contains("BUILD_TIME")) {
-                            inputLine = inputLine.trim();
-                            Pattern p = Pattern.compile("window\\.BUILD_TIME *= *\"(.*)\";");
-                            Matcher m = p.matcher(inputLine);
-                            if (m.matches()) {
-                                buildTime = m.group(1);
-                            }
-                        }
-                    } catch (Exception ignored) {
-
-                    }
-                }
-                return (FetcherThread.buildTime = buildTime);
-            } catch (Exception e) {
-
-            }
-            return null;
-        }
     }
 
     /**

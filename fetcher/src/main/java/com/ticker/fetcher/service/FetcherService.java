@@ -38,6 +38,11 @@ import static com.ticker.fetcher.FetcherUtil.encodeMessage;
 public class FetcherService extends BaseService {
 
     private static final Set<FetcherRepoModel> dataSet = new HashSet<>();
+
+    static {
+        FetcherThread.fetchBuildTime();
+    }
+
     @Autowired
     private TickerService appService;
     @Autowired
@@ -51,11 +56,6 @@ public class FetcherService extends BaseService {
     @Autowired
     @Qualifier("repoExecutor")
     private Executor repoExecutor;
-
-
-    static {
-        FetcherThread.getBuildTime();
-    }
 
     /**
      * Send message.

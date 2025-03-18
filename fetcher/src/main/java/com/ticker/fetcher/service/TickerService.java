@@ -36,12 +36,6 @@ public class TickerService extends TickerThreadService<FetcherThread, FetcherThr
      */
     @Autowired
     FetcherAppRepository repository;
-
-    @Override
-    public FetcherThreadModel createTickerThreadModel(FetcherThread thread) {
-        return new FetcherThreadModel(thread);
-    }
-
     @Autowired
     @Qualifier("fetcherTaskExecutor")
     private Executor fetcherTaskExecutor;
@@ -51,6 +45,11 @@ public class TickerService extends TickerThreadService<FetcherThread, FetcherThr
     @Autowired
     @Qualifier("repoExecutor")
     private Executor repoExecutor;
+
+    @Override
+    public FetcherThreadModel createTickerThreadModel(FetcherThread thread) {
+        return new FetcherThreadModel(thread);
+    }
 
     /**
      * Add tracking for the ticker, given exchange and symbol for app
