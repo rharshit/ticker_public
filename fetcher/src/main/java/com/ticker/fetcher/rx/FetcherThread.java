@@ -87,21 +87,17 @@ public class FetcherThread extends TickerThread<TickerService> {
     private boolean taskStarted = false;
     private int requestId = 0;
     private String studySeries = "sds_1";
-    private String studyBB = "st5";
-    private String studyRSI = "st6";
-    private String studyTEMA = "st7";
     private WebSocketClient webSocketClient;
     private String sessionId;
     private String clusterId;
     private String chartSession;
     private String quoteSession;
-    private String quoteSessionTicker;
-    private String quoteSessionTickerNew;
     private long lastPingAt = 0;
     private int retry = 0;
     private int incorrectValues = 0;
     private Executor executor = Executors.newCachedThreadPool();
     private Set<WebSocketClient> tempWebSocketClients = new HashSet<>();
+    private Set<WebSocketClient> allWebSocketClients = new HashSet<>();
     private long lastDailyValueUpdatedAt = System.currentTimeMillis();
 
     /**
@@ -194,7 +190,7 @@ public class FetcherThread extends TickerThread<TickerService> {
                 closeWebsocketIfExists(SERVICE_RESTART, "Restarting Websocket", webSocketClient);
             }
             FetcherThread thisThread = this;
-            webSocket = new WebSocketClient(new URI("wss://data.tradingview.com/socket.io/websocket?from=chart%2F&date=" + fetchBuildTime())) {
+            webSocket = new WebSocketClient(new URI("wss://data.tradingview.com/socket.io/websocket?from=chart%2F&date=" + fetchBuildTime() + "&type=chart")) {
                 final long start = startTime;
 
                 @Override
@@ -268,12 +264,8 @@ public class FetcherThread extends TickerThread<TickerService> {
     private void createSession() {
         chartSession = "cs_" + createHash(12);
         quoteSession = "qs_" + createHash(12);
-        quoteSessionTicker = "qs_" + createHash(12);
-        quoteSessionTickerNew = "qs_" + createHash(12);
         log.debug(getThreadName() + " : chartSession - " + chartSession);
         log.debug(getThreadName() + " : quoteSession - " + quoteSession);
-        log.debug(getThreadName() + " : quoteSessionTicker - " + quoteSessionTicker);
-        log.debug(getThreadName() + " : quoteSessionTickerNew - " + quoteSessionTickerNew);
     }
 
     /**
@@ -323,12 +315,12 @@ public class FetcherThread extends TickerThread<TickerService> {
                     log.debug(getThreadName() + " : Already refreshing daily values " + (now - lastDailyValueUpdatedAt));
                     if (now - lastDailyValueUpdatedAt > 75000) {
                         log.debug(getThreadName() + " : Refreshing new daily values");
-                        removeTempWebSockets();
+                        closeAllWebsockets(tempWebSocketClients);
                         addTempWebSocket();
                     }
                 }
             } else {
-                removeTempWebSockets();
+                closeAllWebsockets(tempWebSocketClients);
             }
         } else {
             incorrectValues = 0;
@@ -357,20 +349,9 @@ public class FetcherThread extends TickerThread<TickerService> {
             setLastPingAt(0);
             setUpdatedAt(0);
             webSocketClient = initializeWebSocket(false);
-            log.debug(getThreadName() + " :" +
-                    " getStudySeries(): " + getStudySeries() +
-                    " getStudyBB(): " + getStudyBB() +
-                    " getStudyRSI(): " + getStudyRSI() +
-                    " getStudyTEMA(): " + getStudyTEMA());
-            if (ObjectUtils.isEmpty(getStudySeries()) ||
-                    ObjectUtils.isEmpty(getStudyBB()) ||
-                    ObjectUtils.isEmpty(getStudyRSI()) ||
-                    ObjectUtils.isEmpty(getStudyTEMA())) {
-                log.error(getThreadName() + " :" +
-                        " getStudySeries(): " + getStudySeries() +
-                        " getStudyBB(): " + getStudyBB() +
-                        " getStudyRSI(): " + getStudyRSI() +
-                        " getStudyTEMA(): " + getStudyTEMA());
+            log.debug(getThreadName() + " : getStudySeries(): " + getStudySeries());
+            if (ObjectUtils.isEmpty(getStudySeries())) {
+                log.error(getThreadName() + " : getStudySeries(): " + getStudySeries());
                 throw new TickerException(getThreadName() + " : Error initializing study name");
             }
             if (refresh) {
@@ -444,10 +425,16 @@ public class FetcherThread extends TickerThread<TickerService> {
     public void terminateThread(boolean shutDownInitiated) {
         super.terminateThread(shutDownInitiated);
         setInitialized(false);
-        closeWebsocketIfExists(GOING_AWAY, "Terminating thread", webSocketClient);
+        setEnabled(false);
+        closeAllWebsockets(allWebSocketClients);
         this.webSocketClient = null;
-        removeTempWebSockets();
         service.deleteTicker(this);
+    }
+
+    private void closeAllWebsockets(Set<WebSocketClient> webSocketClients) {
+        for (WebSocketClient currWebSocketClient : webSocketClients) {
+            closeWebsocketIfExists(GOING_AWAY, "Terminating temp websocket", currWebSocketClient);
+        }
     }
 
     private void closeWebsocketIfExists(int code, String reason, WebSocketClient webSocket) {
@@ -458,14 +445,14 @@ public class FetcherThread extends TickerThread<TickerService> {
                 webSocket.close(code, reason);
                 while (webSocket.isOpen() || webSocket.isClosing() || !webSocket.isClosed()) {
                     waitFor(WAIT_QUICK);
-                    if (System.currentTimeMillis() - start >= 5000) {
+                    if (System.currentTimeMillis() - start >= 30000) {
                         break;
                     }
                 }
+                tempWebSocketClients.remove(webSocket);
             } catch (Exception ignored) {
 
             }
-            tempWebSocketClients.remove(webSocket);
             log.debug(getThreadName() + " : Websocket closed");
         }
     }
@@ -539,18 +526,11 @@ public class FetcherThread extends TickerThread<TickerService> {
         log.debug(getThreadName() + " : Adding temp websocket");
         WebSocketClient webSocket = initializeWebSocket(true);
         tempWebSocketClients.add(webSocket);
-    }
-
-    public void removeTempWebSockets() {
-        log.debug(getThreadName() + " : Removing temp websockets");
-        WebSocketClient[] tempWebSocketArr = tempWebSocketClients.toArray(new WebSocketClient[0]);
-        for (WebSocketClient webSocketClient : tempWebSocketArr) {
-            closeWebsocketIfExists(GOING_AWAY, "Terminating temp websocket", webSocketClient);
-        }
+        allWebSocketClients.add(webSocket);
     }
 
     public void finishTempWebsocketTask() {
         log.debug(getThreadName() + " : Temp websocket task finished");
-        removeTempWebSockets();
+        closeAllWebsockets(tempWebSocketClients);
     }
 }
