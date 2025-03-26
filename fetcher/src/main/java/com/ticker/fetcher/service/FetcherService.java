@@ -1,8 +1,11 @@
 package com.ticker.fetcher.service;
 
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import com.ticker.common.exception.TickerException;
 import com.ticker.common.service.BaseService;
 import com.ticker.fetcher.model.FetcherRepoModel;
+import com.ticker.fetcher.model.websocket.response.*;
 import com.ticker.fetcher.repository.FetcherAppRepository;
 import com.ticker.fetcher.rx.FetcherThread;
 import lombok.extern.slf4j.Slf4j;
@@ -18,10 +21,7 @@ import org.springframework.util.ObjectUtils;
 
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
-import java.util.HashMap;
-import java.util.HashSet;
-import java.util.Map;
-import java.util.Set;
+import java.util.*;
 import java.util.concurrent.Executor;
 import java.util.regex.Pattern;
 
@@ -29,6 +29,7 @@ import static com.ticker.common.util.Util.WAIT_QUICK;
 import static com.ticker.common.util.Util.waitFor;
 import static com.ticker.fetcher.FetcherUtil.decodeMessage;
 import static com.ticker.fetcher.FetcherUtil.encodeMessage;
+import static com.ticker.fetcher.rx.FetcherThread.STUDY_SERIES_CODE;
 
 /**
  * The type Fetcher service.
@@ -65,7 +66,7 @@ public class FetcherService extends BaseService {
      */
     public void sendMessage(FetcherThread thread, String data) {
         if (thread.getWebSocketClient() != null && thread.getWebSocketClient().isOpen()) {
-            log.debug(thread.getThreadName() + " : sending message\n" + data);
+            log.trace("{} : sending message\n{}", thread.getThreadName(), data);
             sendMessage(thread.getWebSocketClient(), data);
             thread.getWebSocketClient().send(encodeMessage(data));
             waitFor(5);
@@ -82,8 +83,7 @@ public class FetcherService extends BaseService {
      */
     public void sendMessage(WebSocketClient webSocket, String data) {
         if (webSocket != null && webSocket.isOpen()) {
-            log.trace("Sending message:");
-            log.trace(data);
+            log.trace("Sending message : {}", data);
             webSocket.send(encodeMessage(data));
             waitFor(5);
         }
@@ -98,12 +98,13 @@ public class FetcherService extends BaseService {
      * @param temp
      */
     public void onReceiveMessage(FetcherThread thread, WebSocketClient webSocket, String data, boolean temp) {
-        log.trace("Recv:");
         String[] messages = decodeMessage(data);
+        log.trace("Receive : {}\n{}", thread.getThreadName(), String.join("\n", messages));
         for (String message : messages) {
             if (Pattern.matches("~h~\\d*$", message)) {
                 if (!temp) {
                     sendMessage(webSocket, message);
+                    log.debug("Replying : {} - {}", thread.getThreadName(), message);
                 }
             } else {
                 parseMessage(thread, message, temp);
@@ -122,8 +123,8 @@ public class FetcherService extends BaseService {
                     try {
                         String objString = array.get(i).toString();
                         JSONObject jsonObject = new JSONObject(objString);
-                        if (hasInterestedValue(thread, jsonObject)) {
-                            thread.getExecutor().execute(() -> setVal(thread, jsonObject, temp));
+                        if (jsonObject.has(STUDY_SERIES_CODE) || jsonObject.has("s") || jsonObject.has("v")) {
+                            decodeValues(jsonObject, thread, temp);
                         }
                     } catch (Exception ignored) {
 
@@ -135,113 +136,149 @@ public class FetcherService extends BaseService {
         }
     }
 
-    private boolean hasInterestedValue(FetcherThread thread, JSONObject jsonObject) {
-        if (jsonObject.has(thread.getStudySeries())) {
-            return true;
-        }
-        if (jsonObject.has("v")) {
-            JSONObject value = jsonObject.getJSONObject("v");
-            return value.has("lp") ||
-                    value.has("open_price") ||
-                    value.has("high_price") ||
-                    value.has("low_price");
-        }
-        return false;
-    }
+    private void decodeValues(JSONObject jsonObject, FetcherThread thread, boolean temp) {
+        boolean updated = false;
+        boolean decoded = false;
+        try {
+            ObjectMapper mapper = new ObjectMapper(); //TODO: Initialize one instance
 
-    private void setVal(FetcherThread thread, JSONObject object, boolean temp) {
-        log.debug(thread.getThreadName() + " : Setting value");
-        log.debug(object.toString(2));
-        for (String key : object.keySet()) {
-            log.trace("Key: " + key);
-            try {
-                Double[] vals = null;
-                try {
-                    vals = getVals(object.getJSONObject(key).getJSONArray("st"));
-                } catch (Exception ignored) {
+            CurrentLp currentLp = mapToObject(mapper, jsonObject, CurrentLp.class);
+            CurrentOhlc currentOhlc = mapToObject(mapper, jsonObject, CurrentOhlc.class);
+            PrevBars prevBars = mapToObject(mapper, jsonObject, PrevBars.class);
+            DayOhlc dayOhlc = mapToObject(mapper, jsonObject, DayOhlc.class);
+            TickerDetails tickerDetails = mapToObject(mapper, jsonObject, TickerDetails.class);
+
+            if (currentLp != null) {
+                if (currentLp.v != null && currentLp.v.lp != 0) {
+                    updated = setCurrentLp(thread, currentLp);
+                    decoded = true;
+                } else {
+                    log.trace("Not a currentLp type");
                 }
-                if (vals == null) {
-                    try {
-                        vals = getVals(object.getJSONObject(key).getJSONArray("s"));
-                    } catch (Exception ignored) {
-                    }
+            }
+            if (currentOhlc != null) {
+                if (currentOhlc.sds.s.size() == 1 && currentOhlc.sds.s.get(0).v.size() >= 5) {
+                    updated = setCurrentOhlc(thread, currentOhlc);
+                    decoded = true;
+                } else {
+                    log.trace("Not a currentOhlc type");
                 }
-                if (thread.getStudySeries().equals(key)) {
-                    log.trace(thread.getThreadName() + " : Setting OHLC value");
-                    thread.setO(vals[1]);
-                    thread.setH(vals[2]);
-                    thread.setL(vals[3]);
-                    thread.setC(vals[4]);
-                } else if ("v".equals(key)) {
-                    log.trace(thread.getThreadName() + " : Setting day values value");
-                    JSONObject value = object.getJSONObject("v");
-                    if (value.has("open_price")) {
-                        thread.setDayO(value.getDouble("open_price"));
-                    }
-                    if (value.has("high_price")) {
-                        thread.setDayH(value.getDouble("high_price"));
-                    }
-                    if (value.has("low_price")) {
-                        thread.setDayL(value.getDouble("low_price"));
-                    }
-                    if (value.has("lp")) {
-                        thread.setDayC(value.getDouble("lp"));
-                    }
-                    if (value.has("prev_close_price")) {
-                        thread.setPrevClose(value.getDouble("prev_close_price"));
-                    }
-                    if (value.has("pointvalue")) {
-                        thread.setPointValue(value.getInt("pointvalue"));
-                    }
-                    if (temp
-                            && value.has("open_price")
-                            && value.has("high_price")
-                            && value.has("low_price")
-                            && value.has("lp")
-                            && value.has("prev_close_price")) {
-                        thread.setLastDailyValueUpdatedAt(System.currentTimeMillis());
-                        thread.finishTempWebsocketTask();
-                    }
+            }
+            if (prevBars != null) {
+                //TODO: Implement populating previous bar data
+                log.trace("prevBars : ({}) {}", prevBars.sds.s.size(), prevBars);
+                decoded = true;
+            }
+            if (dayOhlc != null) {
+                DayOhlc.V v = dayOhlc.v;
+                if (v != null && v.lp != 0 &&
+                        v.open_price != 0 && v.high_price != 0
+                        && v.low_price != 0 && v.prev_close_price != 0) {
+                    updated = setDayOhlc(thread, dayOhlc);
+                    decoded = true;
+                } else {
+                    log.trace("Not a dayOhlc type");
                 }
+            }
+            if (tickerDetails != null) {
+                TickerDetails.V v = tickerDetails.v;
+                if (v != null && v.lp != 0 &&
+                        v.open_price != 0 && v.high_price != 0
+                        && v.low_price != 0 && v.prev_close_price != 0) {
+                    updated = setTickerDetails(thread, tickerDetails);
+                    decoded = true;
+                } else {
+                    log.trace("Not a tickerDetails type");
+                }
+            }
+        } catch (Exception e) {
+            decoded = false;
+            updated = false;
+        }
+
+
+        if (!decoded) {
+            log.trace("Not decoded : {} - {}", thread.getThreadName(), jsonObject);
+        } else {
+            log.trace("Decoded : {} at {}", thread.getThreadName(), System.currentTimeMillis());
+            if (updated) {
                 if (!temp) {
                     thread.setUpdatedAt(System.currentTimeMillis());
+                    log.trace("Updated {}", thread.getThreadName());
+                } else {
+                    thread.setLastDailyValueUpdatedAt(System.currentTimeMillis());
+                    thread.finishTempWebsocketTask();
                 }
                 synchronized (dataSet) {
                     dataSet.add(new FetcherRepoModel(thread));
                 }
-            } catch (Exception ignored) {
-
             }
         }
     }
 
-
-    private Double[] getVals(JSONArray arr) {
-        int maxIndex = 0;
-        double maxTime = 0;
-        for (int i = 0; i < arr.length(); i++) {
-            try {
-                JSONObject object = arr.getJSONObject(i);
-                JSONArray vals = object.getJSONArray("v");
-                double time = vals.getDouble(0);
-                if (time > maxTime) {
-                    maxIndex = i;
-                    maxTime = time;
-                }
-            } catch (Exception ignored) {
-
-            }
+    private boolean setTickerDetails(FetcherThread thread, TickerDetails tickerDetails) {
+        log.trace("setTickerDetails : {}", tickerDetails);
+        try {
+            thread.setDayO(tickerDetails.v.open_price);
+            thread.setDayH(tickerDetails.v.high_price);
+            thread.setDayL(tickerDetails.v.low_price);
+            thread.setDayC(tickerDetails.v.lp);
+            thread.setC(tickerDetails.v.lp);
+            thread.setPrevClose(tickerDetails.v.prev_close_price);
+            return true;
+        } catch (Exception e) {
+            return false;
         }
-        JSONObject object = arr.getJSONObject(maxIndex);
-        JSONArray vals = object.getJSONArray("v");
-        return vals.toList().stream().map(o -> {
-            if (o instanceof Double) {
-                return (Double) o;
-            } else if (o instanceof Integer) {
-                return Double.valueOf((Integer) o);
+    }
+
+    private boolean setDayOhlc(FetcherThread thread, DayOhlc dayOhlc) {
+        log.trace("dayOhlc : {}", dayOhlc);
+        try {
+            thread.setDayO(dayOhlc.v.open_price);
+            thread.setDayH(dayOhlc.v.high_price);
+            thread.setDayL(dayOhlc.v.low_price);
+            thread.setDayC(dayOhlc.v.lp);
+            thread.setC(dayOhlc.v.lp);
+            thread.setPrevClose(dayOhlc.v.prev_close_price);
+            return true;
+        } catch (Exception e) {
+            return false;
+        }
+    }
+
+    private boolean setCurrentOhlc(FetcherThread thread, CurrentOhlc currentOhlc) {
+        log.trace("currentOhlc : ({}) {}", currentOhlc.sds.s.size(), currentOhlc);
+        try {
+            List<Double> vals = currentOhlc.sds.s.get(0).v;
+            if (vals == null) {
+                return false;
             }
-            return 0.0;
-        }).toArray(Double[]::new);
+            thread.setO(vals.get(1));
+            thread.setH(vals.get(2));
+            thread.setL(vals.get(3));
+            thread.setC(vals.get(4));
+            return true;
+        } catch (Exception e) {
+            return false;
+        }
+    }
+
+    private boolean setCurrentLp(FetcherThread thread, CurrentLp currentLp) {
+        log.trace("currentLp : {}", currentLp);
+        try {
+            thread.setC(currentLp.v.lp);
+            return true;
+        } catch (Exception e) {
+            return false;
+        }
+    }
+
+    private <T> T mapToObject(ObjectMapper mapper, JSONObject jsonObject, Class<T> valueType) {
+        try {
+            return mapper.readValue(jsonObject.toString(), valueType);
+        } catch (JsonProcessingException e) {
+        }
+        return null;
     }
 
     /**
@@ -323,10 +360,10 @@ public class FetcherService extends BaseService {
         sendMessage(webSocket, "{\"m\":\"resolve_symbol\",\"p\":[\"" + thread.getChartSession() + "\",\"sds_sym_1\",\"={\\\"symbol\\\":\\\"" + thread.getExchange() + ":" + thread.getSymbol() + "\\\",\\\"adjustment\\\":\\\"splits\\\"}\"]}");
         waitFor(WAIT_QUICK);
         log.debug("{} : Creating series", thread.getThreadName());
-        sendMessage(webSocket, "{\"m\":\"create_series\",\"p\":[\"" + thread.getChartSession() + "\",\"" + thread.getStudySeries() + "\",\"s1\",\"sds_sym_1\",\"1\",300,\"\"]}");
+        sendMessage(webSocket, "{\"m\":\"create_series\",\"p\":[\"" + thread.getChartSession() + "\",\"" + STUDY_SERIES_CODE + "\",\"s1\",\"sds_sym_1\",\"1\",20,\"\"]}");
         waitFor(WAIT_QUICK);
         log.debug("{} : Requesting more ticks", thread.getThreadName());
-        sendMessage(webSocket, "{\"m\":\"request_more_tickmarks\",\"p\":[\"" + thread.getChartSession() + "\",\"sds_1\",10]}");
+        sendMessage(webSocket, "{\"m\":\"request_more_tickmarks\",\"p\":[\"" + thread.getChartSession() + "\",\"" + STUDY_SERIES_CODE + "\",10]}");
         waitFor(WAIT_QUICK);
         log.debug("{} : Websocket initialization messages sent", thread.getThreadName());
     }
