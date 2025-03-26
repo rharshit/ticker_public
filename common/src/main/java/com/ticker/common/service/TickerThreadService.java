@@ -73,9 +73,7 @@ public abstract class TickerThreadService<T extends TickerThread, TM extends Tic
     @Deprecated
     public void createThread(String exchange, String symbol, String threadBeanName) {
         T thread = getThread(exchange, symbol);
-        if (thread != null && thread.isEnabled()) {
-            return;
-        } else {
+        if (thread == null || !thread.isEnabled()) {
             if (thread != null) {
                 getThreadPool().remove(thread);
             }

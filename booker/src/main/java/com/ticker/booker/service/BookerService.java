@@ -343,9 +343,9 @@ public class BookerService extends BaseService {
                         TickerTrade balance = new TickerTrade();
                         balance.quantity = String.valueOf(0);
                         balance.averagePrice = String.valueOf(0);
-                        for (; (!buyTradeList.isEmpty() && !sellTradeList.isEmpty()) ||
+                        while ((!buyTradeList.isEmpty() && !sellTradeList.isEmpty()) ||
                                 (buyTradeList.isEmpty() && !sellTradeList.isEmpty() && Integer.parseInt(balance.quantity) < 0) ||
-                                (!buyTradeList.isEmpty() && sellTradeList.isEmpty() && Integer.parseInt(balance.quantity) > 0); ) {
+                                (!buyTradeList.isEmpty() && sellTradeList.isEmpty() && Integer.parseInt(balance.quantity) > 0)) {
                             CompleteTrade completeTrade = new CompleteTrade();
                             TickerTrade buy = null;
                             TickerTrade sell = null;
