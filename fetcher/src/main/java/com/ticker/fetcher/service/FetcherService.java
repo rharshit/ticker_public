@@ -27,9 +27,9 @@ import java.util.regex.Pattern;
 
 import static com.ticker.common.util.Util.WAIT_QUICK;
 import static com.ticker.common.util.Util.waitFor;
-import static com.ticker.fetcher.FetcherUtil.decodeMessage;
-import static com.ticker.fetcher.FetcherUtil.encodeMessage;
 import static com.ticker.fetcher.rx.FetcherThread.STUDY_SERIES_CODE;
+import static com.ticker.fetcher.utils.FetcherUtil.decodeMessage;
+import static com.ticker.fetcher.utils.FetcherUtil.encodeMessage;
 
 /**
  * The type Fetcher service.
