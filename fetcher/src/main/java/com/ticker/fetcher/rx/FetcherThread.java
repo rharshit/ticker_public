@@ -6,6 +6,8 @@ import com.ticker.common.rx.TickerThread;
 import com.ticker.fetcher.repository.FetcherAppRepository;
 import com.ticker.fetcher.service.FetcherService;
 import com.ticker.fetcher.service.TickerService;
+import com.ticker.fetcher.utils.TimeUtil;
+import com.ticker.fetcher.utils.compute.ComputeEngine;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
@@ -25,9 +27,7 @@ import java.net.URL;
 import java.util.Arrays;
 import java.util.HashSet;
 import java.util.Set;
-import java.util.concurrent.Executor;
-import java.util.concurrent.Executors;
-import java.util.concurrent.Semaphore;
+import java.util.concurrent.*;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
@@ -36,6 +36,8 @@ import static com.ticker.common.contants.WebConstants.TRADING_VIEW_BASE;
 import static com.ticker.common.contants.WebConstants.TRADING_VIEW_CHART;
 import static com.ticker.common.util.Util.*;
 import static com.ticker.fetcher.constants.FetcherConstants.FETCHER_THREAD_COMP_NAME;
+import static com.ticker.fetcher.utils.TimeUtil.MINUTE_IN_MILLI;
+import static com.ticker.fetcher.utils.TimeUtil.SECOND_IN_MILLI;
 import static org.java_websocket.framing.CloseFrame.*;
 
 /**
@@ -100,6 +102,11 @@ public class FetcherThread extends TickerThread<TickerService> {
     private Set<WebSocketClient> allWebSocketClients = new HashSet<>();
     private long lastDailyValueUpdatedAt = System.currentTimeMillis();
 
+    private final ComputeEngine computeEngine = new ComputeEngine(this);
+    private final ScheduledExecutorService cutoffScheduler = Executors.newScheduledThreadPool(2);
+    private long currentMinute;
+    private long currentSecond;
+
     /**
      * Gets build time for charts.
      *
@@ -143,6 +150,11 @@ public class FetcherThread extends TickerThread<TickerService> {
         }
     }
 
+    public void setC(double c) {
+        this.c = c;
+        computeEngine.updateLast(c);
+    }
+
     /**
      * Sets properties.
      *
@@ -174,6 +186,28 @@ public class FetcherThread extends TickerThread<TickerService> {
     @Override
     protected void initialize() {
         initializeTables();
+        initializeCutoffs();
+    }
+
+    private void initializeCutoffs() {
+        long currentTimestamp = System.currentTimeMillis();
+        cutoffScheduler.scheduleAtFixedRate(this::secondCutoff,
+                TimeUtil.timeToNextSecond(currentTimestamp), SECOND_IN_MILLI, TimeUnit.MILLISECONDS);
+        cutoffScheduler.scheduleAtFixedRate(this::minuteCutoff,
+                TimeUtil.timeToNextMinute(currentTimestamp), MINUTE_IN_MILLI, TimeUnit.MILLISECONDS);
+        Runtime.getRuntime().addShutdownHook(new Thread(cutoffScheduler::shutdown));
+    }
+
+    private void secondCutoff() {
+        log.trace("{} : secondCutoff initiated at {}", getThreadName(), System.currentTimeMillis());
+        computeEngine.secondCutoff();
+        log.trace("{} : secondCutoff completed at {}", getThreadName(), System.currentTimeMillis());
+    }
+
+    private void minuteCutoff() {
+        log.info("{} : minuteCutoff initiated at {}", getThreadName(), System.currentTimeMillis());
+        computeEngine.minuteCutoff();
+        log.info("{} : minuteCutoff completed at {}", getThreadName(), System.currentTimeMillis());
     }
 
     private WebSocketClient initializeWebSocket(boolean temp) {
