@@ -15,7 +15,6 @@ import org.java_websocket.handshake.ServerHandshake;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Scope;
 import org.springframework.stereotype.Component;
-import org.springframework.util.ObjectUtils;
 import org.springframework.util.StringUtils;
 
 import java.io.BufferedReader;
@@ -56,6 +55,8 @@ public class FetcherThread extends TickerThread<TickerService> {
     public static final int RETRY_LIMIT = 3;
     private static final Semaphore websocketFetcher;
     private static String buildTime = "";
+    public static final String STUDY_SERIES_CODE = "sds_1";
+
 
     static {
         websocketFetcher = new Semaphore(5);
@@ -86,7 +87,6 @@ public class FetcherThread extends TickerThread<TickerService> {
     private long updatedAt;
     private boolean taskStarted = false;
     private int requestId = 0;
-    private String studySeries = "sds_1";
     private WebSocketClient webSocketClient;
     private String sessionId;
     private String clusterId;
@@ -349,11 +349,6 @@ public class FetcherThread extends TickerThread<TickerService> {
             setLastPingAt(0);
             setUpdatedAt(0);
             webSocketClient = initializeWebSocket(false);
-            log.debug(getThreadName() + " : getStudySeries(): " + getStudySeries());
-            if (ObjectUtils.isEmpty(getStudySeries())) {
-                log.error(getThreadName() + " : getStudySeries(): " + getStudySeries());
-                throw new TickerException(getThreadName() + " : Error initializing study name");
-            }
             if (refresh) {
                 log.info(getExchange() + ":" + getSymbol() + " - Refreshed");
             } else {
