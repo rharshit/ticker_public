@@ -47,7 +47,7 @@ public class RestTemplateConfig extends RestTemplate {
                             .append("=")
                             .append(param.getValue() == null ? "" : param.getValue().toString());
                 }
-                return URI.create(s + requestParams.toString());
+                return URI.create(s + requestParams);
             }
 
             @Override

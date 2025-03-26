@@ -59,9 +59,7 @@ public abstract class StratTickerService<T extends StratThread, TM extends Strat
     @Override
     public void createThread(String exchange, String symbol, String... extras) {
         T thread = getThread(exchange, symbol);
-        if (thread != null && thread.isEnabled()) {
-            return;
-        } else {
+        if (thread == null || !thread.isEnabled()) {
             if (thread != null) {
                 getThreadPool().remove(thread);
             }
