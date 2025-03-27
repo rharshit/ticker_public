@@ -53,8 +53,10 @@ public class ComputeEngine {
         long minuteTimestamp = TimeUtil.getMinuteTimestamp(timestamp);
         synchronized (values) {
             if (values.getLast().getMinuteTimestamp() == minuteTimestamp) {
-                values.getLast().setValue(value);
-                values.getLast().setLatestTimestamp(timestamp);
+                if (timestamp >= values.getLast().getLatestTimestamp()) {
+                    values.getLast().setValue(value);
+                    values.getLast().setLatestTimestamp(timestamp);
+                }
             } else {
                 values.addLast(new ComputeData(value, timestamp));
             }

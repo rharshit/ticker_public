@@ -152,12 +152,8 @@ public class FetcherThread extends TickerThread<TickerService> {
     }
 
     public void setC(double c) {
-        setC(c, System.currentTimeMillis());
-    }
-
-    public void setC(double c, long timestamp) {
         this.c = c;
-        computeEngine.updateLastPrice(c, timestamp);
+        computeEngine.updateLastPrice(c, System.currentTimeMillis());
     }
 
     /**
