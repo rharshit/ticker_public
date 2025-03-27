@@ -3,7 +3,7 @@ package com.ticker.fetcher.utils.compute.study.model;
 import com.ticker.fetcher.rx.FetcherThread;
 import com.ticker.fetcher.utils.compute.ComputeEngine;
 
-import java.util.LinkedList;
+import java.util.List;
 
 //TODO: Implement this model
 public class TripleExponentialMovingAverage extends StudyModel {
@@ -12,7 +12,7 @@ public class TripleExponentialMovingAverage extends StudyModel {
     }
 
     @Override
-    public void compute(LinkedList<ComputeEngine.ComputeData> values) {
+    protected void compute(List<ComputeEngine.ComputeData> values) {
         thread.setTema(5);
     }
 

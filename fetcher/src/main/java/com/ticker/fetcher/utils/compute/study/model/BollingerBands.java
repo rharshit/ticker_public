@@ -3,7 +3,7 @@ package com.ticker.fetcher.utils.compute.study.model;
 import com.ticker.fetcher.rx.FetcherThread;
 import com.ticker.fetcher.utils.compute.ComputeEngine;
 
-import java.util.LinkedList;
+import java.util.List;
 
 //TODO: Implement this model
 public class BollingerBands extends StudyModel {
@@ -12,7 +12,7 @@ public class BollingerBands extends StudyModel {
     }
 
     @Override
-    public void compute(LinkedList<ComputeEngine.ComputeData> values) {
+    protected void compute(List<ComputeEngine.ComputeData> values) {
         thread.setBbL(values.stream().mapToDouble(ComputeEngine.ComputeData::getValue).min().orElse(1));
         thread.setBbA(values.stream().mapToDouble(ComputeEngine.ComputeData::getValue).average().orElse(1));
         thread.setBbU(values.stream().mapToDouble(ComputeEngine.ComputeData::getValue).max().orElse(3));

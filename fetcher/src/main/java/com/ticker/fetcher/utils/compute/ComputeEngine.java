@@ -9,7 +9,8 @@ import lombok.Data;
 import lombok.extern.slf4j.Slf4j;
 
 import java.util.*;
-import java.util.function.Consumer;
+import java.util.concurrent.Executor;
+import java.util.concurrent.Executors;
 import java.util.stream.Collectors;
 
 /**
@@ -19,6 +20,7 @@ import java.util.stream.Collectors;
 @Slf4j
 public class ComputeEngine {
     private final FetcherThread thread;
+    private final Executor computeExecutor = Executors.newWorkStealingPool();
     private final LinkedList<ComputeData> values = new LinkedList<>();
     private final Map<Study, StudyModel> studies = new EnumMap<>(Study.class);
     private int windowSize = 1;
@@ -126,17 +128,17 @@ public class ComputeEngine {
                     values.stream().map(computeData -> String.valueOf(computeData.value)).collect(Collectors.joining(", ")));
             computeAllValues();
         }
-
     }
 
     private void computeAllValues() {
         log.trace("{} : Computing all values", thread.getThreadName());
-        studies.values().forEach(new Consumer<StudyModel>() {
-            @Override
-            public void accept(StudyModel studyModel) {
-                studyModel.compute(values);
-            }
-        });
+        studies.forEach((study, studyModel) ->
+                computeExecutor.execute(() -> {
+                    List<ComputeEngine.ComputeData> valuesWindow =
+                            values.subList(Math.max(values.size() - study.getWindowSize(), 0), values.size());
+                    studyModel.compute(valuesWindow, study.getWindowSize());
+                })
+        );
     }
 
     /**
