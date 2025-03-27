@@ -26,6 +26,7 @@ import java.net.URI;
 import java.net.URL;
 import java.util.Arrays;
 import java.util.HashSet;
+import java.util.List;
 import java.util.Set;
 import java.util.concurrent.*;
 import java.util.regex.Matcher;
@@ -151,8 +152,12 @@ public class FetcherThread extends TickerThread<TickerService> {
     }
 
     public void setC(double c) {
+        setC(c, System.currentTimeMillis());
+    }
+
+    public void setC(double c, long timestamp) {
         this.c = c;
-        computeEngine.updateLast(c);
+        computeEngine.updateLastPrice(c, timestamp);
     }
 
     /**
@@ -208,6 +213,10 @@ public class FetcherThread extends TickerThread<TickerService> {
         log.trace("{} : minuteCutoff initiated at {}", getThreadName(), System.currentTimeMillis());
         computeEngine.minuteCutoff();
         log.trace("{} : minuteCutoff completed at {}", getThreadName(), System.currentTimeMillis());
+    }
+
+    public void addPrevBarData(List<ComputeEngine.ComputeData> values) {
+        computeEngine.addValues(values);
     }
 
     private WebSocketClient initializeWebSocket(boolean temp) {

@@ -5,6 +5,7 @@ import com.ticker.fetcher.rx.FetcherThread;
 import com.ticker.fetcher.utils.TimeUtil;
 import com.ticker.fetcher.utils.compute.study.StudyConstants.Study;
 import com.ticker.fetcher.utils.compute.study.model.StudyModel;
+import lombok.Data;
 import lombok.extern.slf4j.Slf4j;
 
 import java.util.*;
@@ -24,7 +25,7 @@ public class ComputeEngine {
 
     public ComputeEngine(FetcherThread thread) {
         this.thread = thread;
-        values.add(new ComputeData(TimeUtil.getMinuteTimestamp(System.currentTimeMillis()), thread.getC()));
+        values.add(new ComputeData(thread.getC(), System.currentTimeMillis()));
         addAllStudies();
     }
 
@@ -44,41 +45,90 @@ public class ComputeEngine {
         }
     }
 
-    public void updateLast(double value) {
-        synchronized (values) {
-            values.getLast().value = value;
-            adjustValues();
-        }
+    public void updateLastPrice(double value) {
+        updateLastPrice(value, System.currentTimeMillis());
     }
 
-    public void pushValue(ComputeData value) {
+    public void updateLastPrice(double value, long timestamp) {
+        long minuteTimestamp = TimeUtil.getMinuteTimestamp(timestamp);
         synchronized (values) {
-            values.addLast(value);
-            adjustValues();
+            if (values.getLast().getMinuteTimestamp() == minuteTimestamp) {
+                values.getLast().setValue(value);
+                values.getLast().setLatestTimestamp(timestamp);
+            } else {
+                values.addLast(new ComputeData(value, timestamp));
+            }
         }
-    }
-
-    public void pushValues(List<ComputeData> valuesToAdd) {
-        synchronized (values) {
-            values.addAll(valuesToAdd);
-            adjustValues();
-        }
+        adjustValues();
     }
 
     /**
-     * Trim array to fit the window size if required
+     * Push a new value to the end of the list.
+     * Use this for adding new data point, at the end of the window
+     *
+     * @param value
+     */
+    public void pushValue(ComputeData value) {
+        synchronized (values) {
+            values.addLast(value);
+        }
+        adjustValues();
+    }
+
+    /**
+     * Add a list of values to the data list.
+     * This does not guarantee the position of the data entry of each data point.
+     * All the data will be sorted in ascending order of the timestamps.
+     *
+     * @param valuesToAdd
+     */
+    public void addValues(List<ComputeData> valuesToAdd) {
+        synchronized (values) {
+            values.addAll(valuesToAdd);
+        }
+        adjustValues();
+    }
+
+    /**
+     * Adjust array to fit the window size if required
      */
     private void adjustValues() {
-        while (values.size() > windowSize) {
-            values.removeFirst();
+        if (values.isEmpty()) {
+            return;
         }
-        log.debug("{} : Compute engine values {}", thread.getThreadName(),
-                values.stream().map(computeData -> String.valueOf(computeData.value)).collect(Collectors.joining(", ")));
-        computeAllValues();
+        synchronized (values) {
+            values.sort(Comparator.comparingLong(ComputeData::getLatestTimestamp));
+            long windowEndTimestamp = values.getLast().getMinuteTimestamp();
+            long windowStartTimestamp = TimeUtil.getMinuteTimestamp(windowEndTimestamp, -windowSize);
+            int i = 0;
+            ComputeData prevData = null;
+            while (i < values.size()) {
+                boolean remove = false;
+                ComputeData data = values.get(i);
+                long minuteTimestamp = data.getMinuteTimestamp();
+                if (minuteTimestamp < windowStartTimestamp) {
+                    remove = true;
+                }
+                if (prevData != null && prevData.getMinuteTimestamp() == minuteTimestamp) {
+                    prevData.setValue(data.value);
+                    remove = true;
+                }
+                if (remove) {
+                    values.remove(data);
+                } else {
+                    prevData = data;
+                    i++;
+                }
+            }
+            log.debug("{} : Compute engine values {}", thread.getThreadName(),
+                    values.stream().map(computeData -> String.valueOf(computeData.value)).collect(Collectors.joining(", ")));
+            computeAllValues();
+        }
+
     }
 
     private void computeAllValues() {
-        log.debug("{} : Computing all values", thread.getThreadName());
+        log.trace("{} : Computing all values", thread.getThreadName());
         studies.values().forEach(new Consumer<StudyModel>() {
             @Override
             public void accept(StudyModel studyModel) {
@@ -105,20 +155,21 @@ public class ComputeEngine {
     }
 
     public void minuteCutoff() {
-        pushValue(new ComputeData(TimeUtil.getMinuteTimestamp(System.currentTimeMillis()), thread.getC()));
+        pushValue(new ComputeData(thread.getC(), System.currentTimeMillis()));
     }
 
+    @Data
     public static class ComputeData {
-        private final long minuteTimestamp;
-        private double value;
+        private long latestTimestamp;
+        private Double value;
 
-        public ComputeData(long minuteTimestamp, double value) {
-            this.minuteTimestamp = minuteTimestamp;
+        public ComputeData(double value, long latestTimestamp) {
             this.value = value;
+            this.latestTimestamp = latestTimestamp;
         }
 
-        public double getValue() {
-            return value;
+        public long getMinuteTimestamp() {
+            return TimeUtil.getMinuteTimestamp(latestTimestamp);
         }
     }
 }

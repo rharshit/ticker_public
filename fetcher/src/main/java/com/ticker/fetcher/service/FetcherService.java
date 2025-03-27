@@ -8,6 +8,7 @@ import com.ticker.fetcher.model.FetcherRepoModel;
 import com.ticker.fetcher.model.websocket.response.*;
 import com.ticker.fetcher.repository.FetcherAppRepository;
 import com.ticker.fetcher.rx.FetcherThread;
+import com.ticker.fetcher.utils.compute.ComputeEngine;
 import lombok.extern.slf4j.Slf4j;
 import org.java_websocket.client.WebSocketClient;
 import org.json.JSONArray;
@@ -24,6 +25,7 @@ import java.time.format.DateTimeFormatter;
 import java.util.*;
 import java.util.concurrent.Executor;
 import java.util.regex.Pattern;
+import java.util.stream.Collectors;
 
 import static com.ticker.common.util.Util.WAIT_QUICK;
 import static com.ticker.common.util.Util.waitFor;
@@ -165,8 +167,7 @@ public class FetcherService extends BaseService {
                 }
             }
             if (prevBars != null) {
-                //TODO: Implement populating previous bar data
-                log.trace("prevBars : ({}) {}", prevBars.sds.s.size(), prevBars);
+                updated = setPrevBars(thread, prevBars);
                 decoded = true;
             }
             if (dayOhlc != null) {
@@ -214,6 +215,20 @@ public class FetcherService extends BaseService {
                 }
             }
         }
+    }
+
+    private boolean setPrevBars(FetcherThread thread, PrevBars prevBars) {
+        log.trace("setPrevBars : {}", prevBars);
+        try {
+            List<ComputeEngine.ComputeData> data = prevBars.sds.s.stream()
+                    .map(s -> new ComputeEngine.ComputeData(s.v.get(4), (long) (s.v.get(0) * 1000)))
+                    .collect(Collectors.toList());
+            thread.addPrevBarData(data);
+            return true;
+        } catch (Exception e) {
+            return false;
+        }
+
     }
 
     private boolean setTickerDetails(FetcherThread thread, TickerDetails tickerDetails) {
