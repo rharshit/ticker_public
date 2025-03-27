@@ -24,6 +24,10 @@ public class FetcherThreadModel extends TickerThreadModel<FetcherThread> {
         super(thread);
     }
 
+    public boolean isPrevDataPopulated() {
+        return this.thread.isPrevDataPopulated();
+    }
+
     /**
      * Gets fetcher apps.
      *
