@@ -360,7 +360,7 @@ public class FetcherService extends BaseService {
         sendMessage(webSocket, "{\"m\":\"resolve_symbol\",\"p\":[\"" + thread.getChartSession() + "\",\"sds_sym_1\",\"={\\\"symbol\\\":\\\"" + thread.getExchange() + ":" + thread.getSymbol() + "\\\",\\\"adjustment\\\":\\\"splits\\\"}\"]}");
         waitFor(WAIT_QUICK);
         log.debug("{} : Creating series", thread.getThreadName());
-        sendMessage(webSocket, "{\"m\":\"create_series\",\"p\":[\"" + thread.getChartSession() + "\",\"" + STUDY_SERIES_CODE + "\",\"s1\",\"sds_sym_1\",\"1\",20,\"\"]}");
+        sendMessage(webSocket, "{\"m\":\"create_series\",\"p\":[\"" + thread.getChartSession() + "\",\"" + STUDY_SERIES_CODE + "\",\"s1\",\"sds_sym_1\",\"1\",50,\"\"]}");
         waitFor(WAIT_QUICK);
         log.debug("{} : Requesting more ticks", thread.getThreadName());
         sendMessage(webSocket, "{\"m\":\"request_more_tickmarks\",\"p\":[\"" + thread.getChartSession() + "\",\"" + STUDY_SERIES_CODE + "\",10]}");
