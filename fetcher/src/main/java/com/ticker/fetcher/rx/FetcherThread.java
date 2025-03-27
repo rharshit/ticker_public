@@ -88,7 +88,7 @@ public class FetcherThread extends TickerThread<TickerService> {
     private int pointValue;
     private double currentValue;
     private long updatedAt;
-    private boolean taskStarted = false;
+    private boolean prevDataPopulated = false;
     private int requestId = 0;
     private WebSocketClient webSocketClient;
     private String sessionId;
@@ -212,7 +212,9 @@ public class FetcherThread extends TickerThread<TickerService> {
     }
 
     public void addPrevBarData(List<ComputeEngine.ComputeData> values) {
+        log.info("{} : Populating previous data", getThreadName());
         computeEngine.addValues(values);
+        prevDataPopulated = true;
     }
 
     private WebSocketClient initializeWebSocket(boolean temp) {
@@ -341,9 +343,15 @@ public class FetcherThread extends TickerThread<TickerService> {
         if (isEnabled() && isInitialized()) {
             if (getCurrentValue() == 0 ||
                     getCurrentValue() > dayH ||
-                    getCurrentValue() < dayL) {
+                    getCurrentValue() < dayL ||
+                    !prevDataPopulated) {
                 incorrectValues++;
-                log.debug(getThreadName() + " : incorrectValues " + incorrectValues + " - " + dayL + ", " + getCurrentValue() + ", " + dayH);
+                log.debug(getThreadName() + " : incorrectValues " + incorrectValues + " - " + dayL + ", " + getCurrentValue() + ", " + dayH + ", " + prevDataPopulated);
+            } else {
+                if (incorrectValues != 0) {
+                    log.debug(getThreadName() + " : Values corrected - " + dayL + ", " + getCurrentValue() + ", " + dayH + ", " + prevDataPopulated);
+                }
+                incorrectValues = 0;
             }
             long now = System.currentTimeMillis();
             if (now - lastDailyValueUpdatedAt > 60000 && now - updatedAt < 30000) {
@@ -363,9 +371,10 @@ public class FetcherThread extends TickerThread<TickerService> {
             }
         } else {
             incorrectValues = 0;
+            log.debug("{} : Not initialized", getThreadName());
         }
         if (incorrectValues > 5) {
-            log.info(getThreadName() + " : Incorrect values " + incorrectValues + " - " + dayL + ", " + getCurrentValue() + ", " + dayH);
+            log.info(getThreadName() + " : Incorrect values " + incorrectValues + " - " + dayL + ", " + getCurrentValue() + ", " + dayH + ", " + prevDataPopulated);
             refresh();
         }
     }
