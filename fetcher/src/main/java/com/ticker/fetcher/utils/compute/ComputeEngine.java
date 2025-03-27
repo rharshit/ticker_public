@@ -72,13 +72,13 @@ public class ComputeEngine {
         while (values.size() > windowSize) {
             values.removeFirst();
         }
-        log.info("{} : Compute engine values {}", thread.getThreadName(),
+        log.debug("{} : Compute engine values {}", thread.getThreadName(),
                 values.stream().map(computeData -> String.valueOf(computeData.value)).collect(Collectors.joining(", ")));
         computeAllValues();
     }
 
     private void computeAllValues() {
-        log.info("{} : Computing all values", thread.getThreadName());
+        log.debug("{} : Computing all values", thread.getThreadName());
         studies.values().forEach(new Consumer<StudyModel>() {
             @Override
             public void accept(StudyModel studyModel) {

@@ -205,9 +205,9 @@ public class FetcherThread extends TickerThread<TickerService> {
     }
 
     private void minuteCutoff() {
-        log.info("{} : minuteCutoff initiated at {}", getThreadName(), System.currentTimeMillis());
+        log.trace("{} : minuteCutoff initiated at {}", getThreadName(), System.currentTimeMillis());
         computeEngine.minuteCutoff();
-        log.info("{} : minuteCutoff completed at {}", getThreadName(), System.currentTimeMillis());
+        log.trace("{} : minuteCutoff completed at {}", getThreadName(), System.currentTimeMillis());
     }
 
     private WebSocketClient initializeWebSocket(boolean temp) {
