@@ -1,4 +1,4 @@
-package com.ticker.fetcher;
+package com.ticker.fetcher.utils;
 
 /**
  * The type Fetcher util.

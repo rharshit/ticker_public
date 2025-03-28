@@ -8,6 +8,7 @@ import com.ticker.fetcher.model.FetcherRepoModel;
 import com.ticker.fetcher.model.websocket.response.*;
 import com.ticker.fetcher.repository.FetcherAppRepository;
 import com.ticker.fetcher.rx.FetcherThread;
+import com.ticker.fetcher.utils.compute.ComputeEngine;
 import lombok.extern.slf4j.Slf4j;
 import org.java_websocket.client.WebSocketClient;
 import org.json.JSONArray;
@@ -24,12 +25,13 @@ import java.time.format.DateTimeFormatter;
 import java.util.*;
 import java.util.concurrent.Executor;
 import java.util.regex.Pattern;
+import java.util.stream.Collectors;
 
 import static com.ticker.common.util.Util.WAIT_QUICK;
 import static com.ticker.common.util.Util.waitFor;
-import static com.ticker.fetcher.FetcherUtil.decodeMessage;
-import static com.ticker.fetcher.FetcherUtil.encodeMessage;
 import static com.ticker.fetcher.rx.FetcherThread.STUDY_SERIES_CODE;
+import static com.ticker.fetcher.utils.FetcherUtil.decodeMessage;
+import static com.ticker.fetcher.utils.FetcherUtil.encodeMessage;
 
 /**
  * The type Fetcher service.
@@ -165,8 +167,7 @@ public class FetcherService extends BaseService {
                 }
             }
             if (prevBars != null) {
-                //TODO: Implement populating previous bar data
-                log.trace("prevBars : ({}) {}", prevBars.sds.s.size(), prevBars);
+                updated = setPrevBars(thread, prevBars);
                 decoded = true;
             }
             if (dayOhlc != null) {
@@ -214,6 +215,20 @@ public class FetcherService extends BaseService {
                 }
             }
         }
+    }
+
+    private boolean setPrevBars(FetcherThread thread, PrevBars prevBars) {
+        log.trace("setPrevBars : {}", prevBars);
+        try {
+            List<ComputeEngine.ComputeData> data = prevBars.sds.s.stream()
+                    .map(s -> new ComputeEngine.ComputeData(s.v.get(4), (long) (s.v.get(0) * 1000)))
+                    .collect(Collectors.toList());
+            thread.addPrevBarData(data);
+            return true;
+        } catch (Exception e) {
+            return false;
+        }
+
     }
 
     private boolean setTickerDetails(FetcherThread thread, TickerDetails tickerDetails) {
@@ -360,7 +375,7 @@ public class FetcherService extends BaseService {
         sendMessage(webSocket, "{\"m\":\"resolve_symbol\",\"p\":[\"" + thread.getChartSession() + "\",\"sds_sym_1\",\"={\\\"symbol\\\":\\\"" + thread.getExchange() + ":" + thread.getSymbol() + "\\\",\\\"adjustment\\\":\\\"splits\\\"}\"]}");
         waitFor(WAIT_QUICK);
         log.debug("{} : Creating series", thread.getThreadName());
-        sendMessage(webSocket, "{\"m\":\"create_series\",\"p\":[\"" + thread.getChartSession() + "\",\"" + STUDY_SERIES_CODE + "\",\"s1\",\"sds_sym_1\",\"1\",20,\"\"]}");
+        sendMessage(webSocket, "{\"m\":\"create_series\",\"p\":[\"" + thread.getChartSession() + "\",\"" + STUDY_SERIES_CODE + "\",\"s1\",\"sds_sym_1\",\"1\",50,\"\"]}");
         waitFor(WAIT_QUICK);
         log.debug("{} : Requesting more ticks", thread.getThreadName());
         sendMessage(webSocket, "{\"m\":\"request_more_tickmarks\",\"p\":[\"" + thread.getChartSession() + "\",\"" + STUDY_SERIES_CODE + "\",10]}");
