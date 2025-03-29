@@ -186,6 +186,7 @@ public abstract class StratTickerService<T extends StratThread, TM extends Strat
             params.put("exchange", exchange);
             params.put("symbol", symbol);
             params.put("appName", appName);
+            assert baseUrl != null;
             restTemplate.delete(baseUrl, params);
         } catch (Exception e) {
             log.error(e.getMessage());
@@ -374,10 +375,11 @@ public abstract class StratTickerService<T extends StratThread, TM extends Strat
                     params.put("sell", thread.getCurrentValue());
                     params.put("quantity", thread.getEntity().getMinQty());
                     Map<String, Double> response = restTemplate.getForObject(url, Map.class, params);
-                    if (response.get("ptb").doubleValue() == 0) {
+                    assert response != null;
+                    if (response.get("ptb") == 0) {
                         thread.setTargetThreshold(0.03f);
                     } else {
-                        thread.setTargetThreshold(3 * response.get("ptb").doubleValue());
+                        thread.setTargetThreshold(3 * response.get("ptb"));
                     }
                     thresholdSet = true;
                     log.info(thread.getThreadName() + " : Target threshold set");

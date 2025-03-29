@@ -223,12 +223,11 @@ public class BbRsiSafeService<T extends BbRsiSafeThread<?>, TM extends BbRsiSafe
             log.trace(thread.getThreadName() + " : Upward trend");
             if (thread.getTrailValue() - thread.getCurrentValue() < 0.8 * thread.getTargetThreshold()) {
                 log.trace(thread.getThreadName() + " : No action");
-                return;
             } else {
                 log.debug(thread.getThreadName() + " : ended 2");
                 thread.setCurrentState(BB_RSI_THREAD_STATE_UT_WAIT_WAVE_ENDED2);
-                return;
             }
+            return;
         } else {
             log.trace(thread.getThreadName() + " : back to wave");
             thread.setCurrentState(BB_RSI_THREAD_STATE_UT_WAIT_END_WAVE);

@@ -72,7 +72,7 @@ public abstract class BaseRepository {
         procedure.setFunction(false);
         procedure.setParameters(sqlParameters);
 
-        log.debug("Running procedure : " + getDatasourceName());
+        log.debug("Running procedure : {}", getDatasourceName());
 
         return procedure.execute(inputParameters);
     }
@@ -87,12 +87,10 @@ public abstract class BaseRepository {
      */
     public List executeQuery(final String sqlQuery, final RowMapper rowMapper) {
         try {
-            log.debug("sqlQuery : " + sqlQuery);
+            log.debug("sqlQuery : {}", sqlQuery);
             return getJdbcTemplate().query(sqlQuery, rowMapper);
         } catch (DataAccessException e) {
-            log.error("Error while executing query");
-            log.error(String.valueOf(e));
-            log.error(sqlQuery);
+            log.error("Error while executing query : {}", sqlQuery, e);
             throw new TickerException(e.getMessage());
         }
     }
@@ -106,8 +104,8 @@ public abstract class BaseRepository {
      * @return list
      */
     public List executeQuery(final String sqlQuery, final RowMapper rowMapper, final Object... args) {
-        log.debug("sqlQuery : " + sqlQuery);
-        log.debug("args : " + args);
+        log.debug("sqlQuery : {}", sqlQuery);
+        log.debug("args : {}", args);
 
         if (StringUtils.countOccurrencesOf(sqlQuery, "?") != args.length) {
             throw new TickerException("Invalid Arguments");
@@ -115,8 +113,7 @@ public abstract class BaseRepository {
         try {
             return getJdbcTemplate().query(sqlQuery, args, rowMapper);
         } catch (DataAccessException e) {
-            log.error(String.valueOf(e));
-            log.error(sqlQuery);
+            log.error("Error while executing query : {}", sqlQuery, e);
             throw new TickerException(e.getMessage());
         }
     }
@@ -128,11 +125,10 @@ public abstract class BaseRepository {
      */
     public void executeQuery(final String sqlQuery) {
         try {
-            log.debug("sqlQuery : " + sqlQuery);
+            log.debug("sqlQuery : {}", sqlQuery);
             getJdbcTemplate().execute(sqlQuery);
         } catch (DataAccessException e) {
-            log.error(String.valueOf(e));
-            log.error(sqlQuery);
+            log.error("Error while executing query : {}", sqlQuery, e);
             throw new TickerException(e.getMessage());
         }
     }
@@ -145,12 +141,11 @@ public abstract class BaseRepository {
      */
     public void executeQuery(final String sqlQuery, final Object... args) {
         try {
-            log.debug("sqlQuery : " + sqlQuery);
-            log.debug("args : " + args);
+            log.debug("sqlQuery : {}", sqlQuery);
+            log.debug("args : {}", args);
             getJdbcTemplate().update(sqlQuery, args);
         } catch (DataAccessException e) {
-            log.error(String.valueOf(e));
-            log.error(sqlQuery);
+            log.error("Error while executing query : {}", sqlQuery, e);
             throw new TickerException(e.getMessage());
         }
     }
@@ -168,8 +163,7 @@ public abstract class BaseRepository {
         try {
             return getJdbcTemplate().queryForObject(sqlQuery, requiredType, args);
         } catch (DataAccessException e) {
-            log.error(String.valueOf(e));
-            log.error(sqlQuery);
+            log.error("Error while executing query : {}", sqlQuery, e);
             throw new TickerException(e.getMessage());
         }
     }
@@ -198,8 +192,7 @@ public abstract class BaseRepository {
         try {
             return getJdbcTemplate().queryForList(sqlQuery, args);
         } catch (DataAccessException e) {
-            log.error(String.valueOf(e));
-            log.error(sqlQuery);
+            log.error("Error while executing query : {}", sqlQuery, e);
             throw new TickerException(e.getMessage());
         }
     }
@@ -217,8 +210,7 @@ public abstract class BaseRepository {
         try {
             return getJdbcTemplate().queryForList(sqlQuery, requiredType, args);
         } catch (DataAccessException e) {
-            log.error(String.valueOf(e));
-            log.error(sqlQuery);
+            log.error("Error while executing query : {}", sqlQuery, e);
             throw new TickerException(e.getMessage());
         }
     }
@@ -236,8 +228,7 @@ public abstract class BaseRepository {
         try {
             return getJdbcTemplate().query(sqlQuery, rowMapper, args);
         } catch (DataAccessException e) {
-            log.error(String.valueOf(e));
-            log.error(sqlQuery);
+            log.error("Error while executing query : {}", sqlQuery, e);
             throw new TickerException(e.getMessage());
         }
     }
@@ -251,8 +242,7 @@ public abstract class BaseRepository {
         try {
             getJdbcTemplate().update(sqlQuery);
         } catch (DataAccessException e) {
-            log.error(String.valueOf(e));
-            log.error(sqlQuery);
+            log.error("Error while executing query : {}", sqlQuery, e);
             throw new TickerException(e.getMessage());
         }
     }
