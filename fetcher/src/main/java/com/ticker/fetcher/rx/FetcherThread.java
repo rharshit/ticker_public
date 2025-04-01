@@ -349,7 +349,7 @@ public class FetcherThread extends TickerThread<TickerService> {
                 log.debug(getThreadName() + " : incorrectValues " + incorrectValues + " - " + dayL + ", " + getCurrentValue() + ", " + dayH + ", " + prevDataPopulated);
             } else {
                 if (incorrectValues != 0) {
-                    log.debug(getThreadName() + " : Values corrected - " + dayL + ", " + getCurrentValue() + ", " + dayH + ", " + prevDataPopulated);
+                    log.info(getThreadName() + " : Values corrected - " + dayL + ", " + getCurrentValue() + ", " + dayH + ", " + prevDataPopulated);
                 }
                 incorrectValues = 0;
             }
