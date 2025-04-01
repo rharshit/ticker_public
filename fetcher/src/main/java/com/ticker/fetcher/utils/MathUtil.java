@@ -50,4 +50,25 @@ public class MathUtil {
         }
         return Math.sqrt(sum / values.length);
     }
+
+    /**
+     * Calculate the Exponential Moving Average (EMA) of the values.
+     *
+     * @param values
+     * @return
+     */
+    public static double[] ema(double[] values) {
+        if (values.length == 0) {
+            return new double[0];
+        }
+        double[] emas = new double[values.length];
+        double multiplier = 2.0 / (values.length + 1);
+        double ema = values[0];
+        emas[0] = ema;
+        for (int i = 1; i < values.length; i++) {
+            ema = ((values[i] - ema) * multiplier) + ema;
+            emas[i] = ema;
+        }
+        return emas;
+    }
 }
