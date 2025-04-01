@@ -7,6 +7,8 @@ import lombok.extern.slf4j.Slf4j;
 
 import java.util.List;
 
+import static com.ticker.fetcher.utils.MathUtil.roundTo2Decimal;
+
 @Slf4j
 public class RelativeStrengthIndex extends StudyModel {
     private static final double[] computedValues = new double[1];
@@ -43,8 +45,8 @@ public class RelativeStrengthIndex extends StudyModel {
         log.trace("{} - Prev Loss: {}", thread.getThreadName(), prevAvgLoss);
         double rs = ((prevAvgGain * (n - 1)) + currentGain) / ((prevAvgLoss * (n - 1)) + currentLoss);
         log.trace("{} - RS: {}", thread.getThreadName(), rs);
-        double rsi = 100 - (100 / (1 + rs));
-        computedValues[0] = MathUtil.roundTo2Decimal(rsi);
+        double rsi = roundTo2Decimal(100 - (100 / (1 + rs)));
+        computedValues[0] = roundTo2Decimal(rsi);
         log.debug("{} - Computed RSI: {}", thread.getThreadName(), computedValues[0]);
     }
 

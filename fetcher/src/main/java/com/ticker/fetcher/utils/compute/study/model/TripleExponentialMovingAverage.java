@@ -7,6 +7,8 @@ import lombok.extern.slf4j.Slf4j;
 
 import java.util.List;
 
+import static com.ticker.fetcher.utils.MathUtil.roundTo2Decimal;
+
 @Slf4j
 public class TripleExponentialMovingAverage extends StudyModel {
     private static final double[] computedValues = new double[1];
@@ -27,7 +29,7 @@ public class TripleExponentialMovingAverage extends StudyModel {
         double[] ema3 = MathUtil.ema(ema2);
         log.trace("{} - EMA3 : {}", thread.getThreadName(), ema3);
 
-        double tema = 3 * (ema1[ema1.length - 1] - ema2[ema2.length - 1]) + ema3[ema3.length - 1];
+        double tema = roundTo2Decimal(3 * (ema1[ema1.length - 1] - ema2[ema2.length - 1]) + ema3[ema3.length - 1]);
         computedValues[0] = tema;
         log.debug("{} - TEMA: {}", thread.getThreadName(), tema);
     }
