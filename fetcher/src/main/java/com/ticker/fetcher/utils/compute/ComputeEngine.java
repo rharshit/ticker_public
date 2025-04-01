@@ -124,7 +124,7 @@ public class ComputeEngine {
                     i++;
                 }
             }
-            log.debug("{} : Compute engine values {}", thread.getThreadName(),
+            log.trace("{} : Compute engine values {}", thread.getThreadName(),
                     values.stream().map(computeData -> String.valueOf(computeData.value)).collect(Collectors.joining(", ")));
             computeAllValues();
         }
