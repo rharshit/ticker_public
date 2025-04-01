@@ -31,7 +31,7 @@ public class BrokerageService extends BaseService {
     private static final String INTRADAY = "intraday";
     private static final String FUTURES = "futures";
     private static final String OPTIONS = "options";
-    private static final Map<String, List<String>> tabs;
+    private static final Map<String, List<String>> tabs; //TODO: Use enum instead
     private static final ObjectPool<WebDriverObjectPoolData> webDrivers;
     private static boolean busy = false;
 
@@ -102,7 +102,7 @@ public class BrokerageService extends BaseService {
         }
         Map<String, Double> data = new HashMap<>();
         busy = true;
-        WebDriver webDriver = null;
+        WebDriver webDriver;
         long startTime = System.currentTimeMillis();
         while (true) {
             if (System.currentTimeMillis() - startTime > 100000) {
@@ -176,7 +176,7 @@ public class BrokerageService extends BaseService {
         for (WebElement input : inputs) {
             WebElement weLabel = input.findElement(By.tagName("label"));
             String label = weLabel.getText();
-            double val = 0;
+            double val;
             switch (label) {
                 case "BUY":
                     val = buy;

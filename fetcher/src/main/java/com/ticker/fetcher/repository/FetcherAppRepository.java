@@ -91,6 +91,7 @@ public class FetcherAppRepository {
                     long start = System.currentTimeMillis();
                     if (!CollectionUtils.isEmpty(tempQueue)) {
                         try (Connection connection = getFetcherConnection()) {
+                            assert connection != null;
                             Statement statement = connection.createStatement();
                             log.debug("Pushing data, size: " + tempQueue.size());
                             for (String sql : tempQueue) {
@@ -101,8 +102,7 @@ public class FetcherAppRepository {
                             log.trace("Executed queries");
                             log.trace("Data pushed");
                         } catch (SQLException e) {
-                            e.printStackTrace();
-                            log.error("Data not pushed");
+                            log.error("Data not pushed", e);
                             log.info("Adding sql data back to queue");
                             synchronized (sqlQueue) {
                                 sqlQueue.addAll(tempQueue);

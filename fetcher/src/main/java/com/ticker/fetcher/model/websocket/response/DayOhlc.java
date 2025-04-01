@@ -1,6 +1,5 @@
 package com.ticker.fetcher.model.websocket.response;
 
-@Deprecated
 public class DayOhlc {
     public String s;
     public V v;

@@ -9,7 +9,6 @@ import com.ticker.common.model.TickerTrade;
 import com.ticker.common.service.BaseService;
 import com.ticker.common.util.Util;
 import com.zerodhatech.kiteconnect.KiteConnect;
-import com.zerodhatech.kiteconnect.kitehttp.SessionExpiryHook;
 import com.zerodhatech.kiteconnect.kitehttp.exceptions.KiteException;
 import com.zerodhatech.kiteconnect.kitehttp.exceptions.TokenException;
 import com.zerodhatech.models.Margin;
@@ -61,12 +60,7 @@ public class BookerService extends BaseService {
 
             kiteSdk.setUserId(userId);
 
-            kiteSdk.setSessionExpiryHook(new SessionExpiryHook() {
-                @Override
-                public void sessionExpired() {
-                    log.warn("Kite session expired");
-                }
-            });
+            kiteSdk.setSessionExpiryHook(() -> log.warn("Kite session expired"));
         }
         return kiteSdk;
     }
@@ -203,7 +197,7 @@ public class BookerService extends BaseService {
                     } else if ("Sold".equalsIgnoreCase(transactionType)) {
                         trade.transactionType = "SELL";
                     } else {
-                        new TickerException("Wrong transaction type: " + transactionType);
+                        throw new TickerException("Wrong transaction type: " + transactionType);
                     }
 
                     trade.quantity = String.valueOf(Integer.parseInt(matcher.group(2)));
@@ -526,8 +520,8 @@ public class BookerService extends BaseService {
         log.debug("Fetching brokerage");
         Map<String, Double> brokerage = getBrokerage(trade);
         log.debug("Fetched brokerage");
-        trade.setPnl(brokerage.get("netPnl").doubleValue());
-        trade.setTaxes(brokerage.get("totalBrokerage").doubleValue());
+        trade.setPnl(brokerage.get("netPnl"));
+        trade.setTaxes(brokerage.get("totalBrokerage"));
     }
 
     /**
@@ -556,7 +550,7 @@ public class BookerService extends BaseService {
     public List<String> getLogFiles() {
         List<String> files = new ArrayList<>();
         final File folder = new File(LOG_PATH);
-        for (final File fileEntry : folder.listFiles()) {
+        for (final File fileEntry : Objects.requireNonNull(folder.listFiles())) {
             if (!fileEntry.isDirectory()) {
                 String name = fileEntry.getName();
                 if (name.endsWith(".log")) {

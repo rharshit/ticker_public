@@ -1,5 +1,6 @@
 package com.ticker.common.util;
 
+import com.ticker.common.exception.TickerException;
 import lombok.extern.slf4j.Slf4j;
 
 import java.io.File;
@@ -69,7 +70,7 @@ public abstract class Util {
             case APPLICATION_MWAVE:
                 return "http://localhost:8182/";
             default:
-                return null;
+                throw new TickerException("Application URL not found for " + application);
         }
     }
 

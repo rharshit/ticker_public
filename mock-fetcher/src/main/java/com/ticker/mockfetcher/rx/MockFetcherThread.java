@@ -165,7 +165,7 @@ public class MockFetcherThread extends TickerThread<TickerService> {
                 } else {
                     log.error("Error while initializing " + getThreadName(), e);
                 }
-                log.error("Destorying " + getThreadName());
+                log.error("Destroying " + getThreadName());
                 terminateThread(false);
             }
         }

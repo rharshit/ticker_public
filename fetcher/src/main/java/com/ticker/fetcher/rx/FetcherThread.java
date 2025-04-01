@@ -126,7 +126,7 @@ public class FetcherThread extends TickerThread<TickerService> {
                 BufferedReader in = new BufferedReader(new InputStreamReader(httpURLConnection.getInputStream()));
                 String inputLine;
                 String buildTime = "";
-                while (StringUtils.isEmpty(buildTime) && (inputLine = in.readLine()) != null) {
+                while (!StringUtils.hasText(buildTime) && (inputLine = in.readLine()) != null) {
                     try {
                         if (inputLine.contains("BUILD_TIME")) {
                             inputLine = inputLine.trim();
@@ -293,7 +293,7 @@ public class FetcherThread extends TickerThread<TickerService> {
             }
 
         } catch (Exception e) {
-            e.printStackTrace();
+            log.error("Error while creating websocket", e);
             closeWebsocketIfExists(TRY_AGAIN_LATER, "Error while creating websocket", webSocket);
             throw new TickerException(getThreadName() + " : Error while creating websocket");
         } finally {
@@ -349,7 +349,7 @@ public class FetcherThread extends TickerThread<TickerService> {
                 log.debug(getThreadName() + " : incorrectValues " + incorrectValues + " - " + dayL + ", " + getCurrentValue() + ", " + dayH + ", " + prevDataPopulated);
             } else {
                 if (incorrectValues != 0) {
-                    log.debug(getThreadName() + " : Values corrected - " + dayL + ", " + getCurrentValue() + ", " + dayH + ", " + prevDataPopulated);
+                    log.info(getThreadName() + " : Values corrected - " + dayL + ", " + getCurrentValue() + ", " + dayH + ", " + prevDataPopulated);
                 }
                 incorrectValues = 0;
             }
@@ -522,7 +522,7 @@ public class FetcherThread extends TickerThread<TickerService> {
     }
 
     /**
-     * Gets alpha numeric char.
+     * Gets alphanumeric char.
      *
      * @param x the x
      * @return the alpha numeric char
