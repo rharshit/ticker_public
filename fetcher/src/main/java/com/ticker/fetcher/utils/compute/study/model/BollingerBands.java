@@ -6,7 +6,6 @@ import com.ticker.fetcher.utils.compute.ComputeEngine;
 import lombok.extern.slf4j.Slf4j;
 
 import java.text.DecimalFormat;
-import java.util.ArrayList;
 import java.util.List;
 
 @Slf4j
@@ -20,8 +19,8 @@ public class BollingerBands extends StudyModel {
 
     @Override
     protected void compute(List<ComputeEngine.ComputeData> values) {
-        List<Double> valsDouble = values.stream().mapToDouble(ComputeEngine.ComputeData::getValue)
-                .collect(ArrayList::new, ArrayList::add, ArrayList::addAll);
+        double[] valsDouble = values.stream().mapToDouble(ComputeEngine.ComputeData::getValue)
+                .toArray();
         log.debug("{} - Computing Bollinger Bands for : {}", thread.getThreadName(), valsDouble);
 
         double average = MathUtil.average(valsDouble);
