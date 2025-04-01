@@ -1,30 +1,53 @@
 package com.ticker.fetcher.utils.compute.study.model;
 
 import com.ticker.fetcher.rx.FetcherThread;
+import com.ticker.fetcher.utils.MathUtil;
 import com.ticker.fetcher.utils.compute.ComputeEngine;
+import lombok.extern.slf4j.Slf4j;
 
+import java.text.DecimalFormat;
+import java.util.ArrayList;
 import java.util.List;
 
-//TODO: Implement this model
+@Slf4j
 public class BollingerBands extends StudyModel {
+    private static final DecimalFormat df = new DecimalFormat("#.##");
+    double[] computedValues = new double[3];
+
     public BollingerBands(FetcherThread thread) {
         super(thread);
     }
 
     @Override
     protected void compute(List<ComputeEngine.ComputeData> values) {
-        thread.setBbL(values.stream().mapToDouble(ComputeEngine.ComputeData::getValue).min().orElse(1));
-        thread.setBbA(values.stream().mapToDouble(ComputeEngine.ComputeData::getValue).average().orElse(1));
-        thread.setBbU(values.stream().mapToDouble(ComputeEngine.ComputeData::getValue).max().orElse(3));
+        List<Double> valsDouble = values.stream().mapToDouble(ComputeEngine.ComputeData::getValue)
+                .collect(ArrayList::new, ArrayList::add, ArrayList::addAll);
+        log.debug("{} - Computing Bollinger Bands for : {}", thread.getThreadName(), valsDouble);
+
+        double average = MathUtil.average(valsDouble);
+        log.trace("{} - Average: {}", thread.getThreadName(), average);
+        double stdDev = MathUtil.standardDeviation(valsDouble);
+        log.trace("{} - Standard Deviation: {}", thread.getThreadName(), stdDev);
+        double upperBand = average + (stdDev * 2);
+        log.trace("{} - Upper Band: {}", thread.getThreadName(), upperBand);
+        double lowerBand = average - (stdDev * 2);
+        log.trace("{} - Lower Band: {}", thread.getThreadName(), lowerBand);
+        computedValues = new double[3];
+        computedValues[0] = Double.parseDouble(df.format(average));
+        computedValues[1] = Double.parseDouble(df.format(upperBand));
+        computedValues[2] = Double.parseDouble(df.format(lowerBand));
+        log.debug("{} - Computed Bollinger Bands: {}", thread.getThreadName(), computedValues);
     }
 
     @Override
     public double[] getComputedValues() {
-        return new double[0];
+        return computedValues;
     }
 
     @Override
     public void setValues(FetcherThread fetcherThread) {
-
+        fetcherThread.setBbA(computedValues[0]);
+        fetcherThread.setBbU(computedValues[1]);
+        fetcherThread.setBbL(computedValues[2]);
     }
 }
