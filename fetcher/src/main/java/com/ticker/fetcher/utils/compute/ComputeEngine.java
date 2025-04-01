@@ -110,10 +110,10 @@ public class ComputeEngine {
                 boolean remove = false;
                 ComputeData data = values.get(i);
                 long minuteTimestamp = data.getMinuteTimestamp();
-                if (minuteTimestamp < windowStartTimestamp) {
+                if (minuteTimestamp < windowStartTimestamp || data.getValue().isNaN() || data.getValue() == 0) {
                     remove = true;
                 }
-                if (prevData != null && prevData.getMinuteTimestamp() == minuteTimestamp) {
+                if (!remove && prevData != null && prevData.getMinuteTimestamp() == minuteTimestamp) {
                     prevData.setValue(data.value);
                     remove = true;
                 }
@@ -137,6 +137,7 @@ public class ComputeEngine {
                     List<ComputeEngine.ComputeData> valuesWindow =
                             values.subList(Math.max(values.size() - study.getWindowSize(), 0), values.size());
                     studyModel.compute(valuesWindow, study.getWindowSize());
+                    studyModel.setValues(thread);
                 })
         );
     }
