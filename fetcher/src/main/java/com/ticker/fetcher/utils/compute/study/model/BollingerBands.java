@@ -11,7 +11,7 @@ import java.util.List;
 @Slf4j
 public class BollingerBands extends StudyModel {
     private static final DecimalFormat df = new DecimalFormat("#.##");
-    double[] computedValues = new double[3];
+    private static final double[] computedValues = new double[3];
 
     public BollingerBands(FetcherThread thread) {
         super(thread);
@@ -31,7 +31,6 @@ public class BollingerBands extends StudyModel {
         log.trace("{} - Upper Band: {}", thread.getThreadName(), upperBand);
         double lowerBand = average - (stdDev * 2);
         log.trace("{} - Lower Band: {}", thread.getThreadName(), lowerBand);
-        computedValues = new double[3];
         computedValues[0] = Double.parseDouble(df.format(average));
         computedValues[1] = Double.parseDouble(df.format(upperBand));
         computedValues[2] = Double.parseDouble(df.format(lowerBand));
