@@ -18,7 +18,6 @@ import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.scheduling.annotation.Async;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
-import org.springframework.util.ObjectUtils;
 
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
@@ -60,6 +59,29 @@ public class FetcherService extends BaseService {
     @Qualifier("repoExecutor")
     private Executor repoExecutor;
 
+    private static final Set<WebSocketClient> activeWebsockets = new HashSet<>();
+    private static final Set<WebSocketClient> websocketsToRemove = new HashSet<>();
+
+    public static synchronized void addToActiveWebsockets(WebSocketClient webSocketClient) {
+        synchronized (activeWebsockets) {
+            activeWebsockets.add(webSocketClient);
+        }
+    }
+
+    public static void closeWebSocket(WebSocketClient webSocketClient) {
+        if (webSocketClient != null) {
+            synchronized (websocketsToRemove) {
+                websocketsToRemove.add(webSocketClient);
+            }
+        }
+    }
+
+    public static void closeWebSockets(List<WebSocketClient> webSocketClients) {
+        synchronized (websocketsToRemove) {
+            websocketsToRemove.addAll(webSocketClients.stream().filter(Objects::nonNull).collect(Collectors.toList()));
+        }
+    }
+
     /**
      * Send message.
      *
@@ -84,6 +106,7 @@ public class FetcherService extends BaseService {
      * @param data      the data
      */
     public void sendMessage(WebSocketClient webSocket, String data) {
+        log.trace("{} - Sending message", webSocket);
         if (webSocket != null && webSocket.isOpen()) {
             log.trace("Sending message : {}", data);
             webSocket.send(encodeMessage(data));
@@ -97,24 +120,22 @@ public class FetcherService extends BaseService {
      * @param thread    the thread
      * @param webSocket the web socket
      * @param data      the data
-     * @param temp
      */
-    public void onReceiveMessage(FetcherThread thread, WebSocketClient webSocket, String data, boolean temp) {
+    public void onReceiveMessage(FetcherThread thread, WebSocketClient webSocket, String data) {
+        log.trace("{} - Message received", webSocket);
         String[] messages = decodeMessage(data);
         log.trace("Receive : {}\n{}", thread.getThreadName(), String.join("\n", messages));
         for (String message : messages) {
             if (Pattern.matches("~h~\\d*$", message)) {
-                if (!temp) {
-                    sendMessage(webSocket, message);
-                    log.debug("Replying : {} - {}", thread.getThreadName(), message);
-                }
+                sendMessage(webSocket, message);
+                log.debug("Replying : {} - {}", thread.getThreadName(), message);
             } else {
-                parseMessage(thread, message, temp);
+                parseMessage(thread, message);
             }
         }
     }
 
-    private void parseMessage(FetcherThread thread, String message, boolean temp) {
+    private void parseMessage(FetcherThread thread, String message) {
         try {
             JSONObject object = new JSONObject(message);
             if (object.has("session_id")) {
@@ -126,7 +147,7 @@ public class FetcherService extends BaseService {
                         String objString = array.get(i).toString();
                         JSONObject jsonObject = new JSONObject(objString);
                         if (jsonObject.has(STUDY_SERIES_CODE) || jsonObject.has("s") || jsonObject.has("v")) {
-                            decodeValues(jsonObject, thread, temp);
+                            decodeValues(jsonObject, thread);
                         }
                     } catch (Exception ignored) {
 
@@ -138,7 +159,7 @@ public class FetcherService extends BaseService {
         }
     }
 
-    private void decodeValues(JSONObject jsonObject, FetcherThread thread, boolean temp) {
+    private void decodeValues(JSONObject jsonObject, FetcherThread thread) {
         boolean updated = false;
         boolean decoded = false;
         try {
@@ -203,16 +224,12 @@ public class FetcherService extends BaseService {
         } else {
             log.trace("Decoded : {} at {}", thread.getThreadName(), System.currentTimeMillis());
             if (updated) {
-                if (!temp) {
-                    thread.setUpdatedAt(System.currentTimeMillis());
-                    log.trace("Updated {}", thread.getThreadName());
-                } else {
-                    thread.setLastDailyValueUpdatedAt(System.currentTimeMillis());
-                    thread.finishTempWebsocketTask();
-                }
+                thread.setUpdatedAt(System.currentTimeMillis());
+                log.trace("Updated {}", thread.getThreadName());
                 synchronized (dataSet) {
                     dataSet.add(new FetcherRepoModel(thread));
                 }
+                thread.closePreviousWebsockets();
             }
         }
     }
@@ -240,6 +257,7 @@ public class FetcherService extends BaseService {
             thread.setDayC(tickerDetails.v.lp);
             thread.setC(tickerDetails.v.lp);
             thread.setPrevClose(tickerDetails.v.prev_close_price);
+            thread.setLastDailyValueUpdatedAt(System.currentTimeMillis());
             return true;
         } catch (Exception e) {
             return false;
@@ -255,6 +273,7 @@ public class FetcherService extends BaseService {
             thread.setDayC(dayOhlc.v.lp);
             thread.setC(dayOhlc.v.lp);
             thread.setPrevClose(dayOhlc.v.prev_close_price);
+            thread.setLastDailyValueUpdatedAt(System.currentTimeMillis());
             return true;
         } catch (Exception e) {
             return false;
@@ -338,23 +357,11 @@ public class FetcherService extends BaseService {
      *
      * @param thread    the thread
      * @param webSocket the web socket
-     * @param temp
      */
-    public void handshake(FetcherThread thread, WebSocketClient webSocket, boolean temp) {
-        if (webSocket == null) {
-            throw new TickerException(thread.getThreadName() + " : Null websocket");
-        }
-        long startTime = System.currentTimeMillis();
-        while (thread.isEnabled() && !webSocket.isOpen()) {
-            if (System.currentTimeMillis() - startTime > 10000 && !temp) {
-                throw new TickerException(thread.getThreadName() + " : Timeout while waiting for websocket to open");
-            }
-            waitFor(WAIT_QUICK);
-        }
+    public void handshake(FetcherThread thread, WebSocketClient webSocket) {
         if (thread.isEnabled()) {
             sendMessagesForInitializing(webSocket, thread);
-            log.debug("Sent messages");
-
+            log.debug("{} : Handshake completed", thread.getThreadName());
         }
     }
 
@@ -384,34 +391,6 @@ public class FetcherService extends BaseService {
     }
 
     /**
-     * Add session to the thread.
-     *
-     * @param thread    the thread
-     * @param webSocket the web socket
-     * @param temp
-     */
-    public void addSession(FetcherThread thread, WebSocketClient webSocket, boolean temp) {
-        if (webSocket == null) {
-            throw new TickerException(thread.getThreadName() + " : Null websocket");
-        }
-        long startTime = System.currentTimeMillis();
-        while (thread.isEnabled() && !webSocket.isOpen()) {
-            if (System.currentTimeMillis() - startTime > 10000 && !temp) {
-                throw new TickerException(thread.getThreadName() + " : Timeout while waiting for websocket to open");
-            }
-            waitFor(WAIT_QUICK);
-        }
-        startTime = System.currentTimeMillis();
-        while (ObjectUtils.isEmpty(thread.getSessionId())) {
-            if (System.currentTimeMillis() - startTime > 10000 && !temp) {
-                throw new TickerException(thread.getThreadName() + " : Timeout while waiting for Session ID");
-            }
-            waitFor(WAIT_QUICK);
-        }
-        log.debug(thread.getThreadName() + " : Session set - " + thread.getSessionId());
-    }
-
-    /**
      * Update point value.
      *
      * @param thread the thread
@@ -427,5 +406,54 @@ public class FetcherService extends BaseService {
         executorMap.put("ScheduledExecutor", scheduledExecutor);
         executorMap.put("RepoExecutor", repoExecutor);
         return executorMap;
+    }
+
+    @Scheduled(fixedDelay = 5000)
+    public void cleanupWebsockets() {
+        long start = System.currentTimeMillis();
+        log.debug("cleanupWebsockets - Starting cleanup");
+        List<WebSocketClient> webSocketClients;
+        synchronized (activeWebsockets) {
+            webSocketClients = new ArrayList<>(activeWebsockets);
+        }
+
+        webSocketClients.forEach(webSocketClient ->
+                log.debug("{} :\t{} {} {}", webSocketClient, webSocketClient.isOpen(), webSocketClient.isClosing(), webSocketClient.isClosed()));
+
+        Set<WebSocketClient> closedWebsockets = webSocketClients.stream()
+                .filter(WebSocketClient::isClosed)
+                .collect(Collectors.toSet());
+        log.debug("{} closed websockets found", closedWebsockets.size());
+        if (!closedWebsockets.isEmpty()) {
+            log.debug("Removing {} websockets from the active list", closedWebsockets.size());
+            synchronized (activeWebsockets) {
+                activeWebsockets.removeAll(closedWebsockets);
+            }
+        }
+
+        synchronized (websocketsToRemove) {
+            closedWebsockets = websocketsToRemove.stream()
+                    .filter(WebSocketClient::isClosed)
+                    .collect(Collectors.toSet());
+            log.debug("Removing {} websockets from the removal list", closedWebsockets.size());
+            websocketsToRemove.removeAll(closedWebsockets);
+        }
+        synchronized (websocketsToRemove) {
+            if (!websocketsToRemove.isEmpty()) {
+                log.debug("Closing websockets that are to be removed");
+                websocketsToRemove.forEach(webSocketClient -> {
+                    try {
+                        if (webSocketClient.isOpen()) {
+                            log.debug("{} : Closing websocket", webSocketClient);
+                            webSocketClient.close();
+                        }
+                    } catch (Exception e) {
+                        log.error("{} : Error while closing websocket", webSocketClient, e);
+                    }
+                });
+            }
+        }
+
+        log.debug("cleanupWebsockets - Completed in {}ms", System.currentTimeMillis() - start);
     }
 }

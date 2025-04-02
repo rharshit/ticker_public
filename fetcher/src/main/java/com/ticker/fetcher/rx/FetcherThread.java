@@ -24,10 +24,7 @@ import java.io.InputStreamReader;
 import java.net.HttpURLConnection;
 import java.net.URI;
 import java.net.URL;
-import java.util.Arrays;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Set;
+import java.util.*;
 import java.util.concurrent.*;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
@@ -39,7 +36,6 @@ import static com.ticker.common.util.Util.*;
 import static com.ticker.fetcher.constants.FetcherConstants.FETCHER_THREAD_COMP_NAME;
 import static com.ticker.fetcher.utils.TimeUtil.MINUTE_IN_MILLI;
 import static com.ticker.fetcher.utils.TimeUtil.SECOND_IN_MILLI;
-import static org.java_websocket.framing.CloseFrame.*;
 
 /**
  * The type Fetcher thread.
@@ -56,16 +52,8 @@ public class FetcherThread extends TickerThread<TickerService> {
      * The constant RETRY_LIMIT.
      */
     public static final int RETRY_LIMIT = 3;
-    private static final Semaphore websocketFetcher;
     private static String buildTime = "";
     public static final String STUDY_SERIES_CODE = "sds_1";
-
-
-    static {
-        websocketFetcher = new Semaphore(5);
-    }
-
-    private final Object postInitLock = new Object();
     @Autowired
     private FetcherAppRepository repository;
     @Autowired
@@ -91,6 +79,13 @@ public class FetcherThread extends TickerThread<TickerService> {
     private boolean prevDataPopulated = false;
     private int requestId = 0;
     private WebSocketClient webSocketClient;
+    private static final Semaphore websocketInitializeSemaphore = new Semaphore(5);
+    private final Object websocketLock = new Object();
+    private final Object websocketInitializeLock = new Object();
+    private final Set<WebSocketClient> previousWebsockets = new HashSet<>();
+    private boolean isRequestWebsocketInitialize = false;
+    private long websocketInitializeTime = 0;
+
     private String sessionId;
     private String clusterId;
     private String chartSession;
@@ -99,14 +94,18 @@ public class FetcherThread extends TickerThread<TickerService> {
     private int retry = 0;
     private int incorrectValues = 0;
     private Executor executor = Executors.newCachedThreadPool();
-    private Set<WebSocketClient> tempWebSocketClients = new HashSet<>();
-    private Set<WebSocketClient> allWebSocketClients = new HashSet<>();
     private long lastDailyValueUpdatedAt = System.currentTimeMillis();
 
     private final ComputeEngine computeEngine = new ComputeEngine(this);
     private final ScheduledExecutorService cutoffScheduler = Executors.newScheduledThreadPool(2);
     private long currentMinute;
     private long currentSecond;
+
+    private void requestWebsocketInitialize() {
+        synchronized (websocketInitializeLock) {
+            isRequestWebsocketInitialize = true;
+        }
+    }
 
     /**
      * Gets build time for charts.
@@ -212,101 +211,126 @@ public class FetcherThread extends TickerThread<TickerService> {
     }
 
     public void addPrevBarData(List<ComputeEngine.ComputeData> values) {
-        log.info("{} : Populating previous data", getThreadName());
+        log.debug("{} : Populating previous data", getThreadName());
         computeEngine.addValues(values);
         prevDataPopulated = true;
     }
 
-    private WebSocketClient initializeWebSocket(boolean temp) {
+    private void initializeNewWebSocket(boolean refresh) {
+        requestWebsocketInitialize();
         long startTime = System.currentTimeMillis();
-        WebSocketClient webSocket = null;
-        try {
-            while (!websocketFetcher.tryAcquire()) {
-                waitFor(WAIT_QUICK);
-                if (System.currentTimeMillis() - startTime > 120000) {
-                    throw new TickerException("Error while waiting to acquire websocket fetcher lock");
+        synchronized (websocketInitializeLock) {
+            if (isRequestWebsocketInitialize || startTime >= websocketInitializeTime) {
+                boolean initialized = false;
+                WebSocketClient webSocket = null;
+                try {
+                    FetcherThread thisThread = this;
+                    boolean initializeAllowed = websocketInitializeSemaphore.tryAcquire();
+                    while (!initializeAllowed) {
+                        log.trace("{} : Waiting to acquire semaphore lock to connect websocket", getThreadName());
+                        waitFor(WAIT_SHORT);
+                        initializeAllowed = websocketInitializeSemaphore.tryAcquire();
+                    }
+                    log.debug("{} : Semaphore lock to connect websocket acquired", getThreadName());
+                    try {
+                        webSocket = new WebSocketClient(new URI("wss://data.tradingview.com/socket.io/websocket?from=chart%2F&date=" + fetchBuildTime() + "&type=chart")) {
+                            final long start = startTime;
+
+                            @Override
+                            public void onOpen(ServerHandshake handshakedata) {
+                                log.debug("{} : Opened websocket", getThreadName());
+                            }
+
+                            @Override
+                            public void onMessage(String message) {
+                                setLastPingAt(System.currentTimeMillis());
+                                fetcherService.onReceiveMessage(thisThread, this, message);
+                            }
+
+                            @Override
+                            public void onClose(int code, String reason, boolean remote) {
+                                log.debug("{} - {} : Closing websocket {}", getThreadName(), reason, this);
+                            }
+
+                            @Override
+                            public void onError(Exception ex) {
+                                log.error("{} : Error in websocket", getThreadName(), ex);
+                            }
+                        };
+                        webSocket.addHeader("Accept-Encoding", "gzip, deflate, br");
+                        webSocket.addHeader("Accept-Language", "en-IN,en;q=0.9");
+                        webSocket.addHeader("Cache-Control", "no-cache");
+                        webSocket.addHeader("Connection", "Upgrade");
+                        webSocket.addHeader("Host", "data.tradingview.com");
+                        webSocket.addHeader("Origin", "https://in.tradingview.com");
+                        webSocket.addHeader("Pragma", "no-cache");
+                        webSocket.addHeader("Sec-WebSocket-Extensions", "client_max_window_bits");
+                        webSocket.addHeader("Sec-WebSocket-Key", createHash(22) + "==");
+                        webSocket.addHeader("Sec-WebSocket-Version", "13");
+                        webSocket.addHeader("Upgrade", "websocket");
+                        webSocket.addHeader("User-Agent", "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/98.0.4758.80 Safari/537.36");
+                        webSocket.connect();
+
+                        FetcherService.addToActiveWebsockets(webSocket);
+
+                        createSession();
+                        setSessionId("");
+                        setRequestId(0);
+
+                        log.debug("{} : Waiting for websocket to open", getThreadName());
+                        while (isEnabled() && !webSocket.isOpen()) {
+                            if (refresh && System.currentTimeMillis() - startTime > 10000) {
+                                throw new TickerException(getThreadName() + " : Timeout while waiting for websocket to open");
+                            }
+                            waitFor(WAIT_SHORT);
+                        }
+                        log.debug("{} : Websocket opened in {}ms", getThreadName(), System.currentTimeMillis() - startTime);
+
+                        fetcherService.handshake(this, webSocket);
+                    } catch (Exception e) {
+                        log.error("{} : Error while initializing new websocket", getThreadName(), e);
+                    } finally {
+                        websocketInitializeSemaphore.release();
+                        log.debug("{} : Semaphore lock to connect websocket released", getThreadName());
+                    }
+
+                    replaceWebsocket(webSocket);
+                    setInitialized(true);
+                    initialized = true;
+                    log.debug("{} : Websocket initialized in {}ms", getThreadName(), System.currentTimeMillis() - startTime);
+                } catch (Exception e) {
+                    log.error("{} - Error while creating websocket", getThreadName(), e);
+                    if (webSocket != null) {
+                        FetcherService.closeWebSocket(webSocket);
+                    }
                 }
+                if (!initialized && !refresh) {
+                    log.info("{} - Re-initializing websocket", getThreadName());
+                    initializeNewWebSocket(false);
+                }
+            } else {
+                log.info("{} : Websocket already initialized", getThreadName());
             }
-            if (!temp) {
-                closeWebsocketIfExists(SERVICE_RESTART, "Restarting Websocket", webSocketClient);
-            }
-            FetcherThread thisThread = this;
-            webSocket = new WebSocketClient(new URI("wss://data.tradingview.com/socket.io/websocket?from=chart%2F&date=" + fetchBuildTime() + "&type=chart")) {
-                final long start = startTime;
-
-                @Override
-                public void onOpen(ServerHandshake handshakedata) {
-                    log.debug(getThreadName() + " : Opened websocket");
-                }
-
-                @Override
-                public void onMessage(String message) {
-                    if (!temp) {
-                        setLastPingAt(System.currentTimeMillis());
-                    }
-                    fetcherService.onReceiveMessage(thisThread, this, message, temp);
-                }
-
-                @Override
-                public void onClose(int code, String reason, boolean remote) {
-                    log.debug(getThreadName() + " : Closed websocket, reason - " + reason);
-                    if (!temp && isEnabled() && isInitialized()) {
-                        refresh();
-                    }
-                    if (temp) {
-                        log.debug(thisThread.getThreadName() + " : Closing temp websocket in " + (System.currentTimeMillis() - start) + "ms");
-                    }
-                }
-
-                @Override
-                public void onError(Exception ex) {
-                    if (!temp) {
-                        log.error(getThreadName() + " : Error in websocket", ex);
-                    } else {
-                        close(GOING_AWAY, "Error in temp websocket");
-                    }
-                }
-            };
-            webSocket.addHeader("Accept-Encoding", "gzip, deflate, br");
-            webSocket.addHeader("Accept-Language", "en-IN,en;q=0.9");
-            webSocket.addHeader("Cache-Control", "no-cache");
-            webSocket.addHeader("Connection", "Upgrade");
-            webSocket.addHeader("Host", "data.tradingview.com");
-            webSocket.addHeader("Origin", "https://in.tradingview.com");
-            webSocket.addHeader("Pragma", "no-cache");
-            webSocket.addHeader("Sec-WebSocket-Extensions", "client_max_window_bits");
-            webSocket.addHeader("Sec-WebSocket-Key", createHash(22) + "==");
-            webSocket.addHeader("Sec-WebSocket-Version", "13");
-            webSocket.addHeader("Upgrade", "websocket");
-            webSocket.addHeader("User-Agent", "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/98.0.4758.80 Safari/537.36");
-            webSocket.connect();
-
-            createSession();
-
-            setSessionId("");
-            setRequestId(0);
-            fetcherService.addSession(this, webSocket, temp);
-            fetcherService.handshake(this, webSocket, temp);
-
-            if (!temp) {
-                setInitialized(true);
-            }
-
-        } catch (Exception e) {
-            log.error("Error while creating websocket", e);
-            closeWebsocketIfExists(TRY_AGAIN_LATER, "Error while creating websocket", webSocket);
-            throw new TickerException(getThreadName() + " : Error while creating websocket");
-        } finally {
-            websocketFetcher.release();
         }
-        return webSocket;
+    }
+
+    private void replaceWebsocket(WebSocketClient webSocket) {
+        synchronized (previousWebsockets) {
+            previousWebsockets.add(this.webSocketClient);
+            log.debug("{} : Moving to previous websockets {}", getThreadName(), this.webSocketClient);
+        }
+        synchronized (websocketLock) {
+            this.webSocketClient = webSocket;
+            log.debug("{} : New websocket {}", getThreadName(), webSocket);
+        }
+        websocketInitializeTime = System.currentTimeMillis();
     }
 
     private void createSession() {
         chartSession = "cs_" + createHash(12);
         quoteSession = "qs_" + createHash(12);
-        log.debug(getThreadName() + " : chartSession - " + chartSession);
-        log.debug(getThreadName() + " : quoteSession - " + quoteSession);
+        log.debug("{} : chartSession - {}", getThreadName(), chartSession);
+        log.debug("{} : quoteSession - {}", getThreadName(), quoteSession);
     }
 
     /**
@@ -352,22 +376,11 @@ public class FetcherThread extends TickerThread<TickerService> {
                     log.info(getThreadName() + " : Values corrected - " + dayL + ", " + getCurrentValue() + ", " + dayH + ", " + prevDataPopulated);
                 }
                 incorrectValues = 0;
-            }
-            long now = System.currentTimeMillis();
-            if (now - lastDailyValueUpdatedAt > 60000 && now - updatedAt < 30000) {
-                if (tempWebSocketClients.isEmpty()) {
+                long now = System.currentTimeMillis();
+                if (now - lastDailyValueUpdatedAt > 60000 && now - updatedAt < 30000) {
                     log.debug(getThreadName() + " : Refreshing daily values");
-                    addTempWebSocket();
-                } else {
-                    log.debug(getThreadName() + " : Already refreshing daily values " + (now - lastDailyValueUpdatedAt));
-                    if (now - lastDailyValueUpdatedAt > 75000) {
-                        log.debug(getThreadName() + " : Refreshing new daily values");
-                        closeAllWebsockets(tempWebSocketClients);
-                        addTempWebSocket();
-                    }
+                    initializeNewWebSocket(true);
                 }
-            } else {
-                closeAllWebsockets(tempWebSocketClients);
             }
         } else {
             incorrectValues = 0;
@@ -396,7 +409,7 @@ public class FetcherThread extends TickerThread<TickerService> {
         try {
             setLastPingAt(0);
             setUpdatedAt(0);
-            webSocketClient = initializeWebSocket(false);
+            initializeNewWebSocket(refresh);
             if (refresh) {
                 log.info(getExchange() + ":" + getSymbol() + " - Refreshed");
             } else {
@@ -466,38 +479,12 @@ public class FetcherThread extends TickerThread<TickerService> {
 
     @Override
     public void terminateThread(boolean shutDownInitiated) {
+        replaceWebsocket(null);
         super.terminateThread(shutDownInitiated);
         setInitialized(false);
         setEnabled(false);
-        closeAllWebsockets(allWebSocketClients);
-        this.webSocketClient = null;
+        closePreviousWebsockets();
         service.deleteTicker(this);
-    }
-
-    private void closeAllWebsockets(Set<WebSocketClient> webSocketClients) {
-        for (WebSocketClient currWebSocketClient : webSocketClients) {
-            closeWebsocketIfExists(GOING_AWAY, "Terminating temp websocket", currWebSocketClient);
-        }
-    }
-
-    private void closeWebsocketIfExists(int code, String reason, WebSocketClient webSocket) {
-        if (webSocket != null) {
-            log.debug(getThreadName() + " : Closing websocket");
-            try {
-                long start = System.currentTimeMillis();
-                webSocket.close(code, reason);
-                while (webSocket.isOpen() || webSocket.isClosing() || !webSocket.isClosed()) {
-                    waitFor(WAIT_QUICK);
-                    if (System.currentTimeMillis() - start >= 30000) {
-                        break;
-                    }
-                }
-                tempWebSocketClients.remove(webSocket);
-            } catch (Exception ignored) {
-
-            }
-            log.debug(getThreadName() + " : Websocket closed");
-        }
     }
 
     public String getThreadName() {
@@ -565,15 +552,13 @@ public class FetcherThread extends TickerThread<TickerService> {
         this.clusterId = m.matches() ? m.group(2) : "";
     }
 
-    public void addTempWebSocket() {
-        log.debug(getThreadName() + " : Adding temp websocket");
-        WebSocketClient webSocket = initializeWebSocket(true);
-        tempWebSocketClients.add(webSocket);
-        allWebSocketClients.add(webSocket);
-    }
-
-    public void finishTempWebsocketTask() {
-        log.debug(getThreadName() + " : Temp websocket task finished");
-        closeAllWebsockets(tempWebSocketClients);
+    public void closePreviousWebsockets() {
+        log.trace("{} : Closing previous websockets", getThreadName());
+        List<WebSocketClient> websocketsToClose;
+        synchronized (previousWebsockets) {
+            websocketsToClose = new ArrayList<>(previousWebsockets);
+            previousWebsockets.clear();
+        }
+        FetcherService.closeWebSockets(websocketsToClose.stream().filter(Objects::nonNull).collect(Collectors.toList()));
     }
 }
