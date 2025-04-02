@@ -149,7 +149,11 @@ public class FetcherAppRepository {
                         ", " + data.getDayO() + ", " + data.getDayH() + ", " + data.getDayL() + ", " + data.getDayC() +
                         ", " + data.getPrevClose() + ")";
                 log.trace(insertSql);
-                tempQueue.add(insertSql);
+                if (insertSql.contains("NaN")) {
+                    log.info("Skipping sql statement : {}", insertSql);
+                } else {
+                    tempQueue.add(insertSql);
+                }
             }
             synchronized (sqlQueue) {
                 log.debug("Initial data, size: " + sqlQueue.size());
