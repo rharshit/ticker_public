@@ -9,7 +9,7 @@ import lombok.Getter;
 public class StudyConstants {
     public enum Study {
         BB("Bollinger Bands", 20, BollingerBands.class),
-        RSI("Relative Strength Index (RSI)", 14, RelativeStrengthIndex.class),
+        RSI("Relative Strength Index (RSI)", 15, RelativeStrengthIndex.class),
         TEMA("Triple Exponential Moving Average", 9, TripleExponentialMovingAverage.class);
 
         @Getter

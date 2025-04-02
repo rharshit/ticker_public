@@ -5,14 +5,13 @@ import com.ticker.fetcher.utils.MathUtil;
 import com.ticker.fetcher.utils.compute.ComputeEngine;
 import lombok.extern.slf4j.Slf4j;
 
-import java.text.DecimalFormat;
-import java.util.ArrayList;
 import java.util.List;
+
+import static com.ticker.fetcher.utils.MathUtil.roundTo2Decimal;
 
 @Slf4j
 public class BollingerBands extends StudyModel {
-    private static final DecimalFormat df = new DecimalFormat("#.##");
-    double[] computedValues = new double[3];
+    private static final double[] computedValues = new double[3];
 
     public BollingerBands(FetcherThread thread) {
         super(thread);
@@ -20,8 +19,8 @@ public class BollingerBands extends StudyModel {
 
     @Override
     protected void compute(List<ComputeEngine.ComputeData> values) {
-        List<Double> valsDouble = values.stream().mapToDouble(ComputeEngine.ComputeData::getValue)
-                .collect(ArrayList::new, ArrayList::add, ArrayList::addAll);
+        double[] valsDouble = values.stream().mapToDouble(ComputeEngine.ComputeData::getValue)
+                .toArray();
         log.debug("{} - Computing Bollinger Bands for : {}", thread.getThreadName(), valsDouble);
 
         double average = MathUtil.average(valsDouble);
@@ -32,10 +31,9 @@ public class BollingerBands extends StudyModel {
         log.trace("{} - Upper Band: {}", thread.getThreadName(), upperBand);
         double lowerBand = average - (stdDev * 2);
         log.trace("{} - Lower Band: {}", thread.getThreadName(), lowerBand);
-        computedValues = new double[3];
-        computedValues[0] = Double.parseDouble(df.format(average));
-        computedValues[1] = Double.parseDouble(df.format(upperBand));
-        computedValues[2] = Double.parseDouble(df.format(lowerBand));
+        computedValues[0] = roundTo2Decimal(average);
+        computedValues[1] = roundTo2Decimal(upperBand);
+        computedValues[2] = roundTo2Decimal(lowerBand);
         log.debug("{} - Computed Bollinger Bands: {}", thread.getThreadName(), computedValues);
     }
 
