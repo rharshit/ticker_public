@@ -74,7 +74,7 @@ public class FetcherAppRepository {
     /**
      * Push data.
      */
-    @Scheduled(fixedRate = 60000)
+    @Scheduled(fixedRate = 10000)
     public void pushData() {
         if (!pushing) {
             pushing = true;
@@ -140,7 +140,6 @@ public class FetcherAppRepository {
                 log.trace(data.toString());
                 String deleteSql = "DELETE FROM " + data.getTableName() + " WHERE `timestamp`='" + data.getTimestamp() + "'";
                 log.trace(deleteSql);
-                tempQueue.add(deleteSql);
                 String insertSql = "INSERT INTO " + data.getTableName() +
                         " (`timestamp`, O, H, L, C, BB_U, BB_A, BB_L, RSI, TEMA, DAY_O, DAY_H, DAY_L, DAY_C, PREV_CLOSE)" +
                         "VALUES('" + data.getTimestamp() + "', " + data.getO() + ", " + data.getH() +
@@ -152,6 +151,7 @@ public class FetcherAppRepository {
                 if (insertSql.contains("NaN")) {
                     log.info("Skipping sql statement : {}", insertSql);
                 } else {
+                    tempQueue.add(deleteSql);
                     tempQueue.add(insertSql);
                 }
             }

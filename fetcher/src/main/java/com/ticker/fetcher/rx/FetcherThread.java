@@ -191,17 +191,15 @@ public class FetcherThread extends TickerThread<TickerService> {
 
     private void initializeCutoffs() {
         long currentTimestamp = System.currentTimeMillis();
-        cutoffScheduler.scheduleAtFixedRate(this::secondCutoff,
+        cutoffScheduler.scheduleAtFixedRate(() -> {
+                    if (isInitialized()) {
+                        FetcherService.addCurrentValueToDataset(this);
+                    }
+                },
                 TimeUtil.timeToNextSecond(currentTimestamp), SECOND_IN_MILLI, TimeUnit.MILLISECONDS);
         cutoffScheduler.scheduleAtFixedRate(this::minuteCutoff,
                 TimeUtil.timeToNextMinute(currentTimestamp), MINUTE_IN_MILLI, TimeUnit.MILLISECONDS);
         Runtime.getRuntime().addShutdownHook(new Thread(cutoffScheduler::shutdown));
-    }
-
-    private void secondCutoff() {
-        log.trace("{} : secondCutoff initiated at {}", getThreadName(), System.currentTimeMillis());
-        computeEngine.secondCutoff();
-        log.trace("{} : secondCutoff completed at {}", getThreadName(), System.currentTimeMillis());
     }
 
     private void minuteCutoff() {
