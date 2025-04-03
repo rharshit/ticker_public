@@ -1,5 +1,6 @@
 package com.ticker.common.service;
 
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.scheduling.concurrent.ThreadPoolTaskExecutor;
 import org.springframework.stereotype.Service;
 
@@ -8,10 +9,14 @@ import java.util.Map;
 import java.util.concurrent.Executor;
 import java.util.concurrent.ThreadPoolExecutor;
 
+import static com.ticker.common.util.Util.WAIT_QUICK;
+import static com.ticker.common.util.Util.waitFor;
+
 /**
  * The type Base service.
  */
 @Service("BaseService")
+@Slf4j
 public abstract class BaseService {
 
     public Map<String, Map<String, Integer>> getExecutorDetailMap() {
@@ -45,13 +50,43 @@ public abstract class BaseService {
             details.put("TaskCount", (int) ((ThreadPoolTaskExecutor) taskExecutor).getThreadPoolExecutor().getTaskCount());
             details.put("QueueSize", ((ThreadPoolTaskExecutor) taskExecutor).getThreadPoolExecutor().getQueue().size());
         } else if (taskExecutor instanceof ThreadPoolExecutor) {
-            details.put("ActiveCount", ((ThreadPoolExecutor) taskExecutor).getActiveCount());
-            details.put("CorePoolSize", ((ThreadPoolExecutor) taskExecutor).getCorePoolSize());
-            details.put("PoolSize", ((ThreadPoolExecutor) taskExecutor).getPoolSize());
-            details.put("QueueSize", 0);
+            String valueString = getTaskExecutorValueString((ThreadPoolExecutor) taskExecutor);
+            details.put("ActiveCount", Math.max(getExecutorValue(valueString, "active threads") - 1, 0));
+            details.put("CorePoolSize", getExecutorValue(valueString, "pool size"));
+            details.put("PoolSize", getExecutorValue(valueString, "pool size"));
+            details.put("QueueSize", getExecutorValue(valueString, "queued tasks"));
         }
 
         return details;
+    }
+
+    private int getExecutorValue(String valueString, String key) {
+        try {
+            return Integer.parseInt(valueString.split("^.*\\[.*" + key + " = ")[1].split(",")[0]);
+        } catch (Exception e) {
+            return -1;
+        }
+    }
+
+    private String getTaskExecutorValueString(ThreadPoolExecutor executor) {
+        try {
+            long start = System.currentTimeMillis();
+            final String[] values = new String[1];
+            Runnable valueFetchRunnable = () -> values[0] = executor.toString();
+            executor.execute(valueFetchRunnable);
+            while (values[0] == null) {
+                if (System.currentTimeMillis() - start > 500) {
+                    log.warn("No async executor value");
+                    values[0] = executor.toString();
+                } else {
+                    waitFor(WAIT_QUICK);
+                }
+            }
+            log.debug("Executor values : {}", values[0]);
+            return values[0];
+        } catch (Exception e) {
+            return "";
+        }
     }
 
     /**
