@@ -268,7 +268,7 @@ public class BookerService extends BaseService {
                 }
                 tradeGraph.getLabels().add(time);
                 tradeGraph.getNetPnl().add(totalNetPnl);
-                tradeGraph.getTaxes().add(totalTaxes);
+                tradeGraph.getTaxes().add(-totalTaxes);
                 tradeGraph.getPnl().add(totalNetPnl + totalTaxes);
                 tradeGraph.getNumTrades().add(i);
             }
