@@ -405,6 +405,7 @@ public class FetcherService extends BaseService {
         executorMap.put("FetcherTaskExecutor", fetcherTaskExecutor);
         executorMap.put("ScheduledExecutor", scheduledExecutor);
         executorMap.put("RepoExecutor", repoExecutor);
+        executorMap.put("ComputeEngine", ComputeEngine.getComputeExecutor());
         return executorMap;
     }
 

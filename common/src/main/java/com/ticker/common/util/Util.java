@@ -6,6 +6,7 @@ import lombok.extern.slf4j.Slf4j;
 import java.io.File;
 import java.io.FileWriter;
 import java.io.IOException;
+import java.text.DecimalFormat;
 import java.util.Random;
 
 import static com.ticker.common.contants.TickerConstants.*;
@@ -15,6 +16,8 @@ import static com.ticker.common.contants.TickerConstants.*;
  */
 @Slf4j
 public abstract class Util {
+    private static final DecimalFormat df = new DecimalFormat("#.##");
+
     /**
      * The constant WAIT_QUICK.
      */
@@ -124,5 +127,9 @@ public abstract class Util {
             random = new Random();
         }
         return random;
+    }
+
+    public static double roundTo2Decimal(double value) {
+        return Double.parseDouble(df.format(value));
     }
 }

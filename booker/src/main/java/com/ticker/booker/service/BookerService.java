@@ -33,6 +33,7 @@ import java.util.regex.Pattern;
 
 import static com.ticker.booker.BookerConstants.LOG_PATH;
 import static com.ticker.common.contants.TickerConstants.APPLICATION_BROKERAGE;
+import static com.ticker.common.util.Util.roundTo2Decimal;
 
 /**
  * The type Booker service.
@@ -267,7 +268,7 @@ public class BookerService extends BaseService {
                 }
                 tradeGraph.getLabels().add(time);
                 tradeGraph.getNetPnl().add(totalNetPnl);
-                tradeGraph.getTaxes().add(totalTaxes);
+                tradeGraph.getTaxes().add(-totalTaxes);
                 tradeGraph.getPnl().add(totalNetPnl + totalTaxes);
                 tradeGraph.getNumTrades().add(i);
             }
@@ -520,8 +521,8 @@ public class BookerService extends BaseService {
         log.debug("Fetching brokerage");
         Map<String, Double> brokerage = getBrokerage(trade);
         log.debug("Fetched brokerage");
-        trade.setPnl(brokerage.get("netPnl"));
-        trade.setTaxes(brokerage.get("totalBrokerage"));
+        trade.setPnl(roundTo2Decimal(brokerage.get("netPnl")));
+        trade.setTaxes(roundTo2Decimal(brokerage.get("totalBrokerage")));
     }
 
     /**

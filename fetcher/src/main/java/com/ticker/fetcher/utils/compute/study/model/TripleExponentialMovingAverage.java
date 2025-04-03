@@ -7,7 +7,7 @@ import lombok.extern.slf4j.Slf4j;
 
 import java.util.List;
 
-import static com.ticker.fetcher.utils.MathUtil.roundTo2Decimal;
+import static com.ticker.common.util.Util.roundTo2Decimal;
 
 @Slf4j
 public class TripleExponentialMovingAverage extends StudyModel {
