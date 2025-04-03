@@ -226,9 +226,6 @@ public class FetcherService extends BaseService {
             if (updated) {
                 thread.setUpdatedAt(System.currentTimeMillis());
                 log.trace("Updated {}", thread.getThreadName());
-                synchronized (dataSet) {
-                    dataSet.add(new FetcherRepoModel(thread));
-                }
                 thread.closePreviousWebsockets();
             }
         }
@@ -315,6 +312,13 @@ public class FetcherService extends BaseService {
         return null;
     }
 
+    public static void addCurrentValueToDataset(FetcherThread thread) {
+        FetcherRepoModel fetcherRepoModel = new FetcherRepoModel(thread);
+        synchronized (dataSet) {
+            dataSet.add(fetcherRepoModel);
+        }
+        log.trace("{} - Added value to dataset list {}", thread.getThreadName(), fetcherRepoModel);
+    }
     /**
      * Scheduled job.
      */

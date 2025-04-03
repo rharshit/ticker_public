@@ -157,10 +157,6 @@ public class ComputeEngine {
         windowSize = maxWindowSize[0];
     }
 
-    //TODO: Remove second cutoff implementation if not required
-    public void secondCutoff() {
-    }
-
     public void minuteCutoff() {
         pushValue(new ComputeData(thread.getC(), System.currentTimeMillis()));
     }
