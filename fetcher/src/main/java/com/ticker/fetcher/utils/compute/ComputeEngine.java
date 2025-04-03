@@ -6,6 +6,7 @@ import com.ticker.fetcher.utils.TimeUtil;
 import com.ticker.fetcher.utils.compute.study.StudyConstants.Study;
 import com.ticker.fetcher.utils.compute.study.model.StudyModel;
 import lombok.Data;
+import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 
 import java.util.*;
@@ -19,8 +20,9 @@ import java.util.stream.Collectors;
  */
 @Slf4j
 public class ComputeEngine {
+    @Getter
+    private static final Executor computeExecutor = Executors.newCachedThreadPool();
     private final FetcherThread thread;
-    private final Executor computeExecutor = Executors.newWorkStealingPool();
     private final LinkedList<ComputeData> values = new LinkedList<>();
     private final Map<Study, StudyModel> studies = new EnumMap<>(Study.class);
     private int windowSize = 1;
