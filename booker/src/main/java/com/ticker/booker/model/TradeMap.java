@@ -9,6 +9,8 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
+import static com.ticker.common.util.Util.roundTo2Decimal;
+
 /**
  * The type Trade map.
  */
@@ -60,7 +62,7 @@ public class TradeMap extends HashMap<String, Object> {
             }
             pnl = pnlTmp;
         }
-        return pnl;
+        return roundTo2Decimal(pnl);
     }
 
     /**
@@ -84,6 +86,6 @@ public class TradeMap extends HashMap<String, Object> {
             }
             taxes = taxTmp;
         }
-        return taxes;
+        return roundTo2Decimal(taxes);
     }
 }

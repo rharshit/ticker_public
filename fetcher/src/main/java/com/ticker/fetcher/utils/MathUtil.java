@@ -1,19 +1,12 @@
 package com.ticker.fetcher.utils;
 
-import java.text.DecimalFormat;
-
 /**
  * The type Math util.
  */
 public class MathUtil {
-    private static final DecimalFormat df = new DecimalFormat("#.##");
 
     private MathUtil() {
 
-    }
-
-    public static double roundTo2Decimal(double value) {
-        return Double.parseDouble(df.format(value));
     }
 
     /**
