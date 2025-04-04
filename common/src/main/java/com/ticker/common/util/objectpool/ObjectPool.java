@@ -25,6 +25,7 @@ public abstract class ObjectPool<D extends ObjectPoolData<?>> {
     private final long idleTime;
     private final Set<ObjectPoolData<?>> pool;
     private Integer initializing = 0;
+    private long lastQuery = 0;
 
     private boolean shutdown;
 
@@ -103,6 +104,7 @@ public abstract class ObjectPool<D extends ObjectPoolData<?>> {
     private void removeObject(ObjectPoolData<?> object, List<ObjectPoolData<?>> objectsToDestroy) {
         pool.remove(object);
         objectsToDestroy.add(object);
+        log.info("Removed object : {}", objectsToDestroy);
     }
 
     private void addObject() {
@@ -141,8 +143,10 @@ public abstract class ObjectPool<D extends ObjectPoolData<?>> {
                     if (object.isValid()) {
                         if (object.isIdle()) {
                             if (toDestroy > 0) {
-                                removeObject(object, objectsToDestroy);
-                                toDestroy--;
+                                if (System.currentTimeMillis() - lastQuery > 10000) {
+                                    removeObject(object, objectsToDestroy);
+                                    toDestroy--;
+                                }
                             }
                         } else {
                             object.setLastUsed(System.currentTimeMillis());
@@ -205,6 +209,7 @@ public abstract class ObjectPool<D extends ObjectPoolData<?>> {
             }
         }
         List<Thread> threads = new ArrayList<>();
+        log.debug("Objects to destroy : {}", objectsToDestroy.size());
         for (ObjectPoolData<?> object : objectsToDestroy) {
             Thread thread = new Thread(object::destroy);
             thread.start();
@@ -225,6 +230,7 @@ public abstract class ObjectPool<D extends ObjectPoolData<?>> {
                 e.printStackTrace();
             }
         }
+        log.debug("Object pool metrics : {}", poolSize());
     }
 
     /**
@@ -232,7 +238,8 @@ public abstract class ObjectPool<D extends ObjectPoolData<?>> {
      *
      * @return the object
      */
-    public Object get() {
+    public Object get(boolean retry) {
+        lastQuery = System.currentTimeMillis();
         synchronized (pool) {
             for (ObjectPoolData<?> object : pool) {
                 if (object.isValid() && object.isIdle()) {
@@ -241,7 +248,7 @@ public abstract class ObjectPool<D extends ObjectPoolData<?>> {
                 }
             }
         }
-        if (pool.size() + this.initializing < max) {
+        if (!retry && pool.size() + this.initializing < max) {
             Thread thread = new Thread(this::addObject);
             thread.start();
         }
@@ -263,5 +270,4 @@ public abstract class ObjectPool<D extends ObjectPoolData<?>> {
             }
         }
     }
-
 }

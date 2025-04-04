@@ -35,10 +35,10 @@ public class BrokerageService extends BaseService {
     private static final Map<String, List<String>> tabs; //TODO: Use enum instead
     private static final ObjectPool<ZerodhaWebdriverPoolData> zerodhaWebdrivers;
     private static boolean busy = false;
-    private static final Executor executor = Executors.newFixedThreadPool(Runtime.getRuntime().availableProcessors() + 2);
+    private static final Executor executor = Executors.newFixedThreadPool(Runtime.getRuntime().availableProcessors() * 2);
 
     static {
-        zerodhaWebdrivers = new ObjectPool<ZerodhaWebdriverPoolData>(20, 40, 50, 5000, 180000) {
+        zerodhaWebdrivers = new ObjectPool<ZerodhaWebdriverPoolData>(20, 40, 50, 1000, 180000) {
             @Override
             public ZerodhaWebdriverPoolData createObject() {
                 return new ZerodhaWebdriverPoolData(ZERODHA_BROKERAGE_URL);
@@ -93,14 +93,17 @@ public class BrokerageService extends BaseService {
                 busy = true;
                 WebDriver webDriver;
                 long startTime = System.currentTimeMillis();
+                boolean retry = false;
                 while (true) {
                     if (System.currentTimeMillis() - startTime > 100000) {
                         throw new TickerException("Error getting webdriver, closing");
                     }
                     log.debug("Getting webdriver");
-                    webDriver = (WebDriver) zerodhaWebdrivers.get();
+                    webDriver = (WebDriver) zerodhaWebdrivers.get(retry);
                     if (webDriver != null) {
                         break;
+                    } else {
+                        retry = true;
                     }
                     waitFor(WAIT_SHORT);
                 }
