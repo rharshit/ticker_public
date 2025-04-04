@@ -28,12 +28,13 @@ import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.util.*;
 import java.util.concurrent.Executor;
+import java.util.concurrent.Executors;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 import static com.ticker.booker.BookerConstants.LOG_PATH;
 import static com.ticker.common.contants.TickerConstants.APPLICATION_BROKERAGE;
-import static com.ticker.common.util.Util.roundTo2Decimal;
+import static com.ticker.common.util.Util.*;
 
 /**
  * The type Booker service.
@@ -54,6 +55,8 @@ public class BookerService extends BaseService {
     private static String userId;
     @Autowired
     private RestTemplate restTemplate;
+
+    private static final Executor executor = Executors.newFixedThreadPool(Runtime.getRuntime().availableProcessors() * 10);
 
     private static KiteConnect getKiteSdk() {
         if (kiteSdk == null) {
@@ -540,7 +543,12 @@ public class BookerService extends BaseService {
         params.put("buy", trade.getBuy().averagePrice);
         params.put("sell", trade.getSell().averagePrice);
         params.put("quantity", trade.getQuantity());
-        return restTemplate.getForObject(url, Map.class, params);
+        final Map<String, Double>[] brokerage = new Map[1];
+        executor.execute(() -> brokerage[0] = restTemplate.getForObject(url, Map.class, params));
+        while (brokerage[0] == null) {
+            waitFor(WAIT_QUICK);
+        }
+        return brokerage[0];
     }
 
     /**
