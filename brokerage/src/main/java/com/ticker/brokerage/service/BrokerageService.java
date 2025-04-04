@@ -28,7 +28,6 @@ public class BrokerageService extends BaseService {
      * The constant numTries.
      */
     public static final int NUM_TRIES = 3;
-    private static final int MAX_FETCHES = 30;
     private static final String EQUITY = "equity";
     private static final String INTRADAY = "intraday";
     private static final String FUTURES = "futures";
@@ -36,10 +35,10 @@ public class BrokerageService extends BaseService {
     private static final Map<String, List<String>> tabs; //TODO: Use enum instead
     private static final ObjectPool<ZerodhaWebdriverPoolData> zerodhaWebdrivers;
     private static boolean busy = false;
-    private static final Executor executor = Executors.newFixedThreadPool(MAX_FETCHES);
+    private static final Executor executor = Executors.newFixedThreadPool(Runtime.getRuntime().availableProcessors() + 2);
 
     static {
-        zerodhaWebdrivers = new ObjectPool<ZerodhaWebdriverPoolData>(5, 10, MAX_FETCHES, 5000, 180000) {
+        zerodhaWebdrivers = new ObjectPool<ZerodhaWebdriverPoolData>(20, 40, 50, 5000, 180000) {
             @Override
             public ZerodhaWebdriverPoolData createObject() {
                 return new ZerodhaWebdriverPoolData(ZERODHA_BROKERAGE_URL);
