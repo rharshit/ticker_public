@@ -41,12 +41,12 @@ public class WebDriverObjectPoolData extends ObjectPoolData<WebDriver> {
         WebDriver webDriver;
         log.debug("Initializing webdriver");
         ChromeOptions options = new ChromeOptions();
-        options.setHeadless(true);
+        options.addArguments("--headless=new");
         options.addArguments("--window-size=1920,1080");
         options.addArguments("--disable-gpu");
         options.addArguments("incognito");
         options.addArguments("--remote-allow-origins=*");
-        options.setCapability(CapabilityType.UNEXPECTED_ALERT_BEHAVIOUR, ACCEPT);
+        options.setCapability(CapabilityType.UNHANDLED_PROMPT_BEHAVIOUR, ACCEPT);
         options.setUnhandledPromptBehaviour(ACCEPT);
         if (Platform.getCurrent().is(Platform.LINUX)) {
             System.setProperty("webdriver.chrome.driver", "/usr/bin/chromedriver");
