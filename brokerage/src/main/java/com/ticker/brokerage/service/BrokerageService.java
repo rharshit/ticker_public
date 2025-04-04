@@ -1,9 +1,8 @@
 package com.ticker.brokerage.service;
 
-import com.ticker.brokerage.objectpool.WebDriverObjectPoolData;
+import com.ticker.brokerage.objectpool.ZerodhaWebdriverPoolData;
 import com.ticker.common.exception.TickerException;
 import com.ticker.common.service.BaseService;
-import com.ticker.common.util.Util;
 import com.ticker.common.util.objectpool.ObjectPool;
 import lombok.extern.slf4j.Slf4j;
 import org.openqa.selenium.*;
@@ -12,8 +11,10 @@ import org.springframework.stereotype.Service;
 
 import java.util.*;
 import java.util.concurrent.Executor;
+import java.util.concurrent.Executors;
 
 import static com.ticker.brokerage.constants.WebConstants.ZERODHA_BROKERAGE_URL;
+import static com.ticker.common.util.Util.*;
 
 
 /**
@@ -26,20 +27,21 @@ public class BrokerageService extends BaseService {
     /**
      * The constant numTries.
      */
-    public static final int numTries = 3;
+    public static final int NUM_TRIES = 3;
     private static final String EQUITY = "equity";
     private static final String INTRADAY = "intraday";
     private static final String FUTURES = "futures";
     private static final String OPTIONS = "options";
     private static final Map<String, List<String>> tabs; //TODO: Use enum instead
-    private static final ObjectPool<WebDriverObjectPoolData> webDrivers;
+    private static final ObjectPool<ZerodhaWebdriverPoolData> zerodhaWebdrivers;
     private static boolean busy = false;
+    private static final Executor executor = Executors.newFixedThreadPool(Runtime.getRuntime().availableProcessors() * 2);
 
     static {
-        webDrivers = new ObjectPool<WebDriverObjectPoolData>(5, 10, 45, 5000, 60000) {
+        zerodhaWebdrivers = new ObjectPool<ZerodhaWebdriverPoolData>(20, 40, 50, 1000, 180000) {
             @Override
-            public WebDriverObjectPoolData createObject() {
-                return new WebDriverObjectPoolData(ZERODHA_BROKERAGE_URL);
+            public ZerodhaWebdriverPoolData createObject() {
+                return new ZerodhaWebdriverPoolData(ZERODHA_BROKERAGE_URL);
             }
         };
 
@@ -81,93 +83,108 @@ public class BrokerageService extends BaseService {
     public Map<String, Double> getZerodhaBrokerage(String type, String exchange,
                                                    double buy, double sell, double quantity,
                                                    int numTry) {
+        final boolean[] fetched = {false};
+        final boolean[] error = {false};
         log.debug("start: " + exchange + " : " + buy + ", " + sell + ", " + quantity);
         long start = System.currentTimeMillis();
-        String tabType = getTabType(type);
-        log.debug(tabType);
-        String divId = null;
-        switch (tabType) {
-            case INTRADAY:
-                divId = "intraday-equity-calc";
-                break;
-            case EQUITY:
-                divId = "delivery-equity-calc";
-                break;
-            case FUTURES:
-                divId = "futures-equity-calc";
-                break;
-            case OPTIONS:
-                divId = "options-equity-calc";
-                break;
-        }
         Map<String, Double> data = new HashMap<>();
-        busy = true;
-        WebDriver webDriver;
-        long startTime = System.currentTimeMillis();
-        while (true) {
-            if (System.currentTimeMillis() - startTime > 100000) {
-                throw new TickerException("Error getting webdriver, closing");
-            }
-            log.debug("Getting webdriver");
-            webDriver = (WebDriver) webDrivers.get();
-            if (webDriver != null) {
-                break;
-            }
+        executor.execute(() -> {
             try {
-                synchronized (webDrivers) {
-                    log.trace("Wait started");
-                    webDrivers.wait(Util.WAIT_SHORT);
-                    log.trace("Wait ended");
+                busy = true;
+                WebDriver webDriver;
+                long startTime = System.currentTimeMillis();
+                boolean retry = false;
+                while (true) {
+                    if (System.currentTimeMillis() - startTime > 100000) {
+                        throw new TickerException("Error getting webdriver, closing");
+                    }
+                    log.debug("Getting webdriver");
+                    webDriver = (WebDriver) zerodhaWebdrivers.get(retry);
+                    if (webDriver != null) {
+                        break;
+                    } else {
+                        retry = true;
+                    }
+                    waitFor(WAIT_SHORT);
                 }
-            } catch (InterruptedException e) {
-                e.printStackTrace();
+                log.debug("Got webdriver");
+                long startFetch = System.currentTimeMillis();
+                String tabType = getTabType(type);
+                log.debug(tabType);
+                String divId = null;
+                switch (tabType) {
+                    case INTRADAY:
+                        divId = "intraday-equity-calc";
+                        break;
+                    case EQUITY:
+                        divId = "delivery-equity-calc";
+                        break;
+                    case FUTURES:
+                        divId = "futures-equity-calc";
+                        break;
+                    case OPTIONS:
+                        divId = "options-equity-calc";
+                        break;
+                }
+                try {
+                    WebElement tabDiv = webDriver.findElement(By.id(divId));
+                    setTabValues(tabDiv, buy, sell, quantity);
+                    boolean isExchangeSelected = false;
+                    List<WebElement> weExchanges = tabDiv.findElements(By.className("equity-radio"));
+                    List<String> exchanges = new ArrayList<>();
+                    for (WebElement weExchange : weExchanges) {
+                        WebElement rb = weExchange.findElement(By.tagName("input"));
+                        String exchangeValue = rb.getAttribute("value");
+                        if (exchange.equalsIgnoreCase(exchangeValue)) {
+                            rb.click();
+                            isExchangeSelected = true;
+                            break;
+                        }
+                        exchanges.add(exchangeValue);
+                    }
+                    if (!isExchangeSelected) {
+                        throw new TickerException("Exchange value '" + exchange + "' is invalid. Valid options are: " + exchanges);
+                    }
+                    List<WebElement> divs = tabDiv.findElements(By.className("valuation-block"));
+                    divs.add(tabDiv.findElement(By.className("net-profit")));
+                    for (WebElement div : divs) {
+                        WebElement label = div.findElement(By.tagName("label"));
+                        WebElement span = div.findElement(By.tagName("span"));
+                        data.put(convertToCamelCase(label.getText()), Double.valueOf(span.getText()));
+                    }
+                } catch (TickerException e) {
+                    throw e;
+                } catch (Exception e) {
+                    error[0] = true;
+                } finally {
+                    zerodhaWebdrivers.put(webDriver);
+                    busy = false;
+                }
+                data.put("pnl", data.get("netPnl"));
+                data.put("ptb", data.get("pointsToBreakeven"));
+                data.put("totalBrokerage", data.get("totalTaxAndCharges"));
+                fetched[0] = true;
+                log.info("Time taken - Webdriver: {}ms, Fetch: {}ms, total: {}ms",
+                        startFetch - start, System.currentTimeMillis() - startFetch, System.currentTimeMillis() - start);
+            } catch (Exception e) {
+                fetched[0] = false;
+                error[0] = true;
             }
+
+        });
+        while (!fetched[0] && !error[0]) {
+            waitFor(WAIT_QUICK);
         }
-        log.debug("Got webdriver");
-        try {
-            WebElement tabDiv = webDriver.findElement(By.id(divId));
-            setTabValues(tabDiv, buy, sell, quantity);
-            boolean isExchangeSelected = false;
-            List<WebElement> weExchanges = tabDiv.findElements(By.className("equity-radio"));
-            List<String> exchanges = new ArrayList<>();
-            for (WebElement weExchange : weExchanges) {
-                WebElement rb = weExchange.findElement(By.tagName("input"));
-                String exchangeValue = rb.getAttribute("value");
-                if (exchange.equalsIgnoreCase(exchangeValue)) {
-                    rb.click();
-                    isExchangeSelected = true;
-                    break;
-                }
-                exchanges.add(exchangeValue);
-            }
-            if (!isExchangeSelected) {
-                throw new TickerException("Exchange value '" + exchange + "' is invalid. Valid options are: " + exchanges);
-            }
-            List<WebElement> divs = tabDiv.findElements(By.className("valuation-block"));
-            divs.add(tabDiv.findElement(By.className("net-profit")));
-            for (WebElement div : divs) {
-                WebElement label = div.findElement(By.tagName("label"));
-                WebElement span = div.findElement(By.tagName("span"));
-                data.put(convertToCamelCase(label.getText()), Double.valueOf(span.getText()));
-            }
-        } catch (TickerException e) {
-            throw e;
-        } catch (Exception e) {
-            if (numTry < numTries) {
-                log.info("Error while getting brokerage, retrying " + numTry);
+        if (fetched[0]) {
+            return data;
+        } else {
+            if (numTry < NUM_TRIES) {
+                log.info("Error while getting brokerage, retrying {}", numTry);
                 return getZerodhaBrokerage(type, exchange, buy, sell, quantity, numTry + 1);
             } else {
                 throw new TickerException("Error while getting values. Please try again");
             }
-        } finally {
-            webDrivers.put(webDriver);
-            busy = false;
         }
-        data.put("pnl", data.get("netPnl"));
-        data.put("ptb", data.get("pointsToBreakeven"));
-        data.put("totalBrokerage", data.get("totalTaxAndCharges"));
-        log.info("end: " + exchange + " : " + buy + ", " + sell + ", " + quantity + ", " + data.get("pointsToBreakeven") + " in " + (System.currentTimeMillis() - start) + "ms");
-        return data;
     }
 
     private void setTabValues(WebElement tabDiv, double buy, double sell, double quantity) {
@@ -226,7 +243,7 @@ public class BrokerageService extends BaseService {
      * @return the int [ ]
      */
     public int[] getZerodhaWebdriverPoolSize() {
-        return webDrivers.poolSize();
+        return zerodhaWebdrivers.poolSize();
     }
 
     @Override
