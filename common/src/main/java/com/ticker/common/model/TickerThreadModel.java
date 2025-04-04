@@ -49,6 +49,10 @@ public class TickerThreadModel<T extends TickerThread> {
         return this.thread.isInitialized();
     }
 
+    public boolean isRefreshing() {
+        return this.thread.isRefreshing();
+    }
+
     /**
      * Gets exchange.
      *

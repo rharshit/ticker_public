@@ -107,6 +107,12 @@ public class FetcherThread extends TickerThread<TickerService> {
         }
     }
 
+    private void websocketInitialized() {
+        synchronized (websocketInitializeLock) {
+            isRequestWebsocketInitialize = false;
+        }
+    }
+
     /**
      * Gets build time for charts.
      *
@@ -220,6 +226,7 @@ public class FetcherThread extends TickerThread<TickerService> {
         synchronized (websocketInitializeLock) {
             if (!refresh || isRequestWebsocketInitialize || startTime >= websocketInitializeTime) {
                 log.info("{} - {} websocket", getThreadName(), refresh ? "Refreshing" : "Initializing new");
+                log.debug("{} - {}, {}, {}, {}, {}", getThreadName(), refresh, isRequestWebsocketInitialize, startTime >= websocketInitializeTime, startTime, websocketInitializeTime);
                 boolean initialized = false;
                 WebSocketClient webSocket = null;
                 try {
@@ -278,25 +285,24 @@ public class FetcherThread extends TickerThread<TickerService> {
 
                         log.debug("{} : Waiting for websocket to open", getThreadName());
                         while (isEnabled() && !webSocket.isOpen()) {
-                            if (refresh && System.currentTimeMillis() - startTime > 10000) {
+                            if (refresh && System.currentTimeMillis() - startTime > 30000) {
                                 throw new TickerException(getThreadName() + " : Timeout while waiting for websocket to open");
                             }
                             waitFor(WAIT_SHORT);
                         }
                         log.debug("{} : Websocket opened in {}ms", getThreadName(), System.currentTimeMillis() - startTime);
-
                         fetcherService.handshake(this, webSocket);
+                        replaceWebsocket(webSocket);
+                        setInitialized(true);
+                        initialized = true;
+                        websocketInitialized();
+                        log.info("{} : Websocket {}initialized in {}ms", getThreadName(), refresh ? "re-" : "", System.currentTimeMillis() - startTime);
                     } catch (Exception e) {
                         log.error("{} : Error while initializing new websocket", getThreadName(), e);
                     } finally {
                         websocketInitializeSemaphore.release();
                         log.debug("{} : Semaphore lock to connect websocket released", getThreadName());
                     }
-
-                    replaceWebsocket(webSocket);
-                    setInitialized(true);
-                    initialized = true;
-                    log.info("{} : Websocket {}initialized in {}ms", getThreadName(), refresh ? "re-" : "", System.currentTimeMillis() - startTime);
                 } catch (Exception e) {
                     log.error("{} - Error while creating websocket", getThreadName(), e);
                     if (webSocket != null) {
@@ -373,8 +379,8 @@ public class FetcherThread extends TickerThread<TickerService> {
                     log.info(getThreadName() + " : Values corrected - " + dayL + ", " + getCurrentValue() + ", " + dayH + ", " + prevDataPopulated);
                 }
                 incorrectValues = 0;
-                if (now - lastDailyValueUpdatedAt > 60000 && now - updatedAt < 30000) {
-                    log.debug(getThreadName() + " : Refreshing daily values");
+                if (now - lastDailyValueUpdatedAt > 60000 && now - updatedAt > 30000) {
+                    log.info(getThreadName() + " : Refreshing daily values");
                     refresh();
                 }
             }
@@ -382,7 +388,7 @@ public class FetcherThread extends TickerThread<TickerService> {
             incorrectValues = 0;
             log.debug("{} : Not initialized", getThreadName());
         }
-        if (incorrectValues > 5) {
+        if (incorrectValues > 10) {
             log.info(getThreadName() + " : Incorrect values " + incorrectValues + " - " + dayL + ", " + getCurrentValue() + ", " + dayH + ", " + prevDataPopulated);
             refresh();
             incorrectValues = 1;
@@ -438,7 +444,24 @@ public class FetcherThread extends TickerThread<TickerService> {
      * Refresh browser.
      */
     public void refresh() {
-        executor.execute(() -> initializeNewWebSocket(true));
+        try {
+            executor.execute(() -> {
+                if (!isRefreshing()) {
+                    setRefreshing(true);
+                    try {
+                        initializeNewWebSocket(true);
+                    } catch (Exception e) {
+                        log.error("{} - Error while refreshing", getThreadName());
+                    }
+                    setRefreshing(false);
+                }
+            });
+        } catch (OutOfMemoryError e) {
+            log.info("{} - Creating new executor", getThreadName());
+            Executor oldExecutor = executor;
+            executor = Executors.newCachedThreadPool();
+            ((ExecutorService) oldExecutor).shutdown();
+        }
     }
 
     /**
