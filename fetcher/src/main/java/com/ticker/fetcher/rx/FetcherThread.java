@@ -93,7 +93,7 @@ public class FetcherThread extends TickerThread<TickerService> {
     private long lastPingAt = 0;
     private int retry = 0;
     private int incorrectValues = 0;
-    private Executor executor = Executors.newCachedThreadPool();
+    private Executor refreshExecutor = Executors.newFixedThreadPool(Runtime.getRuntime().availableProcessors() * 2);
     private long lastDailyValueUpdatedAt = System.currentTimeMillis();
 
     private final ComputeEngine computeEngine = new ComputeEngine(this);
@@ -219,7 +219,8 @@ public class FetcherThread extends TickerThread<TickerService> {
         long startTime = System.currentTimeMillis();
         synchronized (websocketInitializeLock) {
             if (!refresh || isRequestWebsocketInitialize || startTime >= websocketInitializeTime) {
-                log.info("{} - {} websocket", getThreadName(), refresh ? "Refreshing" : "Initializing new");
+                log.info("{} - {} websocket : {} {} {} {} {}", getThreadName(), refresh ? "Refreshing" : "Initializing new",
+                        refresh, isRequestWebsocketInitialize, startTime >= websocketInitializeTime, startTime, websocketInitializeTime);
                 boolean initialized = false;
                 WebSocketClient webSocket = null;
                 try {
@@ -237,6 +238,7 @@ public class FetcherThread extends TickerThread<TickerService> {
 
                             @Override
                             public void onOpen(ServerHandshake handshakedata) {
+                                setLastPingAt(System.currentTimeMillis());
                                 log.debug("{} : Opened websocket", getThreadName());
                             }
 
@@ -373,8 +375,8 @@ public class FetcherThread extends TickerThread<TickerService> {
                     log.info(getThreadName() + " : Values corrected - " + dayL + ", " + getCurrentValue() + ", " + dayH + ", " + prevDataPopulated);
                 }
                 incorrectValues = 0;
-                if (now - lastDailyValueUpdatedAt > 60000 && now - updatedAt < 30000) {
-                    log.debug(getThreadName() + " : Refreshing daily values");
+                if (now - lastDailyValueUpdatedAt > 180000 && now - updatedAt < 30000) {
+                    log.info("{} - Refreshing daily values: {} {}", getThreadName(), now - lastDailyValueUpdatedAt, now - updatedAt);
                     refresh();
                 }
             }
@@ -383,7 +385,7 @@ public class FetcherThread extends TickerThread<TickerService> {
             log.debug("{} : Not initialized", getThreadName());
         }
         if (incorrectValues > 5) {
-            log.info(getThreadName() + " : Incorrect values " + incorrectValues + " - " + dayL + ", " + getCurrentValue() + ", " + dayH + ", " + prevDataPopulated);
+            log.info("{} : Incorrect values {} - {}, {}, {}, {}", getThreadName(), incorrectValues, dayL, getCurrentValue(), dayH, prevDataPopulated);
             refresh();
             incorrectValues = 1;
         }
@@ -438,7 +440,7 @@ public class FetcherThread extends TickerThread<TickerService> {
      * Refresh browser.
      */
     public void refresh() {
-        executor.execute(() -> initializeNewWebSocket(true));
+        refreshExecutor.execute(() -> initializeNewWebSocket(true));
     }
 
     /**
