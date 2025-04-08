@@ -4,6 +4,7 @@ import com.ticker.brokerage.objectpool.ZerodhaWebdriverPoolData;
 import com.ticker.common.exception.TickerException;
 import com.ticker.common.service.BaseService;
 import com.ticker.common.util.objectpool.ObjectPool;
+import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 import org.openqa.selenium.*;
 import org.springframework.cache.annotation.Cacheable;
@@ -34,6 +35,13 @@ public class BrokerageService extends BaseService {
     private static final String OPTIONS = "options";
     private static final Map<String, List<String>> tabs; //TODO: Use enum instead
     private static final ObjectPool<ZerodhaWebdriverPoolData> zerodhaWebdrivers;
+    /**
+     * -- GETTER --
+     * Is busy boolean.
+     *
+     * @return the boolean
+     */
+    @Getter
     private static boolean busy = false;
     private static final Executor executor = Executors.newFixedThreadPool(Runtime.getRuntime().availableProcessors() * 2);
 
@@ -79,12 +87,12 @@ public class BrokerageService extends BaseService {
      * @param numTry   the num try
      * @return the zerodha brokerage
      */
-    @Cacheable("brokerage")
-    public Map<String, Double> getZerodhaBrokerage(String type, String exchange,
-                                                   double buy, double sell, double quantity,
+    private static Map<String, Double> getZerodhaBrokerage(String type, String exchange,
+                                                           double buy, double sell, double quantity,
                                                    int numTry) {
         final boolean[] fetched = {false};
         final boolean[] error = {false};
+        final boolean[] isExchangeSelected = {false};
         log.debug("start: " + exchange + " : " + buy + ", " + sell + ", " + quantity);
         long start = System.currentTimeMillis();
         Map<String, Double> data = new HashMap<>();
@@ -129,7 +137,6 @@ public class BrokerageService extends BaseService {
                 try {
                     WebElement tabDiv = webDriver.findElement(By.id(divId));
                     setTabValues(tabDiv, buy, sell, quantity);
-                    boolean isExchangeSelected = false;
                     List<WebElement> weExchanges = tabDiv.findElements(By.className("equity-radio"));
                     List<String> exchanges = new ArrayList<>();
                     for (WebElement weExchange : weExchanges) {
@@ -137,12 +144,12 @@ public class BrokerageService extends BaseService {
                         String exchangeValue = rb.getAttribute("value");
                         if (exchange.equalsIgnoreCase(exchangeValue)) {
                             rb.click();
-                            isExchangeSelected = true;
+                            isExchangeSelected[0] = true;
                             break;
                         }
                         exchanges.add(exchangeValue);
                     }
-                    if (!isExchangeSelected) {
+                    if (!isExchangeSelected[0]) {
                         throw new TickerException("Exchange value '" + exchange + "' is invalid. Valid options are: " + exchanges);
                     }
                     List<WebElement> divs = tabDiv.findElements(By.className("valuation-block"));
@@ -178,16 +185,17 @@ public class BrokerageService extends BaseService {
         if (fetched[0]) {
             return data;
         } else {
-            if (numTry < NUM_TRIES) {
+            if (numTry < NUM_TRIES && isExchangeSelected[0]) {
                 log.info("Error while getting brokerage, retrying {}", numTry);
                 return getZerodhaBrokerage(type, exchange, buy, sell, quantity, numTry + 1);
             } else {
+                log.error("Error while getting values: {} {} {} {} {} {}", type, exchange, buy, sell, quantity, numTry);
                 throw new TickerException("Error while getting values. Please try again");
             }
         }
     }
 
-    private void setTabValues(WebElement tabDiv, double buy, double sell, double quantity) {
+    private static void setTabValues(WebElement tabDiv, double buy, double sell, double quantity) {
         List<WebElement> inputs = tabDiv.findElement(By.className("calc-inputs"))
                 .findElements(By.className("brokerage-calculator-input"));
         for (WebElement input : inputs) {
@@ -218,7 +226,7 @@ public class BrokerageService extends BaseService {
         }
     }
 
-    private String convertToCamelCase(String text) {
+    private static String convertToCamelCase(String text) {
         String[] words = text.split("[ -]+");
         StringBuilder camelCase = new StringBuilder();
         for (String word : words) {
@@ -229,21 +237,27 @@ public class BrokerageService extends BaseService {
     }
 
     /**
-     * Is busy boolean.
-     *
-     * @return the boolean
-     */
-    public boolean isBusy() {
-        return busy;
-    }
-
-    /**
      * Get zerodha webdriver pool size int [ ].
      *
      * @return the int [ ]
      */
-    public int[] getZerodhaWebdriverPoolSize() {
+    public static int[] getZerodhaWebdriverPoolSize() {
         return zerodhaWebdrivers.poolSize();
+    }
+
+    @Cacheable("brokerage")
+    public Map<String, Double> getZerodhaBrokerageWrapper(String type, String exchange,
+                                                          double buy, double sell, double quantity) {
+        try {
+            return getZerodhaBrokerage(type, exchange, buy, sell, quantity, 0);
+        } catch (Exception e) {
+            return new HashMap<String, Double>() {{
+                put("pnl", 0.0);
+                put("netPnl", 0.0);
+                put("ptb", 0.0);
+                put("totalBrokerage", 0.0);
+            }};
+        }
     }
 
     @Override
