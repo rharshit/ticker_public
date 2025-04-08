@@ -131,6 +131,7 @@ public class TickerService extends TickerThreadService<FetcherThread, FetcherThr
         if (thread == null) {
             return;
         }
+        log.info("{} - Refresh browser", thread.getThreadName());
         thread.refresh();
     }
 
@@ -202,7 +203,7 @@ public class TickerService extends TickerThreadService<FetcherThread, FetcherThr
         long now = System.currentTimeMillis();
         for (FetcherThread thread : threadMap) {
             if (thread.getLastPingAt() != 0 && now - thread.getLastPingAt() > 60000 && thread.isInitialized() && thread.isEnabled()) {
-                log.info(thread.getThreadName() + " : not updated for " + (now - thread.getUpdatedAt()) + "ms");
+                log.info("{} : not updated for {}ms", thread.getThreadName(), (now - thread.getUpdatedAt()));
                 thread.refresh();
             }
         }
