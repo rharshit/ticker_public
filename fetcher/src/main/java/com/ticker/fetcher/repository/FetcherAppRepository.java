@@ -149,16 +149,16 @@ public class FetcherAppRepository {
                         ", " + data.getPrevClose() + ")";
                 log.trace(insertSql);
                 if (insertSql.contains("NaN")) {
-                    log.info("Skipping sql statement : {}", insertSql);
-                } else {
-                    tempQueue.add(deleteSql);
-                    tempQueue.add(insertSql);
+                    log.info("Sql statement had NaN value, correcting : {}", insertSql);
+                    insertSql = insertSql.replace("NaN", "0");
+                    log.info("Fixed sql statement : {}", insertSql);
                 }
+                tempQueue.add(deleteSql);
+                tempQueue.add(insertSql);
             }
             synchronized (sqlQueue) {
                 log.debug("Initial data, size: " + sqlQueue.size());
                 sqlQueue.addAll(tempQueue);
-//                sqlQueue.sort(String::compareTo);
                 log.debug("Data Added, size: " + sqlQueue.size());
             }
         }
