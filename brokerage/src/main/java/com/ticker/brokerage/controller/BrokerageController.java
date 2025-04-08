@@ -35,7 +35,7 @@ public class BrokerageController extends BaseController<BrokerageService> {
                                                    @RequestParam double buy,
                                                    @RequestParam double sell,
                                                    @RequestParam double quantity) {
-        return service.getZerodhaBrokerage(type, exchange, buy, sell, quantity, 0);
+        return service.getZerodhaBrokerageWrapper(type, exchange, buy, sell, quantity);
     }
 
     /**
@@ -45,7 +45,7 @@ public class BrokerageController extends BaseController<BrokerageService> {
      */
     @GetMapping("/zerodha/busy")
     public ResponseEntity<Boolean> isBusy() {
-        return new ResponseEntity<>(service.isBusy(), HttpStatus.OK);
+        return new ResponseEntity<>(BrokerageService.isBusy(), HttpStatus.OK);
     }
 
     /**
@@ -55,6 +55,6 @@ public class BrokerageController extends BaseController<BrokerageService> {
      */
     @GetMapping("/zerodha/pool")
     public ResponseEntity<int[]> getZerodhaWebdriverPoolSize() {
-        return new ResponseEntity<>(service.getZerodhaWebdriverPoolSize(), HttpStatus.OK);
+        return new ResponseEntity<>(BrokerageService.getZerodhaWebdriverPoolSize(), HttpStatus.OK);
     }
 }
