@@ -466,6 +466,7 @@ public class BookerService extends BaseService {
         } catch (InterruptedException e) {
             log.error("Error waiting for processTradeExecutor to finish", e);
         }
+        log.info("Processed {} trades in {}ms");
         completeTradesTemp.sort(Comparator.comparing(CompleteTrade::getTimestamp));
         completeTrades.clear();
         completeTrades.addAll(completeTradesTemp);
@@ -606,19 +607,6 @@ public class BookerService extends BaseService {
         List<String> files = getLogFiles();
         for (String file : files) {
             uploadLogFile(file);
-        }
-    }
-
-    /**
-     * Upload today's log files.
-     */
-    public void uploadTodayLogFiles() {
-        List<String> files = getLogFiles();
-        String today = getToday();
-        for (String file : files) {
-            if (file.endsWith(today + ".log")) {
-                uploadLogFile(file);
-            }
         }
     }
 
