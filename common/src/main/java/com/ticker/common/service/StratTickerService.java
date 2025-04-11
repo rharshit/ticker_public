@@ -301,7 +301,7 @@ public abstract class StratTickerService<T extends StratThread, TM extends Strat
                 " at " + DATE_TIME_FORMATTER_TIME_SECONDS.format(new Date(System.currentTimeMillis())) +
                 " for " + thread.getCurrentValue();
         log.info(tradeString);
-        String path = "logs/" + appName + "-trade" + (new SimpleDateFormat("-yyyy-MM-dd")).format(new Date(System.currentTimeMillis())) + ".log";
+        String path = "logs/" + appName + "-trade-" + getToday() + ".log";
         Util.writeToFile(path, tradeString, true);
         thread.setPositionQty(thread.getPositionQty() - qty);
         return thread.getCurrentValue();
