@@ -10,20 +10,27 @@ public class MathUtil {
     }
 
     /**
+     * Calculate the sum of list of values.
+     *
+     * @param values the values
+     * @return the sum
+     */
+    public static double sum(double[] values) {
+        double sum = 0;
+        for (double val : values) {
+            sum += val;
+        }
+        return sum;
+    }
+
+    /**
      * Calculate the average of list of values.
      *
      * @param values the values
      * @return the average
      */
     public static double average(double[] values) {
-        if (values.length == 0) {
-            return 0;
-        }
-        double sum = 0;
-        for (double val : values) {
-            sum += val;
-        }
-        return sum / values.length;
+        return values.length == 0 ? 0 : sum(values) / values.length;
     }
 
     /**
