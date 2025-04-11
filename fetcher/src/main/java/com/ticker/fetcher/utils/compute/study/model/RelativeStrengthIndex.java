@@ -36,14 +36,17 @@ public class RelativeStrengthIndex extends StudyModel {
         double currentChange = valsDouble[n] - valsDouble[n - 1];
         double currentGain = currentChange > 0 ? currentChange : 0;
         double currentLoss = currentChange < 0 ? Math.abs(currentChange) : 0;
-        double prevAvgGain = MathUtil.average(gains);
-        double prevAvgLoss = MathUtil.average(losses);
+        double prevGain = MathUtil.sum(gains);
+        double prevLoss = MathUtil.sum(losses);
 
         log.trace("{} - Curr Gain: {}", thread.getThreadName(), currentGain);
         log.trace("{} - Curr Loss: {}", thread.getThreadName(), currentLoss);
-        log.trace("{} - Prev Gain: {}", thread.getThreadName(), prevAvgGain);
-        log.trace("{} - Prev Loss: {}", thread.getThreadName(), prevAvgLoss);
-        double rs = ((prevAvgGain * (n - 1)) + currentGain) / ((prevAvgLoss * (n - 1)) + currentLoss);
+        log.trace("{} - Prev Gain: {}", thread.getThreadName(), prevGain);
+        log.trace("{} - Prev Loss: {}", thread.getThreadName(), currentGain);
+        double rs = (prevGain + currentGain) / (prevLoss + currentLoss);
+        if (Double.isNaN(rs)) {
+            rs = 1;
+        }
         log.trace("{} - RS: {}", thread.getThreadName(), rs);
         double rsi = roundTo2Decimal(100 - (100 / (1 + rs)));
         computedValues[0] = roundTo2Decimal(rsi);
