@@ -25,9 +25,9 @@
     </modules>
 
     <properties>
-        <maven.compiler.source>21</maven.compiler.source>
-        <maven.compiler.target>21</maven.compiler.target>
-
+        <java.version>21</java.version>
+        <maven.compiler.source>${java.version}</maven.compiler.source>
+        <maven.compiler.target>${java.version}</maven.compiler.target>
         <ticker.home.version>0.0.1-SNAPSHOT</ticker.home.version>
         <ticker.fetcher.version>0.0.1-SNAPSHOT</ticker.fetcher.version>
         <ticker.mock-fetcher.version>0.0.1-SNAPSHOT</ticker.mock-fetcher.version>
@@ -91,8 +91,6 @@
                             <version>${lombok.version}</version>
                         </path>
                     </annotationProcessorPaths>
-                    <source>21</source>
-                    <target>21</target>
                 </configuration>
             </plugin>
         </plugins>
