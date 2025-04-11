@@ -466,11 +466,11 @@ public class BookerService extends BaseService {
         } catch (InterruptedException e) {
             log.error("Error waiting for processTradeExecutor to finish", e);
         }
-        log.info("Processed all trades");
+        log.info("Processed {} trades in {}ms");
         completeTradesTemp.sort(Comparator.comparing(CompleteTrade::getTimestamp));
         completeTrades.clear();
         completeTrades.addAll(completeTradesTemp);
-        log.info("Processed trade map in {}ms", System.currentTimeMillis() - start);
+        log.info("Processed {} trades in {}ms", threads.size(), System.currentTimeMillis() - start);
         return completeAppMap;
     }
 

@@ -218,9 +218,9 @@ public class FetcherThread extends TickerThread<TickerService> {
         requestWebsocketInitialize();
         long startTime = System.currentTimeMillis();
         synchronized (websocketInitializeLock) {
-            if (!refresh || isRequestWebsocketInitialize || startTime >= websocketInitializeTime) {
-                log.info("{} - {} websocket : {} {} {} {} {}", getThreadName(), refresh ? "Refreshing" : "Initializing new",
-                        refresh, isRequestWebsocketInitialize, startTime >= websocketInitializeTime, startTime, websocketInitializeTime);
+            if (!refresh || isRequestWebsocketInitialize || startTime > websocketInitializeTime) {
+                log.info("{} - {} websocket : {} {} {} {} {} {}", getThreadName(), refresh ? "Refreshing" : "Initializing new",
+                        refresh, isRequestWebsocketInitialize, startTime > websocketInitializeTime, startTime, websocketInitializeTime, startTime - websocketInitializeTime);
                 boolean initialized = false;
                 WebSocketClient webSocket = null;
                 try {
