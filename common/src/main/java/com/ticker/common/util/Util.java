@@ -7,6 +7,8 @@ import java.io.File;
 import java.io.FileWriter;
 import java.io.IOException;
 import java.text.DecimalFormat;
+import java.text.SimpleDateFormat;
+import java.util.Date;
 import java.util.Random;
 
 import static com.ticker.common.contants.TickerConstants.*;
@@ -131,5 +133,9 @@ public abstract class Util {
 
     public static double roundTo2Decimal(double value) {
         return Double.parseDouble(df.format(value));
+    }
+
+    public static String getToday() {
+        return (new SimpleDateFormat("yyyy-MM-dd")).format(new Date(System.currentTimeMillis()));
     }
 }

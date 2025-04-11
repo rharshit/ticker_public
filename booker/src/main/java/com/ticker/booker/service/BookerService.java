@@ -28,7 +28,9 @@ import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.util.*;
 import java.util.concurrent.Executor;
+import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
+import java.util.concurrent.TimeUnit;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -283,6 +285,7 @@ public class BookerService extends BaseService {
         try {
             log.info("Getting trade map");
             Map<String, Map<String, Map<String, Map<String, List<TickerTrade>>>>> tradeMap = getTradeMap();
+            log.info("Processing trade map");
             Map<String, Map<String, Map<String, Map<String, List<CompleteTrade>>>>> completeTradeMap = processTradeMap(tradeMap);
             TradeMap totalTrade = new TradeMap(completeTradeMap);
             log.info("Got trade map");
@@ -294,6 +297,7 @@ public class BookerService extends BaseService {
     }
 
     private Map<String, Map<String, Map<String, Map<String, List<CompleteTrade>>>>> processTradeMap(Map<String, Map<String, Map<String, Map<String, List<TickerTrade>>>>> appMap) {
+        long start = System.currentTimeMillis();
         List<CompleteTrade> completeTradesTemp = new ArrayList<>();
         Map<String, Map<String, Map<String, Map<String, List<CompleteTrade>>>>> completeAppMap = new HashMap<>();
         for (Map.Entry<String, Map<String, Map<String, Map<String, List<TickerTrade>>>>> appEntry : appMap.entrySet()) {
@@ -409,7 +413,7 @@ public class BookerService extends BaseService {
                                 completeTradeList.add(completeTrade);
                                 completeTradesTemp.add(completeTrade);
                             } else {
-                                log.info("Skipping invalid/incomplete trade");
+                                log.debug("Skipping invalid/incomplete trade");
                             }
                         }
                     }
@@ -443,23 +447,29 @@ public class BookerService extends BaseService {
                         List<CompleteTrade> completeTradeList = completeProductMap.get(product);
                         for (CompleteTrade completeTrade : completeTradeList) {
                             Thread thread = new Thread(() -> processTrade(completeTrade, symbol, exchange, product));
-                            thread.start();
                             threads.add(thread);
                         }
                     }
                 }
             }
         }
+        log.info("Processing all trades");
+        ExecutorService processTradeExecutor = Executors.newFixedThreadPool(Runtime.getRuntime().availableProcessors() * 4);
         for (Thread thread : threads) {
-            try {
-                thread.join();
-            } catch (InterruptedException e) {
-                e.printStackTrace();
+            processTradeExecutor.execute(thread);
+        }
+        processTradeExecutor.shutdown();
+        try {
+            while (!processTradeExecutor.awaitTermination(100, TimeUnit.MILLISECONDS)) {
+                waitFor(WAIT_QUICK);
             }
+        } catch (InterruptedException e) {
+            log.error("Error waiting for processTradeExecutor to finish", e);
         }
         completeTradesTemp.sort(Comparator.comparing(CompleteTrade::getTimestamp));
         completeTrades.clear();
         completeTrades.addAll(completeTradesTemp);
+        log.info("Processed {} trades in {}ms", threads.size(), System.currentTimeMillis() - start);
         return completeAppMap;
     }
 
@@ -584,8 +594,9 @@ public class BookerService extends BaseService {
         } catch (IOException e) {
             log.error("Error while reading file at path: " + path);
         }
-        String log = new String(encoded, StandardCharsets.US_ASCII);
-        populateLogs(log, file.replaceAll("\\.log$", ""));
+        String logString = new String(encoded, StandardCharsets.US_ASCII);
+        populateLogs(logString, file.replaceAll("\\.log$", ""));
+        log.info("Added logs from {}", path);
     }
 
     /**
@@ -595,6 +606,19 @@ public class BookerService extends BaseService {
         List<String> files = getLogFiles();
         for (String file : files) {
             uploadLogFile(file);
+        }
+    }
+
+    /**
+     * Upload today's log files.
+     */
+    public void uploadTodayLogFiles() {
+        List<String> files = getLogFiles();
+        String today = getToday();
+        for (String file : files) {
+            if (file.endsWith(today + ".log")) {
+                uploadLogFile(file);
+            }
         }
     }
 

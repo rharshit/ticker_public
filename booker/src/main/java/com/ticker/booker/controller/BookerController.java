@@ -132,6 +132,17 @@ public class BookerController extends BaseController<BookerService> {
     }
 
     /**
+     * Upload all log files for the day.
+     *
+     * @return the response entity
+     */
+    @PostMapping("/logs/today")
+    public ResponseEntity<ResponseStatus> uploadTodayLogFiles() {
+        service.uploadTodayLogFiles();
+        return new ResponseEntity<>(new ResponseStatus(), HttpStatus.OK);
+    }
+
+    /**
      * Populate logs response entity.
      *
      * @return the response entity
