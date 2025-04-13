@@ -95,7 +95,7 @@ public abstract class StratController<S extends StratTickerService, TM extends S
      *
      * @return the response entity
      */
-    @DeleteMapping("all/")
+    @DeleteMapping("all")
     public ResponseEntity<ResponseStatus> deleteAllTickers() {
         service.stopFetchingAll();
         return new ResponseEntity<>(new ResponseStatus(), HttpStatus.OK);
