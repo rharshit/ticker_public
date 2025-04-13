@@ -136,7 +136,7 @@ public class FetcherController extends BaseController<FetcherService> {
      * @param symbol   the symbol
      * @return response entity
      */
-    @DeleteMapping("/ticker/")
+    @DeleteMapping("/ticker")
     public ResponseEntity<ResponseStatus> deleteTicker(@RequestParam String exchange, @RequestParam String symbol) {
         service.deleteTicker(exchange, symbol);
         return new ResponseEntity<>(new ResponseStatus(), HttpStatus.OK);
@@ -147,7 +147,7 @@ public class FetcherController extends BaseController<FetcherService> {
      *
      * @return response entity
      */
-    @DeleteMapping(path = "/all/")
+    @DeleteMapping("/all")
     public ResponseEntity<ResponseStatus> deleteAllTickers() {
         service.deleteAllTickers();
         return new ResponseEntity<>(new ResponseStatus(), HttpStatus.OK);
