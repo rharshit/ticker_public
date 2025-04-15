@@ -97,7 +97,7 @@ public abstract class StratTickerService<T extends StratThread, TM extends Strat
         try {
             if (thread.isEnabled()) {
                 String baseUrl = Util.getApplicationUrl(APPLICATION_FETCHER);
-                String getCurrentTickerUrl = baseUrl + "current/";
+                String getCurrentTickerUrl = baseUrl + "current";
                 Map<String, Object> params = new HashMap<>();
                 params.put("exchange", thread.getExchange());
                 params.put("symbol", thread.getSymbol());
