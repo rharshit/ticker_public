@@ -25,10 +25,14 @@ public abstract class TickerThread<S extends TickerThreadService> extends Thread
      * The Enabled.
      */
     protected boolean enabled = false;
+
     /**
      * The Initialized.
      */
     protected boolean initialized = false;
+
+    protected boolean refreshing = false;
+
     /**
      * The Locked.
      */
